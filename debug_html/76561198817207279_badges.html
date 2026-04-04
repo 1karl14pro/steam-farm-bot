@@ -1,0 +1,1953 @@
+<!DOCTYPE html>
+<html class=" responsive DesktopUI" lang="en"  >
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+			<meta name="viewport" content="width=device-width,initial-scale=1">
+		<meta name="theme-color" content="#171a21">
+		<title>Steam Community :: Steam Badges</title>
+	<link rel="shortcut icon" href="/favicon.ico" type="image/x-icon">
+
+	
+	
+	<link href="https://community.fastly.steamstatic.com/public/shared/css/motiva_sans.css?v=-yZgCk0Nu7kH&amp;l=english&amp;_cdn=fastly" rel="stylesheet" type="text/css">
+<link href="https://community.fastly.steamstatic.com/public/shared/css/buttons.css?v=0Ihq-pAoptBq&amp;l=english&amp;_cdn=fastly" rel="stylesheet" type="text/css">
+<link href="https://community.fastly.steamstatic.com/public/shared/css/shared_global.css?v=SfURN_DHgBxt&amp;l=english&amp;_cdn=fastly" rel="stylesheet" type="text/css">
+<link href="https://community.fastly.steamstatic.com/public/css/globalv2.css?v=mqN7ADLkgcvP&amp;l=english&amp;_cdn=fastly" rel="stylesheet" type="text/css">
+<link href="https://community.fastly.steamstatic.com/public/shared/css/motiva_sans.css?v=-yZgCk0Nu7kH&amp;l=english&amp;_cdn=fastly" rel="stylesheet" type="text/css">
+<link href="https://community.fastly.steamstatic.com/public/css/skin_1/profilev2.css?v=-fVuSwVjP_Fu&amp;l=english&amp;_cdn=fastly" rel="stylesheet" type="text/css">
+<link href="https://community.fastly.steamstatic.com/public/css/skin_1/badges.css?v=4ZWJTf6rVvlW&amp;l=english&amp;_cdn=fastly" rel="stylesheet" type="text/css">
+<link href="https://community.fastly.steamstatic.com/public/shared/css/shared_responsive.css?v=KWbVpwRCHuVv&amp;l=english&amp;_cdn=fastly" rel="stylesheet" type="text/css">
+<link href="https://community.fastly.steamstatic.com/public/css/skin_1/header.css?v=EM4kCu67DNda&amp;l=english&amp;_cdn=fastly" rel="stylesheet" type="text/css">
+<script type="text/javascript">
+	var __PrototypePreserve=[];
+	__PrototypePreserve[0] = Array.from;
+	__PrototypePreserve[1] = Array.prototype.filter;
+	__PrototypePreserve[2] = Array.prototype.flatMap;
+	__PrototypePreserve[3] = Array.prototype.find;
+	__PrototypePreserve[4] = Array.prototype.some;
+	__PrototypePreserve[5] = Function.prototype.bind;
+	__PrototypePreserve[6] = HTMLElement.prototype.scrollTo;
+</script>
+<script type="text/javascript" src="https://community.fastly.steamstatic.com/public/javascript/prototype-1.7.js?v=npJElBnrEO6W&amp;l=english&amp;_cdn=fastly"></script>
+<script type="text/javascript">
+	Array.from = __PrototypePreserve[0] || Array.from;
+	Array.prototype.filter = __PrototypePreserve[1] || Array.prototype.filter;
+	Array.prototype.flatMap = __PrototypePreserve[2] || Array.prototype.flatMap;
+	Array.prototype.find = __PrototypePreserve[3] || Array.prototype.find;
+	Array.prototype.some = __PrototypePreserve[4] || Array.prototype.some;
+	Function.prototype.bind = __PrototypePreserve[5] || Function.prototype.bind;
+	HTMLElement.prototype.scrollTo = __PrototypePreserve[6] || HTMLElement.prototype.scrollTo;
+</script>
+<script type="text/javascript">
+	var __ScriptaculousPreserve=[];
+	__ScriptaculousPreserve[0] = Array.from;
+	__ScriptaculousPreserve[1] = Function.prototype.bind;
+	__ScriptaculousPreserve[2] = HTMLElement.prototype.scrollTo;
+</script>
+<script type="text/javascript" src="https://community.fastly.steamstatic.com/public/javascript/scriptaculous/_combined.js?v=pbdAKOcDIgbC&amp;l=english&amp;_cdn=fastly&amp;load=effects,controls,slider,dragdrop"></script>
+<script type="text/javascript">
+	Array.from = __ScriptaculousPreserve[0] || Array.from;
+	Function.prototype.bind = __ScriptaculousPreserve[1] || Function.prototype.bind;
+	HTMLElement.prototype.scrollTo = __ScriptaculousPreserve[2] || HTMLElement.prototype.scrollTo;
+delete String['__parseStyleElement'];  Prototype.Browser.WebKit = true;</script>
+<script type="text/javascript">VALVE_PUBLIC_PATH = "https:\/\/community.fastly.steamstatic.com\/public\/";</script><script type="text/javascript" src="https://community.fastly.steamstatic.com/public/javascript/global.js?v=TPOBsYMKNdVN&amp;l=english&amp;_cdn=fastly"></script>
+<script type="text/javascript" src="https://community.fastly.steamstatic.com/public/javascript/jquery-1.11.1.min.js?v=gQHVlrK4-jX-&amp;l=english&amp;_cdn=fastly"></script>
+<script type="text/javascript" src="https://community.fastly.steamstatic.com/public/shared/javascript/tooltip.js?v=k5leO7MVvAaV&amp;l=english&amp;_cdn=fastly"></script>
+<script type="text/javascript" src="https://community.fastly.steamstatic.com/public/shared/javascript/shared_global.js?v=74PhtZvVZD8D&amp;l=english&amp;_cdn=fastly"></script>
+<script type="text/javascript" src="https://community.fastly.steamstatic.com/public/shared/javascript/auth_refresh.js?v=w6QbwI-5-j2S&amp;l=english&amp;_cdn=fastly"></script>
+<script type="text/javascript">Object.seal && [ Object, Array, String, Number ].map( function( builtin ) { Object.seal( builtin.prototype ); } );</script><script type="text/javascript">$J = jQuery.noConflict();
+if ( typeof JSON != 'object' || !JSON.stringify || !JSON.parse ) { document.write( "<scr" + "ipt type=\"text\/javascript\" src=\"https:\/\/community.fastly.steamstatic.com\/public\/javascript\/json2.js?v=54NKNglvGTO8&amp;l=english&amp;_cdn=fastly\"><\/script>\n" ); };
+</script>
+		<script type="text/javascript">
+			document.addEventListener('DOMContentLoaded', function(event) {
+				SetupTooltips( { tooltipCSSClass: 'community_tooltip'} );
+		});
+		</script><script type="text/javascript" src="https://community.fastly.steamstatic.com/public/javascript/badges.js?v=Bu8dzOXKLIDk&amp;l=english&amp;_cdn=fastly"></script>
+<script type="text/javascript" src="https://community.fastly.steamstatic.com/public/shared/javascript/shared_responsive_adapter.js?v=htU2ZedfDXGF&amp;l=english&amp;_cdn=fastly"></script>
+
+						<meta name="twitter:card" content="summary">
+					<meta name="Description" content="escort? has unlocked 28 badges on Steam, for a total of 7,899 XP.  Steam Level: 34.">
+			
+	<meta name="twitter:site" content="@steam" />
+
+						<meta property="og:title" content="escort?'s Steam Badges">
+					<meta property="twitter:title" content="escort?'s Steam Badges">
+					<meta property="og:type" content="website">
+					<meta property="fb:app_id" content="105386699540688">
+					<meta property="og:description" content="escort? has unlocked 28 badges on Steam, for a total of 7,899 XP.  Steam Level: 34.">
+					<meta property="twitter:description" content="escort? has unlocked 28 badges on Steam, for a total of 7,899 XP.  Steam Level: 34.">
+			
+	
+			<link rel="image_src" href="https://avatars.fastly.steamstatic.com/be02fdcb71d91b2e17094f66bcb45a9460d718f3_medium.jpg">
+		<meta property="og:image" content="https://avatars.fastly.steamstatic.com/be02fdcb71d91b2e17094f66bcb45a9460d718f3_medium.jpg">
+		<meta name="twitter:image" content="https://avatars.fastly.steamstatic.com/be02fdcb71d91b2e17094f66bcb45a9460d718f3_medium.jpg" />
+				
+	
+	
+	
+	
+	</head>
+<body class="flat_page responsive_page ">
+
+
+<div class="responsive_page_frame with_header">
+						<div role="navigation" class="responsive_page_menu_ctn mainmenu" aria-label="Mobile Menu">
+				<div class="responsive_page_menu"  id="responsive_page_menu">
+										<div class="mainmenu_contents">
+						<div class="mainmenu_contents_items">
+															<!-- profile area -->
+								<div class="responsive_menu_user_container">
+
+									<div class="responsive_menu_user_area">
+										<div class="responsive_menu_user_persona ">
+											<div class="playerAvatar persona in-game">
+												<a href="https://steamcommunity.com/profiles/76561198817207279/" aria-label="View your profile">
+													<img src="https://avatars.fastly.steamstatic.com/be02fdcb71d91b2e17094f66bcb45a9460d718f3_full.jpg" alt="escort?">												</a>
+											</div>
+											<div class="playerProfile_area">
+												<div class="persona in-game"><a href="https://steamcommunity.com/profiles/76561198817207279/" aria-label="View your profile"><a href="https://steamcommunity.com/profiles/76561198817207279/" data-miniprofile="856941551">escort?</a></a></div>
+												<div class="playerProfile_area_profilebtn"><a href="https://steamcommunity.com/profiles/76561198817207279/" aria-label="View your profile">View your profile</a></div>
+											</div>
+										</div>
+
+																															<div class="responsive_menu_cartwallet_area persona">
+												<div class="responsive_menu_cartwidget" data-featuretarget="shoppingcart-count-widget-responsive"></div>																									<div class="responsive_menu_user_wallet">
+														<a href="https://store.steampowered.com/account/">
+															Wallet (1,77 руб.)														</a>
+													</div>
+																							</div>
+																			</div>
+									<div class="responsive_menu_user_bg"><img src="https://avatars.fastly.steamstatic.com/be02fdcb71d91b2e17094f66bcb45a9460d718f3.jpg" srcset="https://avatars.fastly.steamstatic.com/be02fdcb71d91b2e17094f66bcb45a9460d718f3.jpg 1x, https://avatars.fastly.steamstatic.com/be02fdcb71d91b2e17094f66bcb45a9460d718f3_medium.jpg 2x" alt="escort?"></div>
+								</div>
+
+																									<div class="menuitem notifications_item">
+										Notifications										<div class="notification_count_total_ctn no_notifications">
+											<span class="notification_envelope"></span>
+											<span class="notification_count">0</span>
+										</div>
+									</div>
+									<div class="notification_submenu" style="display: none;" data-submenuid="notifications">
+										<div  data-featuretarget="green-envelope-responsive"></div>									</div>
+																<a class="menuitem supernav" href="https://store.steampowered.com/" data-tooltip-type="selector" data-tooltip-content=".submenu_Store">
+				Store			</a>
+			<div class="submenu_Store" style="display: none;" data-submenuid="Store">
+														<a class="submenuitem" href="https://store.steampowered.com/">
+						Home											</a>
+														<a class="submenuitem" href="https://store.steampowered.com/explore/">
+						Discovery Queue											</a>
+														<a class="submenuitem" href="https://steamcommunity.com/my/wishlist/">
+						Wishlist											</a>
+														<a class="submenuitem" href="https://store.steampowered.com/points/shop/">
+						Points Shop											</a>
+														<a class="submenuitem" href="https://store.steampowered.com/news/">
+						News											</a>
+														<a class="submenuitem" href="https://store.steampowered.com/stats/">
+						Charts											</a>
+														<a class="submenuitem" href="https://store.steampowered.com/about/">
+						About											</a>
+							</div>
+										<a class="menuitem supernav" href="https://steamcommunity.com/" data-tooltip-type="selector" data-tooltip-content=".submenu_Community">
+				Community			</a>
+			<div class="submenu_Community" style="display: none;" data-submenuid="Community">
+														<a class="submenuitem" href="https://steamcommunity.com/">
+						Home											</a>
+														<a class="submenuitem" href="https://steamcommunity.com/discussions/">
+						Discussions											</a>
+														<a class="submenuitem" href="https://steamcommunity.com/workshop/">
+						Workshop											</a>
+														<a class="submenuitem" href="https://steamcommunity.com/market/">
+						Market											</a>
+														<a class="submenuitem" href="https://steamcommunity.com/?subsection=broadcasts">
+						Broadcasts											</a>
+							</div>
+										<a class="menuitem supernav supernav_active username" href="https://steamcommunity.com/my/" data-tooltip-type="selector" data-tooltip-content=".submenu_Profile">
+				You &amp; Friends			</a>
+			<div class="submenu_Profile" style="display: none;" data-submenuid="Profile">
+														<a class="submenuitem" href="https://steamcommunity.com/my/home/">
+						Activity											</a>
+														<a class="submenuitem" href="https://steamcommunity.com/my/">
+						Profile											</a>
+														<a class="submenuitem" href="https://steamcommunity.com/my/friends/">
+						Friends											</a>
+														<a class="submenuitem" href="https://steamcommunity.com/my/games/">
+						Games											</a>
+														<a class="submenuitem" href="https://steamcommunity.com/my/groups/">
+						Groups											</a>
+														<a class="submenuitem" href="https://steamcommunity.com/my/screenshots/">
+						Content											</a>
+														<a class="submenuitem" href="https://steamcommunity.com/my/badges/">
+						Badges											</a>
+														<a class="submenuitem" href="https://steamcommunity.com/my/inventory/">
+						Inventory											</a>
+														<a class="submenuitem" href="https://store.steampowered.com/yearinreview/">
+						Steam Replay											</a>
+							</div>
+										<a class="menuitem " href="https://steamcommunity.com/chat/">
+				Chat			</a>
+										<a class="menuitem " href="https://help.steampowered.com/en/">
+				Support			</a>
+			
+							<div class="minor_menu_items">
+																	<a class="menuitem" href="https://store.steampowered.com/account/">Account details</a>
+									<a class="menuitem" href="https://store.steampowered.com/account/preferences">Store preferences</a>
+																								<div class="menuitem change_language_action">
+									Change language								</div>
+																									<div class="menuitem" role="link" onclick="Logout();">Change user</div>
+																									<a class="menuitem" href="https://store.steampowered.com/mobile" target="_blank" rel="noreferrer">Get the Steam Mobile App</a>
+																									<div class="menuitem" role="link" onclick="Responsive_RequestDesktopView();">
+										View desktop website									</div>
+															</div>
+						</div>
+						<div class="mainmenu_footer_spacer  "></div>
+						<div class="mainmenu_footer">
+															<div class="mainmenu_footer_logo"><img src="https://community.fastly.steamstatic.com/public/shared/images/responsive/footerLogo_valve_new.png"></div>
+								© Valve Corporation. All rights reserved. All trademarks are property of their respective owners in the US and other countries.								<span class="mainmenu_valve_links">
+									<a href="https://store.steampowered.com/privacy_agreement/" target="_blank">Privacy Policy</a>
+									&nbsp;| &nbsp;<a href="http://www.valvesoftware.com/legal.htm" target="_blank">Legal</a>
+									&nbsp;| &nbsp;<a href="https://help.steampowered.com/faqs/view/10BB-D27A-6378-4436" target="_blank">Accessibility</a>
+									&nbsp;| &nbsp;<a href="https://store.steampowered.com/subscriber_agreement/" target="_blank">Steam Subscriber Agreement</a>
+									&nbsp;| &nbsp;<a href="https://store.steampowered.com/steam_refunds/" target="_blank">Refunds</a>
+									&nbsp;| &nbsp;<a href="https://store.steampowered.com/account/cookiepreferences/" target="_blank">Cookies</a>
+								</span>
+													</div>
+					</div>
+									</div>
+			</div>
+		
+		<div class="responsive_local_menu_tab"></div>
+
+		<div class="responsive_page_menu_ctn localmenu">
+			<div class="responsive_page_menu"  id="responsive_page_local_menu" data-panel="{&quot;onOptionsActionDescription&quot;:&quot;Filter&quot;,&quot;onOptionsButton&quot;:&quot;Responsive_ToggleLocalMenu()&quot;,&quot;onCancelButton&quot;:&quot;Responsive_ToggleLocalMenu()&quot;}">
+				<div class="localmenu_content" data-panel="{&quot;maintainY&quot;:true,&quot;bFocusRingRoot&quot;:true,&quot;flow-children&quot;:&quot;column&quot;}">
+				</div>
+			</div>
+		</div>
+
+
+
+					<div class="responsive_header">
+				<div class="responsive_header_content">
+					<div id="responsive_menu_logo">
+						<img src="https://community.fastly.steamstatic.com/public/shared/images/responsive/header_menu_hamburger.png" height="100%">
+													<div class="responsive_header_notification_badge_ctn">
+								<div class="responsive_header_notification_badge notification_count_total_ctn no_notifications">
+									<span class="notification_count">0</span>
+								</div>
+							</div>
+											</div>
+					<div class="responsive_header_logo">
+						<a href="https://store.steampowered.com/">
+															<img src="https://community.fastly.steamstatic.com/public/shared/images/responsive/header_logo.png" height="36" border="0" alt="STEAM">
+													</a>
+					</div>
+									</div>
+			</div>
+		
+		<div class="responsive_page_content_overlay">
+
+		</div>
+
+		<div class="responsive_fixonscroll_ctn nonresponsive_hidden ">
+		</div>
+	
+	<div class="responsive_page_content">
+
+		<div role="banner" id="global_header" data-panel="{&quot;flow-children&quot;:&quot;row&quot;}">
+	<div class="content">
+		<div class="logo">
+			<span id="logo_holder">
+									<a href="https://store.steampowered.com/" aria-label="Link to the Steam Homepage">
+						<img src="https://community.fastly.steamstatic.com/public/shared/images/header/logo_steam.svg?t=962016" width="176" height="44" alt="Link to the Steam Homepage">
+					</a>
+							</span>
+		</div>
+
+			<div role="navigation" class="supernav_container" aria-label="Global Menu">
+								<a class="menuitem supernav" href="https://store.steampowered.com/" data-tooltip-type="selector" data-tooltip-content=".submenu_Store">
+				STORE			</a>
+			<div class="submenu_Store" style="display: none;" data-submenuid="Store">
+														<a class="submenuitem" href="https://store.steampowered.com/">
+						Home											</a>
+														<a class="submenuitem" href="https://store.steampowered.com/explore/">
+						Discovery Queue											</a>
+														<a class="submenuitem" href="https://steamcommunity.com/my/wishlist/">
+						Wishlist											</a>
+														<a class="submenuitem" href="https://store.steampowered.com/points/shop/">
+						Points Shop											</a>
+														<a class="submenuitem" href="https://store.steampowered.com/news/">
+						News											</a>
+														<a class="submenuitem" href="https://store.steampowered.com/stats/">
+						Charts											</a>
+														<a class="submenuitem" href="https://store.steampowered.com/about/">
+						About											</a>
+							</div>
+										<a class="menuitem supernav" href="https://steamcommunity.com/" data-tooltip-type="selector" data-tooltip-content=".submenu_Community">
+				COMMUNITY			</a>
+			<div class="submenu_Community" style="display: none;" data-submenuid="Community">
+														<a class="submenuitem" href="https://steamcommunity.com/">
+						Home											</a>
+														<a class="submenuitem" href="https://steamcommunity.com/discussions/">
+						Discussions											</a>
+														<a class="submenuitem" href="https://steamcommunity.com/workshop/">
+						Workshop											</a>
+														<a class="submenuitem" href="https://steamcommunity.com/market/">
+						Market											</a>
+														<a class="submenuitem" href="https://steamcommunity.com/?subsection=broadcasts">
+						Broadcasts											</a>
+							</div>
+										<a class="menuitem supernav supernav_active username" href="https://steamcommunity.com/my/" data-tooltip-type="selector" data-tooltip-content=".submenu_Profile">
+				escort?			</a>
+			<div class="submenu_Profile" style="display: none;" data-submenuid="Profile">
+														<a class="submenuitem" href="https://steamcommunity.com/my/home/">
+						Activity											</a>
+														<a class="submenuitem" href="https://steamcommunity.com/my/">
+						Profile											</a>
+														<a class="submenuitem" href="https://steamcommunity.com/my/friends/">
+						Friends											</a>
+														<a class="submenuitem" href="https://steamcommunity.com/my/games/">
+						Games											</a>
+														<a class="submenuitem" href="https://steamcommunity.com/my/groups/">
+						Groups											</a>
+														<a class="submenuitem" href="https://steamcommunity.com/my/screenshots/">
+						Content											</a>
+														<a class="submenuitem" href="https://steamcommunity.com/my/badges/">
+						Badges											</a>
+														<a class="submenuitem" href="https://steamcommunity.com/my/inventory/">
+						Inventory											</a>
+														<a class="submenuitem" href="https://store.steampowered.com/yearinreview/">
+						Steam Replay											</a>
+							</div>
+										<a class="menuitem " href="https://steamcommunity.com/chat/">
+				Chat			</a>
+										<a class="menuitem " href="https://help.steampowered.com/en/">
+				SUPPORT			</a>
+				</div>
+	<script type="text/javascript">
+		jQuery(function($) {
+			$('#global_header .supernav').v_tooltip({'location':'bottom', 'destroyWhenDone': false, 'tooltipClass': 'supernav_content', 'offsetY':-6, 'offsetX': 1, 'horizontalSnap': 4, 'tooltipParent': '#global_header .supernav_container', 'correctForScreenSize': false});
+		});
+	</script>
+
+		<div id="global_actions">
+			<div role="navigation" id="global_action_menu" aria-label="Account Menu">
+									<a class="header_installsteam_btn header_installsteam_btn_gray" href="https://store.steampowered.com/about/">
+						<div class="header_installsteam_btn_content">
+							Install Steam						</div>
+					</a>
+				
+				
+										<!-- notification inbox area -->
+																								<div id="header_notification_area" style="position:relative">
+							<div  data-featuretarget="green-envelope"></div><script type="text/javascript">$J( EnableNotificationCountPolling );</script>			<div id="header_notification_link" class="header_notification_btn global_header_toggle_button header_notification_bell"></div>
+									</div>
+					<button class="pulldown global_action_link persona_name_text_content" id="account_pulldown" onclick="ShowMenu( this, 'account_dropdown', 'right', 'bottom', true );">
+						escort?					</button>
+					<div class="popup_block_new" id="account_dropdown" style="display: none;">
+						<div class="popup_body popup_menu">
+															<a class="popup_menu_item" href="https://steamcommunity.com/profiles/76561198817207279/">View my profile</a>
+								<a class="popup_menu_item" href="https://store.steampowered.com/account/">Account details: <span class="account_name">ale4mat</span></a>
+																						<a class="popup_menu_item" href="https://store.steampowered.com/account/preferences/">Store preferences</a>
+																	<a class="popup_menu_item" href="https://store.steampowered.com/steamaccount/addfunds/">View my wallet <span class="account_name">1,77 руб.</span></a>
+															
+															<span class="popup_menu_item" id="account_language_pulldown">Change language</span>
+								<div class="popup_block_new" id="language_dropdown" style="display: none;">
+									<div class="popup_body popup_menu">
+																																																									<a class="popup_menu_item tight" href="?l=schinese" onclick="ChangeLanguage( 'schinese' ); return false;">简体中文 (Simplified Chinese)</a>
+																																															<a class="popup_menu_item tight" href="?l=tchinese" onclick="ChangeLanguage( 'tchinese' ); return false;">繁體中文 (Traditional Chinese)</a>
+																																															<a class="popup_menu_item tight" href="?l=japanese" onclick="ChangeLanguage( 'japanese' ); return false;">日本語 (Japanese)</a>
+																																															<a class="popup_menu_item tight" href="?l=koreana" onclick="ChangeLanguage( 'koreana' ); return false;">한국어 (Korean)</a>
+																																															<a class="popup_menu_item tight" href="?l=thai" onclick="ChangeLanguage( 'thai' ); return false;">ไทย (Thai)</a>
+																																															<a class="popup_menu_item tight" href="?l=bulgarian" onclick="ChangeLanguage( 'bulgarian' ); return false;">Български (Bulgarian)</a>
+																																															<a class="popup_menu_item tight" href="?l=czech" onclick="ChangeLanguage( 'czech' ); return false;">Čeština (Czech)</a>
+																																															<a class="popup_menu_item tight" href="?l=danish" onclick="ChangeLanguage( 'danish' ); return false;">Dansk (Danish)</a>
+																																															<a class="popup_menu_item tight" href="?l=german" onclick="ChangeLanguage( 'german' ); return false;">Deutsch (German)</a>
+																																															<a class="popup_menu_item tight" href="?l=english" onclick="ChangeLanguage( 'english' ); return false;">English</a>
+																																															<a class="popup_menu_item tight" href="?l=spanish" onclick="ChangeLanguage( 'spanish' ); return false;">Español - España (Spanish - Spain)</a>
+																																															<a class="popup_menu_item tight" href="?l=latam" onclick="ChangeLanguage( 'latam' ); return false;">Español - Latinoamérica (Spanish - Latin America)</a>
+																																															<a class="popup_menu_item tight" href="?l=greek" onclick="ChangeLanguage( 'greek' ); return false;">Ελληνικά (Greek)</a>
+																																															<a class="popup_menu_item tight" href="?l=french" onclick="ChangeLanguage( 'french' ); return false;">Français (French)</a>
+																																															<a class="popup_menu_item tight" href="?l=italian" onclick="ChangeLanguage( 'italian' ); return false;">Italiano (Italian)</a>
+																																															<a class="popup_menu_item tight" href="?l=indonesian" onclick="ChangeLanguage( 'indonesian' ); return false;">Bahasa Indonesia (Indonesian)</a>
+																																															<a class="popup_menu_item tight" href="?l=hungarian" onclick="ChangeLanguage( 'hungarian' ); return false;">Magyar (Hungarian)</a>
+																																															<a class="popup_menu_item tight" href="?l=dutch" onclick="ChangeLanguage( 'dutch' ); return false;">Nederlands (Dutch)</a>
+																																															<a class="popup_menu_item tight" href="?l=norwegian" onclick="ChangeLanguage( 'norwegian' ); return false;">Norsk (Norwegian)</a>
+																																															<a class="popup_menu_item tight" href="?l=polish" onclick="ChangeLanguage( 'polish' ); return false;">Polski (Polish)</a>
+																																															<a class="popup_menu_item tight" href="?l=portuguese" onclick="ChangeLanguage( 'portuguese' ); return false;">Português (Portuguese - Portugal)</a>
+																																															<a class="popup_menu_item tight" href="?l=brazilian" onclick="ChangeLanguage( 'brazilian' ); return false;">Português - Brasil (Portuguese - Brazil)</a>
+																																															<a class="popup_menu_item tight" href="?l=romanian" onclick="ChangeLanguage( 'romanian' ); return false;">Română (Romanian)</a>
+																																															<a class="popup_menu_item tight" href="?l=russian" onclick="ChangeLanguage( 'russian' ); return false;">Русский (Russian)</a>
+																																															<a class="popup_menu_item tight" href="?l=finnish" onclick="ChangeLanguage( 'finnish' ); return false;">Suomi (Finnish)</a>
+																																															<a class="popup_menu_item tight" href="?l=swedish" onclick="ChangeLanguage( 'swedish' ); return false;">Svenska (Swedish)</a>
+																																															<a class="popup_menu_item tight" href="?l=turkish" onclick="ChangeLanguage( 'turkish' ); return false;">Türkçe (Turkish)</a>
+																																															<a class="popup_menu_item tight" href="?l=vietnamese" onclick="ChangeLanguage( 'vietnamese' ); return false;">Tiếng Việt (Vietnamese)</a>
+																																															<a class="popup_menu_item tight" href="?l=ukrainian" onclick="ChangeLanguage( 'ukrainian' ); return false;">Українська (Ukrainian)</a>
+																															<a class="popup_menu_item tight" href="https://www.valvesoftware.com/en/contact?contact-person=Translation%20Team%20Feedback" target="_blank">
+											Report a translation problem										</a>
+									</div>
+								</div>
+							
+															<a class="popup_menu_item" href="javascript:Logout();">Sign out of account...</a>
+													</div>
+					</div>
+					<script type="text/javascript">
+						RegisterFlyout( 'account_language_pulldown', 'language_dropdown', 'leftsubmenu', 'bottomsubmenu', true );
+					</script>
+											<div id="header_wallet_ctn">
+							<a class="global_action_link" id="header_wallet_balance" href="https://store.steampowered.com/account/store_transactions/">1,77 руб.</a>
+						</div>
+												</div>
+							<a href="https://steamcommunity.com/profiles/76561198817207279/" class="user_avatar playerAvatar in-game" aria-label="View your profile">
+					<img src="https://avatars.fastly.steamstatic.com/be02fdcb71d91b2e17094f66bcb45a9460d718f3.jpg" alt="escort?">
+				</a>
+					</div>
+			</div>
+</div>
+<script type="text/javascript">
+	g_sessionID = "1a9d8b89cd0a16c43856a149";
+	g_steamID = "76561198817207279";
+	g_strLanguage = "english";
+	g_SNR = '2_100300_badges_';
+	g_bAllowAppImpressions = true;
+		g_ContentDescriptorPreferences = [1,3,4];
+
+	
+
+	// We always want to have the timezone cookie set for PHP to use
+	setTimezoneCookies();
+
+	$J( function() {
+
+					InitMiniprofileHovers(( 'https%3A%2F%2Fsteamcommunity.com' ));
+			InitEmoticonHovers();
+		
+		ApplyAdultContentPreferences();
+	});
+
+	$J( function() { InitEconomyHovers( "https:\/\/community.fastly.steamstatic.com\/public\/css\/skin_1\/economy.css?v=mX4dfZi4N4aw&l=english&_cdn=fastly", "https:\/\/community.fastly.steamstatic.com\/public\/javascript\/economy_common.js?v=3TZBCEPvtfTo&l=english&_cdn=fastly", "https:\/\/community.fastly.steamstatic.com\/public\/javascript\/economy.js?v=83C2-R6CfQZh&l=english&_cdn=fastly" );});</script>
+<script>window.g_wapit="eyAidHlwIjogIkpXVCIsICJhbGciOiAiRWREU0EiIH0.eyAiaXNzIjogInI6MDAwMl8yN0Y1RUM0M184QjJDMyIsICJzdWIiOiAiNzY1NjExOTg4MTcyMDcyNzkiLCAiYXVkIjogWyAiY2xpZW50IiwgIndlYiIgXSwgImV4cCI6IDE3NzUzMzIxODQsICJuYmYiOiAxNzY2NjA0MDU1LCAiaWF0IjogMTc3NTI0NDA1NSwgImp0aSI6ICIwMDAyXzI3RjVFQzUxXzFGNjdGIiwgIm9hdCI6IDE3NzUxODIyMTMsICJydF9leHAiOiAxNzkzMzYxNzExLCAicGVyIjogMCwgImlwX3N1YmplY3QiOiAiNS4xNDAuMjEzLjE5NiIsICJpcF9jb25maXJtZXIiOiAiNS4xNDAuMjEzLjE5NiIgfQ.AXfX_vy9DnmIRR4YahXT7x6_Xflp99JQv6y7vsVA_DOpc7rnhXAdgkrjtsW6XZAmSW36CYuGGZ5VNwCllSsSDQ";</script><div id="application_config" style="display: none;"  data-config="{&quot;EUNIVERSE&quot;:1,&quot;WEB_UNIVERSE&quot;:&quot;public&quot;,&quot;LANGUAGE&quot;:&quot;english&quot;,&quot;COUNTRY&quot;:&quot;RU&quot;,&quot;MEDIA_CDN_COMMUNITY_URL&quot;:&quot;https:\/\/cdn.fastly.steamstatic.com\/steamcommunity\/public\/&quot;,&quot;MEDIA_CDN_URL&quot;:&quot;https:\/\/cdn.fastly.steamstatic.com\/&quot;,&quot;VIDEO_CDN_URL&quot;:&quot;https:\/\/video.fastly.steamstatic.com\/&quot;,&quot;COMMUNITY_CDN_URL&quot;:&quot;https:\/\/community.fastly.steamstatic.com\/&quot;,&quot;COMMUNITY_CDN_ASSET_URL&quot;:&quot;https:\/\/cdn.fastly.steamstatic.com\/steamcommunity\/public\/assets\/&quot;,&quot;STORE_CDN_URL&quot;:&quot;https:\/\/store.fastly.steamstatic.com\/&quot;,&quot;PUBLIC_SHARED_URL&quot;:&quot;https:\/\/community.fastly.steamstatic.com\/public\/shared\/&quot;,&quot;COMMUNITY_BASE_URL&quot;:&quot;https:\/\/steamcommunity.com\/&quot;,&quot;CHAT_BASE_URL&quot;:&quot;https:\/\/steamcommunity.com\/&quot;,&quot;STORE_BASE_URL&quot;:&quot;https:\/\/store.steampowered.com\/&quot;,&quot;STORE_CHECKOUT_BASE_URL&quot;:&quot;https:\/\/checkout.steampowered.com\/&quot;,&quot;IMG_URL&quot;:&quot;https:\/\/community.fastly.steamstatic.com\/public\/images\/&quot;,&quot;STEAMTV_BASE_URL&quot;:&quot;https:\/\/steam.tv\/&quot;,&quot;HELP_BASE_URL&quot;:&quot;https:\/\/help.steampowered.com\/&quot;,&quot;PARTNER_BASE_URL&quot;:&quot;https:\/\/partner.steamgames.com\/&quot;,&quot;STATS_BASE_URL&quot;:&quot;https:\/\/partner.steampowered.com\/&quot;,&quot;INTERNAL_STATS_BASE_URL&quot;:&quot;https:\/\/steamstats.valve.org\/&quot;,&quot;IN_CLIENT&quot;:false,&quot;USE_POPUPS&quot;:false,&quot;STORE_ICON_BASE_URL&quot;:&quot;https:\/\/shared.fastly.steamstatic.com\/store_item_assets\/steam\/apps\/&quot;,&quot;STORE_ITEM_BASE_URL&quot;:&quot;https:\/\/shared.fastly.steamstatic.com\/store_item_assets\/&quot;,&quot;WEBAPI_BASE_URL&quot;:&quot;https:\/\/api.steampowered.com\/&quot;,&quot;TOKEN_URL&quot;:&quot;https:\/\/steamcommunity.com\/chat\/clientjstoken&quot;,&quot;BUILD_TIMESTAMP&quot;:1775187489,&quot;PAGE_TIMESTAMP&quot;:1775244092,&quot;IN_TENFOOT&quot;:false,&quot;IN_GAMEPADUI&quot;:false,&quot;IN_CHROMEOS&quot;:false,&quot;IN_MOBILE_WEBVIEW&quot;:false,&quot;PLATFORM&quot;:&quot;windows&quot;,&quot;BASE_URL_STORE_CDN_ASSETS&quot;:&quot;https:\/\/cdn.fastly.steamstatic.com\/store\/&quot;,&quot;EREALM&quot;:1,&quot;LOGIN_BASE_URL&quot;:&quot;https:\/\/login.steampowered.com\/&quot;,&quot;AVATAR_BASE_URL&quot;:&quot;https:\/\/avatars.fastly.steamstatic.com\/&quot;,&quot;FROM_WEB&quot;:true,&quot;WEBSITE_ID&quot;:&quot;Community&quot;,&quot;BASE_URL_SHARED_CDN&quot;:&quot;https:\/\/shared.fastly.steamstatic.com\/&quot;,&quot;CLAN_CDN_ASSET_URL&quot;:&quot;https:\/\/clan.fastly.steamstatic.com\/&quot;,&quot;COMMUNITY_ASSETS_BASE_URL&quot;:&quot;https:\/\/shared.fastly.steamstatic.com\/community_assets\/&quot;,&quot;NOW&quot;:1775244092,&quot;SUPPORT_BASE_URL&quot;:&quot;https:\/\/steamsupport.valvesoftware.com\/&quot;,&quot;SNR&quot;:&quot;2_100300_badges_&quot;}" data-userinfo="{&quot;logged_in&quot;:true,&quot;country_code&quot;:&quot;RU&quot;,&quot;excluded_content_descriptors&quot;:[1,3,4],&quot;steamid&quot;:&quot;76561198817207279&quot;,&quot;accountid&quot;:856941551,&quot;account_name&quot;:&quot;ale4mat&quot;,&quot;is_support&quot;:false,&quot;is_limited&quot;:false,&quot;is_partner_member&quot;:false,&quot;is_valve_email&quot;:false}" data-community="[]" data-loyaltystore="{&quot;webapi_token&quot;:&quot;eyAidHlwIjogIkpXVCIsICJhbGciOiAiRWREU0EiIH0.eyAiaXNzIjogInI6MDAwMl8yN0Y1RUM0M184QjJDMyIsICJzdWIiOiAiNzY1NjExOTg4MTcyMDcyNzkiLCAiYXVkIjogWyAiY2xpZW50IiwgIndlYiIgXSwgImV4cCI6IDE3NzUzMzIxODQsICJuYmYiOiAxNzY2NjA0MDU1LCAiaWF0IjogMTc3NTI0NDA1NSwgImp0aSI6ICIwMDAyXzI3RjVFQzUxXzFGNjdGIiwgIm9hdCI6IDE3NzUxODIyMTMsICJydF9leHAiOiAxNzkzMzYxNzExLCAicGVyIjogMCwgImlwX3N1YmplY3QiOiAiNS4xNDAuMjEzLjE5NiIsICJpcF9jb25maXJtZXIiOiAiNS4xNDAuMjEzLjE5NiIgfQ.AXfX_vy9DnmIRR4YahXT7x6_Xflp99JQv6y7vsVA_DOpc7rnhXAdgkrjtsW6XZAmSW36CYuGGZ5VNwCllSsSDQ&quot;}" data-loyalty_webapi_token="&quot;eyAidHlwIjogIkpXVCIsICJhbGciOiAiRWREU0EiIH0.eyAiaXNzIjogInI6MDAwMl8yN0Y1RUM0M184QjJDMyIsICJzdWIiOiAiNzY1NjExOTg4MTcyMDcyNzkiLCAiYXVkIjogWyAiY2xpZW50IiwgIndlYiIgXSwgImV4cCI6IDE3NzUzMzIxODQsICJuYmYiOiAxNzY2NjA0MDU1LCAiaWF0IjogMTc3NTI0NDA1NSwgImp0aSI6ICIwMDAyXzI3RjVFQzUxXzFGNjdGIiwgIm9hdCI6IDE3NzUxODIyMTMsICJydF9leHAiOiAxNzkzMzYxNzExLCAicGVyIjogMCwgImlwX3N1YmplY3QiOiAiNS4xNDAuMjEzLjE5NiIsICJpcF9jb25maXJtZXIiOiAiNS4xNDAuMjEzLjE5NiIgfQ.AXfX_vy9DnmIRR4YahXT7x6_Xflp99JQv6y7vsVA_DOpc7rnhXAdgkrjtsW6XZAmSW36CYuGGZ5VNwCllSsSDQ&quot;" data-steam_notifications="{&quot;pending_gift_count&quot;:0,&quot;pending_friend_count&quot;:0,&quot;unread_count&quot;:0,&quot;pending_family_invite_count&quot;:0,&quot;success&quot;:1,&quot;rwgrsn&quot;:-2}"></div><link href="https://community.fastly.steamstatic.com/public/css/applications/community/main.css?v=GAn5Gvwlt1sf&amp;l=english&amp;_cdn=fastly" rel="stylesheet" type="text/css">
+<script type="text/javascript" src="https://community.fastly.steamstatic.com/public/javascript/applications/community/manifest.js?v=JuDhC3ZN4S7F&amp;l=english&amp;_cdn=fastly"></script>
+<script type="text/javascript" src="https://community.fastly.steamstatic.com/public/javascript/applications/community/libraries~b28b7af69.js?v=ACrz35K8_17f&amp;l=english&amp;_cdn=fastly"></script>
+<script type="text/javascript" src="https://community.fastly.steamstatic.com/public/javascript/applications/community/main.js?v=QaCVOoI1NNT_&amp;l=english&amp;_cdn=fastly"></script>
+	<div id="application_root"></div>
+
+		<div role="main" class="responsive_page_template_content" id="responsive_page_template_content" data-panel="{&quot;autoFocus&quot;:true,&quot;navKey&quot;:&quot;responsive_page_template_content&quot;}" >
+
+			<script type="text/javascript">
+	var g_strProfileURL = 'https://steamcommunity.com/profiles/76561198817207279';
+</script>
+<div class="pagecontent">
+	<div class="profile_small_header_bg">
+	<div class="profile_small_header_texture" data-panel="{&quot;flow-children&quot;:&quot;row&quot;}">
+		<a href="https://steamcommunity.com/profiles/76561198817207279">
+			<div class="profile_small_header_avatar">
+				<div class="playerAvatar medium in-game">
+																		<picture>
+				<source media="(prefers-reduced-motion: reduce)" srcset="https://avatars.fastly.steamstatic.com/be02fdcb71d91b2e17094f66bcb45a9460d718f3_medium.jpg"></source>
+				<img srcset="https://avatars.fastly.steamstatic.com/be02fdcb71d91b2e17094f66bcb45a9460d718f3_medium.jpg" >
+			</picture>
+						</div>
+			</div>
+		</a>
+		<div class="profile_small_header_text">
+			<span class="profile_small_header_name">
+				<a class="whiteLink persona_name_text_content" href="https://steamcommunity.com/profiles/76561198817207279">
+					escort?				</a>
+			</span>
+							<span class="profile_small_header_arrow">&raquo;</span>
+				<a class="whiteLink"  href="https://steamcommunity.com/profiles/76561198817207279/badges/"><span class="profile_small_header_location">Badges</span></a>
+			
+					</div>
+			</div>
+</div>
+	<div class="maincontent">
+
+					<div class="profile_xp_block">
+				<div class="profile_xp_block_left">
+					<span class="profile_xp_block_level">Level <span class="friendPlayerLevel lvl_30"><span class="friendPlayerLevelNum">34</span></span></span>
+					<span class="profile_xp_block_xp">XP 7,899</span>
+				</div>
+									<div class="profile_xp_block_right">How do I earn badges and increase my Steam Level?  <a class="whiteLink" href="https://steamcommunity.com/tradingcards/faq" target="_blank" rel="">Read the FAQ</a></div>
+								<div class="profile_xp_block_mid">
+					<div class="profile_xp_block_remaining">101 XP to reach Level 35</div>
+					<div class="profile_xp_block_remaining_bar">
+						<div class="profile_xp_block_remaining_bar_progress" style="width: 75%"></div>
+					</div>
+				</div>
+				<div style="clear: both"></div>
+			</div>
+		
+					<div class="badge_details_set_favorite">
+				<div data-panel="{&quot;focusable&quot;:true,&quot;clickOnActivate&quot;:true}" role="button" class="btn_grey_black btn_small_thin" onclick="ShowBoosterEligibility();">
+					<span>View my booster pack eligibility</span>
+				</div>
+									<a class="btn_grey_black btn_small_thin" href="https://steamcommunity.com/tradingcards/boostercreator/">
+						<span>Booster Pack Creator</span>
+					</a>
+							</div>
+		
+		<div class="profile_badges_header">
+			<div class="profile_badges_sortoptions">
+				<span>Sort by</span>
+									<a class="badge_sort_option whiteLink active" href="https://steamcommunity.com/profiles/76561198817207279/badges/?sort=p">
+						In Progress					</a>
+									<a class="badge_sort_option whiteLink " href="https://steamcommunity.com/profiles/76561198817207279/badges/?sort=c">
+						Completed					</a>
+									<a class="badge_sort_option whiteLink " href="https://steamcommunity.com/profiles/76561198817207279/badges/?sort=a">
+						A - Z					</a>
+									<a class="badge_sort_option whiteLink " href="https://steamcommunity.com/profiles/76561198817207279/badges/?sort=r">
+						Rarity					</a>
+							</div>
+			<div class="profile_badges_header_title">
+				Badges			</div>
+		</div>
+
+		
+		<div class="badges_sheet">
+							<div id="image_group_scroll_badge_images_gamebadge_3558940_1_0"></div><script type="text/javascript">$J( function() { LoadImageGroupOnScroll( 'image_group_scroll_badge_images_gamebadge_3558940_1_0', 'badge_images_gamebadge_3558940_1_0' ); } );</script>				<div data-panel="{&quot;clickOnActivate&quot;:&quot;firstChild&quot;}" role="button" class="badge_row is_link">
+					<a class="badge_row_overlay" href="https://steamcommunity.com/profiles/76561198817207279/gamecards/3558940/"></a>
+					<div class="badge_row_inner">
+						<div class="badge_title_row">
+															<div class="badge_title_stats">
+																		<div class="badge_title_stats_content">
+										<div class="badge_title_stats_playtime">
+											&nbsp;
+																					</div>
+										<div class="badge_title_stats_drops">
+																																				<span class="progress_info_bold">No card drops remaining</span>
+													<span class="how_to_get_card_drops_ctn">
+														&nbsp;<a class="whiteLink how_to_get_card_drops" href="javascript:ShowCardDropInfo( &quot;Winter Sale 2025&quot;, 'card_drop_info_gamebadge_3558940_1_0' );">How do I earn card drops?</a>
+													</span>
+													
+<div class="card_drop_info_dialog salespend_card_drop_info" id="card_drop_info_gamebadge_3558940_1_0" style="display: none;">
+	<div class="card_drop_info_header">Cards earned: 0</div>
+	<div class="card_drop_info_body">
+		<div>Cards earned through purchases: 0</div>
+
+		
+		
+			</div>
+
+	<div class="card_drop_info_subarea">
+		<div class="card_drop_info_breakafter">How can I earn more cards?</div>
+
+		<div class="card_drop_info_breakafter">Steam Sale trading cards are awarded for purchases made on the Steam Store during the sale.</div>
+		<div class="card_drop_info_breakafter card_drop_info_totalspending">
+							You have not purchased anything on the store since the sale began.					</div>
+		<div class="card_drop_info_progress">
+			<div>Progress to next card drop</div>
+			<div class="card_drop_info_progress_bar_ctn">
+				<div class="card_drop_info_progress_bar" style="width: 0%;"></div>
+			</div>
+			<div>
+				<div style="float: right;">
+					(approximately $0.00 USD per card drop)				</div>
+				<div style="clear: right;"></div>
+			</div>
+		</div>
+		<div class="card_drop_info_breakafter"></div>
+	</div>
+	<!-- TODO: after sale launch? -->
+	<div class="card_drop_info_header salespend_card_drop_info_moreinfo">
+		Earn even more Steam Sale trading cards by crafting game badges.	</div>
+</div>
+																																	</div>
+									</div>
+								</div>
+								<div class="badge_title">
+									Winter Sale 2025																		&nbsp;<span class="badge_view_details">View details</span>
+								</div>
+													</div>
+						<div class="badge_title_rule"></div>
+						<div class="badge_content">
+															<div class="badge_progress_info">
+																			0 of 10 cards collected																	</div>
+							
+							<div class="badge_current">
+																	<div class="badge_empty">
+										<div class="badge_empty_circle"></div>
+										<div class="badge_empty_right">
+											<div class="badge_empty_name">Winter Sale 2025 - Level 1</div>
+											<div class="badge_empty_name">100 XP</div>
+											<div style="clear: both"></div>
+										</div>
+									</div>
+																							</div>
+
+																								<div class="badge_progress_tasks badge_cards">
+																																									<div class="badge_progress_card_ctn">
+												<div class="badge_progress_card unowned"><img src="https://community.fastly.steamstatic.com/public/shared/images/trans.gif" data-delayed-image-group="badge_images_gamebadge_3558940_1_0" data-delayed-image="https://community.fastly.steamstatic.com/economy/image/IzMF03bk9WpSBq-S-ekoE33L-iLqGFHVaU25ZzQNQcXdA3g5gMEPvUZZEfSMJ6dESN8p_2SVTY7V2NoKwXsFnD4QPivs0XEwSORvMMLIxU7asvGIEXb7bSWCJizYG1s1H-JZYWmKqGKst76UQTyYQ-95Sw1RdaAGpmIcOsuIORc1gIII_Ge7wQp3DhFucMpUdAqp9X0eMLoglXVKcZJannH0IcXQ1lkza0djXr2zUrvKb4j0lSZ1CRliS_ZIMNrA6yTyuMmmfLGLL1VQltKi/98x115"></div>
+											</div>
+																					<div class="badge_progress_card_ctn">
+												<div class="badge_progress_card unowned"><img src="https://community.fastly.steamstatic.com/public/shared/images/trans.gif" data-delayed-image-group="badge_images_gamebadge_3558940_1_0" data-delayed-image="https://community.fastly.steamstatic.com/economy/image/IzMF03bk9WpSBq-S-ekoE33L-iLqGFHVaU25ZzQNQcXdA3g5gMEPvUZZEfSMJ6dESN8p_2SVTY7V2NoKwXsFnD4QPivs0XEwRPZ_PcbEzBywg_eJGG2xYTrFKCSETQw_G7NbNDzd-DKt576TFzHOQ-14Ql0FLKUEp2NLbsvYOhY41dRYqCuyh0M7HBk6dsBUTwa2y3MWbOl9nHhKcs5WnnX5dZKIhl5rbEM-Xr_vVrWTaoj0xCwhCUw1S_FPN4qL-Hu77tH8aN5qhsUD/98x115"></div>
+											</div>
+																					<div class="badge_progress_card_ctn">
+												<div class="badge_progress_card unowned"><img src="https://community.fastly.steamstatic.com/public/shared/images/trans.gif" data-delayed-image-group="badge_images_gamebadge_3558940_1_0" data-delayed-image="https://community.fastly.steamstatic.com/economy/image/IzMF03bk9WpSBq-S-ekoE33L-iLqGFHVaU25ZzQNQcXdA3g5gMEPvUZZEfSMJ6dESN8p_2SVTY7V2NoKwXsFnD4QPivs0XEwR-BkPcbJ1A2wg-2ZWn36aTDBcnGNRQ0xSuYIMmCIrGXz4eyRFDuYRe4lQAoGeaAC8WdJPcCOaRA8gtYVoXW_0UZyDBItYPpPfQ68zylHael8kHYXcZwDkHf2d5fYjFtnPEJtUrjuB7nLPtWmlXtyD042SvMbesvL7zOq9ZXLKGHzXg/98x115"></div>
+											</div>
+																					<div class="badge_progress_card_ctn">
+												<div class="badge_progress_card unowned"><img src="https://community.fastly.steamstatic.com/public/shared/images/trans.gif" data-delayed-image-group="badge_images_gamebadge_3558940_1_0" data-delayed-image="https://community.fastly.steamstatic.com/economy/image/IzMF03bk9WpSBq-S-ekoE33L-iLqGFHVaU25ZzQNQcXdA3g5gMEPvUZZEfSMJ6dESN8p_2SVTY7V2NoKwXsFnD4QPivs0XEwU-B_K87Khgz2oOWIQXehPmPBeHKJGg45S-EMZzzb9jqk7L7GQzvJF7klQQwEefdQ8zZNac6XZVJqwtVUuWG9hXt0Excvd5gSKFvikiMWZeokkSJEJJhTkCD1cpDejV9rOUNjC-zkU-iUPdX0xXwlQ1o5SLZcaYmF95Z-tw/98x115"></div>
+											</div>
+																					<div class="badge_progress_card_ctn">
+												<div class="badge_progress_card unowned"><img src="https://community.fastly.steamstatic.com/public/shared/images/trans.gif" data-delayed-image-group="badge_images_gamebadge_3558940_1_0" data-delayed-image="https://community.fastly.steamstatic.com/economy/image/IzMF03bk9WpSBq-S-ekoE33L-iLqGFHVaU25ZzQNQcXdA3g5gMEPvUZZEfSMJ6dESN8p_2SVTY7V2NoKwXsFnD4QPivs0XEwVvVpO8LHzE7fpO6ECnHlcXHNIiDeGQNuS-ILMWrcqmDxtOSdRzCdErl_SgtWK6VV-2xNP8GKOhQ60NMI_TLu2U5tGVAqfddCdR2Ew3kSNrh4nHlGfJNVzCD3d52Kgw5haU9uX-zjUbTCZtCgmX5wXh8zSfJONd7GuTuspsDnLPqE95EqIg8/98x115"></div>
+											</div>
+																			</div>
+															
+							<div style="clear: both;"></div>
+						</div>
+					</div>
+				</div>
+							<div id="image_group_scroll_badge_images_gamebadge_304930_1_0"></div><script type="text/javascript">$J( function() { LoadImageGroupOnScroll( 'image_group_scroll_badge_images_gamebadge_304930_1_0', 'badge_images_gamebadge_304930_1_0' ); } );</script>				<div data-panel="{&quot;clickOnActivate&quot;:&quot;firstChild&quot;}" role="button" class="badge_row is_link">
+					<a class="badge_row_overlay" href="https://steamcommunity.com/profiles/76561198817207279/gamecards/304930/"></a>
+					<div class="badge_row_inner">
+						<div class="badge_title_row">
+															<div class="badge_title_stats">
+																		<div class="badge_title_stats_content">
+										<div class="badge_title_stats_playtime">
+											&nbsp;
+																							105 hrs on record																					</div>
+										<div class="badge_title_stats_drops">
+																																				<span class="progress_info_bold">No card drops remaining</span>
+													<span class="how_to_get_card_drops_ctn">
+														&nbsp;<a class="whiteLink how_to_get_card_drops" href="javascript:ShowCardDropInfo( &quot;Unturned&quot;, 'card_drop_info_gamebadge_304930_1_0' );">How do I earn card drops?</a>
+													</span>
+													<div class="card_drop_info_dialog" id="card_drop_info_gamebadge_304930_1_0" style="display: none;">
+	<div class="card_drop_info_header">Card drops earned: 0</div>
+	<div class="card_drop_info_body">
+									</div>
+
+	<div class="card_drop_info_header">
+		Card drops received: 0	</div>
+	<div class="card_drop_info_body">
+		You don't have any more drops remaining for Unturned.	</div>
+	<div class="card_drop_info_subarea">
+		<div class="card_drop_info_breakafter">How can I earn more drops?</div>
+
+					<div class="card_drop_info_breakafter">
+				Card drops in free to play games are rewards for spending money in game.			</div>
+			<div class="card_drop_info_breakafter">
+									You have not purchased anything in game after this card set was released.							</div>
+			<div class="card_drop_info_progress">
+				<div>Progress to next card drop</div>
+				<div class="card_drop_info_progress_bar_ctn">
+					<div class="card_drop_info_progress_bar" style="width: 0%;"></div>
+				</div>
+				<div>
+					<div style="float: right;">
+						(approximately $9.00 USD per card drop)					</div>
+					<div style="clear: right;"></div>
+				</div>
+			</div>
+			<div class="card_drop_info_breakafter"></div>
+				<div class="card_drop_info_header disabled">
+			You are not currently eligible for a booster pack		</div>
+		<div class="">
+			Once you have received all of your card drops, you become eligible for a booster pack containing 3 additional cards.  Booster packs are granted randomly to eligible users as more badges are crafted by members of the community.  Make sure you log in to Steam each week to maintain eligibility.		</div>
+	</div>
+</div>																																	</div>
+									</div>
+								</div>
+								<div class="badge_title">
+									Unturned																		&nbsp;<span class="badge_view_details">View details</span>
+								</div>
+													</div>
+						<div class="badge_title_rule"></div>
+						<div class="badge_content">
+															<div class="badge_progress_info">
+																			0 of 13 cards collected for next level																	</div>
+							
+							<div class="badge_current">
+																	<div class="badge_info">
+										<div class="badge_info_image">
+											<img src="https://community.fastly.steamstatic.com/public/shared/images/trans.gif" data-delayed-image-group="badge_images_gamebadge_304930_1_0" data-delayed-image="https://cdn.fastly.steamstatic.com/steamcommunity/public/images/items/304930/19ea2616f8002ff6569c2aa1377a081763d6a75b.png" class="badge_icon">
+										</div>
+										<div class="badge_info_description">
+											<div class="badge_info_title">Under the weather!</div>
+											<div>
+																									Level 2,
+																								200 XP											</div>
+											<div class="badge_info_unlocked">
+												Unlocked 3 Jul, 2018 @ 12:24am											</div>
+										</div>
+									</div>
+																							</div>
+
+																								<div class="badge_progress_tasks badge_cards">
+																																									<div class="badge_progress_card_ctn">
+												<div class="badge_progress_card unowned"><img src="https://community.fastly.steamstatic.com/public/shared/images/trans.gif" data-delayed-image-group="badge_images_gamebadge_304930_1_0" data-delayed-image="https://community.fastly.steamstatic.com/economy/image/IzMF03bk9WpSBq-S-ekoE33L-iLqGFHVaU25ZzQNQcXdA3g5gMEPvUZZEfSMJ6dESN8p_2SVTY7V2NoPwHoPmChCIzb02ClLZPdhPdmN-gr2o-uIWn36aTDBcnaJSA0wTLZdMj6I9mCks7-WQT_LFbp5R19QK6sD821OOcHaaxpv0dYVu2u_0UZyDBItYPpPfQ68zylKY-gmmHkUdJJamHX5Jp3Q0Axqb0ZiW-zlAruQa4nxwy0hCBxjTfROesvL7zOq9ZX_eSoBow/98x115"></div>
+											</div>
+																					<div class="badge_progress_card_ctn">
+												<div class="badge_progress_card unowned"><img src="https://community.fastly.steamstatic.com/public/shared/images/trans.gif" data-delayed-image-group="badge_images_gamebadge_304930_1_0" data-delayed-image="https://community.fastly.steamstatic.com/economy/image/IzMF03bk9WpSBq-S-ekoE33L-iLqGFHVaU25ZzQNQcXdA3g5gMEPvUZZEfSMJ6dESN8p_2SVTY7V2NoPwHoPmChCIzb02ClOaut_LNnTwxHyruzGJnv6aj7BaSjUHVltQLYLMj7ZqmKgtO-dEz3OE-p4RQpXdaoF8zcaNMHdPkNs14EK-zPvwBwzDhgvNMdJYgu-2EsaPLwizXxLd54BmSymJ53RhA5raE9jD-vvUbzKbtWnxCh2WRIzTKIfMY2R6nG45tevPeHAIPoQ5R8qiw/98x115"></div>
+											</div>
+																					<div class="badge_progress_card_ctn">
+												<div class="badge_progress_card unowned"><img src="https://community.fastly.steamstatic.com/public/shared/images/trans.gif" data-delayed-image-group="badge_images_gamebadge_304930_1_0" data-delayed-image="https://community.fastly.steamstatic.com/economy/image/IzMF03bk9WpSBq-S-ekoE33L-iLqGFHVaU25ZzQNQcXdA3g5gMEPvUZZEfSMJ6dESN8p_2SVTY7V2NoPwHoPmChCIzb02ClObeBqc_HJzQfypKSEEXXwbWrBLXjdSVpsTuFWYWCM-zb0sb7BSjCdF-0rFwlXfvFWpzBOOs_dPhM1ysdVrCO6mFZ5GwQXe8hHdwrmkyZGMu19znBLfZoDkCT5L8GKjVhiYEc-WOzgBLjKO9KnlXoiWUgzS75aOtyD_iju4PlioyA/98x115"></div>
+											</div>
+																					<div class="badge_progress_card_ctn">
+												<div class="badge_progress_card unowned"><img src="https://community.fastly.steamstatic.com/public/shared/images/trans.gif" data-delayed-image-group="badge_images_gamebadge_304930_1_0" data-delayed-image="https://community.fastly.steamstatic.com/economy/image/IzMF03bk9WpSBq-S-ekoE33L-iLqGFHVaU25ZzQNQcXdA3g5gMEPvUZZEfSMJ6dESN8p_2SVTY7V2NoPwHoPmChCIzb02ClLbPdpPsLByBH-s6m3E3n1YTKCJizYG1s1GLZaPW-L-DOmtuSQRjnJSOAvSgsGeqMN8TUdOs-PbEM83YJa_WS8zwptEBFucMpUdAqp9X0eMLoglXhAcMhSkXLxL5zY1FZiYU8_CbDgVrTDO4Pxl30gVU40HaVPYo_H7HHyuMmmfLGLL91qE6LV/98x115"></div>
+											</div>
+																					<div class="badge_progress_card_ctn">
+												<div class="badge_progress_card unowned"><img src="https://community.fastly.steamstatic.com/public/shared/images/trans.gif" data-delayed-image-group="badge_images_gamebadge_304930_1_0" data-delayed-image="https://community.fastly.steamstatic.com/economy/image/IzMF03bk9WpSBq-S-ekoE33L-iLqGFHVaU25ZzQNQcXdA3g5gMEPvUZZEfSMJ6dESN8p_2SVTY7V2NoPwHoPmChCIzb02CldaullO86N-gr2o-uIWn36aTDBciKITgg5RbcLYz3crWCk7LvGRD_JFbkvRgkCeaIE-jJIa86ON0A53dUVu2u_0UZyDBItYPpPfQ68zylKY-gmmHkUdJJamHX5Jp3Q0Axqb0ZiW-zlAruQa4nxwy0hCBxjTfROesvL7zOq9ZUfeBjPvA/98x115"></div>
+											</div>
+																			</div>
+															
+							<div style="clear: both;"></div>
+						</div>
+					</div>
+				</div>
+							<div id="image_group_scroll_badge_images_gamebadge_206610_1_0"></div><script type="text/javascript">$J( function() { LoadImageGroupOnScroll( 'image_group_scroll_badge_images_gamebadge_206610_1_0', 'badge_images_gamebadge_206610_1_0' ); } );</script>				<div data-panel="{&quot;clickOnActivate&quot;:&quot;firstChild&quot;}" role="button" class="badge_row is_link">
+					<a class="badge_row_overlay" href="https://steamcommunity.com/profiles/76561198817207279/gamecards/206610/"></a>
+					<div class="badge_row_inner">
+						<div class="badge_title_row">
+															<div class="badge_title_stats">
+																		<div class="badge_title_stats_content">
+										<div class="badge_title_stats_playtime">
+											&nbsp;
+																							5.0 hrs on record																					</div>
+										<div class="badge_title_stats_drops">
+																																				<span class="progress_info_bold">No card drops remaining</span>
+													<span class="how_to_get_card_drops_ctn">
+														&nbsp;<a class="whiteLink how_to_get_card_drops" href="javascript:ShowCardDropInfo( &quot;3SwitcheD&quot;, 'card_drop_info_gamebadge_206610_1_0' );">How do I earn card drops?</a>
+													</span>
+													<div class="card_drop_info_dialog" id="card_drop_info_gamebadge_206610_1_0" style="display: none;">
+	<div class="card_drop_info_header">Card drops earned: 3</div>
+	<div class="card_drop_info_body">
+									<div>Drops earned by purchasing: 3</div>
+					</div>
+
+	<div class="card_drop_info_header">
+		Card drops received: 3	</div>
+	<div class="card_drop_info_body">
+		You don't have any more drops remaining for 3SwitcheD.	</div>
+	<div class="card_drop_info_subarea">
+		<div class="card_drop_info_breakafter">How can I earn more drops?</div>
+
+				<div class="card_drop_info_header ">
+			You are now eligible for a booster pack		</div>
+		<div class="">
+			Once you have received all of your card drops, you become eligible for a booster pack containing 3 additional cards.  Booster packs are granted randomly to eligible users as more badges are crafted by members of the community.  Make sure you log in to Steam each week to maintain eligibility.		</div>
+	</div>
+</div>																																	</div>
+									</div>
+								</div>
+								<div class="badge_title">
+									3SwitcheD																		&nbsp;<span class="badge_view_details">View details</span>
+								</div>
+													</div>
+						<div class="badge_title_rule"></div>
+						<div class="badge_content">
+															<div class="badge_progress_info">
+																			0 of 6 cards collected																	</div>
+							
+							<div class="badge_current">
+																	<div class="badge_empty">
+										<div class="badge_empty_circle"></div>
+										<div class="badge_empty_right">
+											<div class="badge_empty_name">Amethyst</div>
+											<div class="badge_empty_name">100 XP</div>
+											<div style="clear: both"></div>
+										</div>
+									</div>
+																							</div>
+
+																								<div class="badge_progress_tasks badge_cards">
+																																									<div class="badge_progress_card_ctn">
+												<div class="badge_progress_card unowned"><img src="https://community.fastly.steamstatic.com/public/shared/images/trans.gif" data-delayed-image-group="badge_images_gamebadge_206610_1_0" data-delayed-image="https://community.fastly.steamstatic.com/economy/image/IzMF03bk9WpSBq-S-ekoE33L-iLqGFHVaU25ZzQNQcXdA3g5gMEPvUZZEfSMJ6dESN8p_2SVTY7V2NsPwnUNmChCIzb02ClfYOEnHt7U2UPyrOOKGSn2ODOWLnCORQ5pTeVaZm7YqzD2tuSdQj2YEr16EFwCLqMH8DYdb8HbIUh9g5FZpHe8klZCFxspdcAbcV_imiZCYORwkCJFc54Ani32JcDQ1FZgb0BrUryxBbzGadD3xS9yWQQnQfcMIoaXtCNClVg/98x115"></div>
+											</div>
+																					<div class="badge_progress_card_ctn">
+												<div class="badge_progress_card unowned"><img src="https://community.fastly.steamstatic.com/public/shared/images/trans.gif" data-delayed-image-group="badge_images_gamebadge_206610_1_0" data-delayed-image="https://community.fastly.steamstatic.com/economy/image/IzMF03bk9WpSBq-S-ekoE33L-iLqGFHVaU25ZzQNQcXdA3g5gMEPvUZZEfSMJ6dESN8p_2SVTY7V2NsPwnUNmChCIzb02ClPafBpc_jS0gzwpKSEEXXwbWqTLSXaHlsxTLIIPWiNq2Cns-rHEzifQLspFwsCffQB8TZPNMyMPRdryt1LrCO6mFZ5GwQXe8hHdwrmyyRKYe90mXhHfchVnyGiIZ3fhgtrOU9oXb7mXriUPIGhln52CBoxG75aOtyD_ijuDJgAUyc/98x115"></div>
+											</div>
+																					<div class="badge_progress_card_ctn">
+												<div class="badge_progress_card unowned"><img src="https://community.fastly.steamstatic.com/public/shared/images/trans.gif" data-delayed-image-group="badge_images_gamebadge_206610_1_0" data-delayed-image="https://community.fastly.steamstatic.com/economy/image/IzMF03bk9WpSBq-S-ekoE33L-iLqGFHVaU25ZzQNQcXdA3g5gMEPvUZZEfSMJ6dESN8p_2SVTY7V2NsPwnUNmChCIzb02ClKd-BpNoDs1QjrpuOZGTL-ZTbDKnyASgc_GOBfZjqI_2X2t7mRFjDBR7wuQQEHdaUMpDcYPZrYaxE01oZf5W-okAJ_EQQsd9d5eQK6zXFOMO18mHNDdJJXkXf3IJGLglZkaxJjC7HlUbrDZ4Xzwy8gW0s1SqBMYJXV5nL6vprzyN3wSRg/98x115"></div>
+											</div>
+																					<div class="badge_progress_card_ctn">
+												<div class="badge_progress_card unowned"><img src="https://community.fastly.steamstatic.com/public/shared/images/trans.gif" data-delayed-image-group="badge_images_gamebadge_206610_1_0" data-delayed-image="https://community.fastly.steamstatic.com/economy/image/IzMF03bk9WpSBq-S-ekoE33L-iLqGFHVaU25ZzQNQcXdA3g5gMEPvUZZEfSMJ6dESN8p_2SVTY7V2NsPwnUNmChCIzb02ClUYOlgN9yN6QvtoPGEE3qxYTrFKCSEHwdpG-daPG_dqjShsO-WFj_OR719FwoBK_RXpjFAO8GPbRQ519Ffqiuyh0M7HBk6dsBUTwa2y3MWbLx1kXFAdJpbnCyjIZLc11hrbkU-U-nuVLvEbomhxnwkWRw2TfUaMo-L-Hu77tH8aNmvWibC/98x115"></div>
+											</div>
+																					<div class="badge_progress_card_ctn">
+												<div class="badge_progress_card unowned"><img src="https://community.fastly.steamstatic.com/public/shared/images/trans.gif" data-delayed-image-group="badge_images_gamebadge_206610_1_0" data-delayed-image="https://community.fastly.steamstatic.com/economy/image/IzMF03bk9WpSBq-S-ekoE33L-iLqGFHVaU25ZzQNQcXdA3g5gMEPvUZZEfSMJ6dESN8p_2SVTY7V2NsPwnUNmChCIzb02CldcPd8NM6N6hD2saSEEXXwbWqQf3SLHQY-SbALNDzer2Wj57mWRzDIQO59R1wNeKcF92BLaJvaaRA8yt1LrCO6mFZ5GwQXe8hHdwrmyyRKYe90mXhHfchVnyGiIZ3fhgtrOU9oXb7mXriUPIGhln52CBoxG75aOtyD_ijuaEKTZ4s/98x115"></div>
+											</div>
+																			</div>
+															
+							<div style="clear: both;"></div>
+						</div>
+					</div>
+				</div>
+							<div id="image_group_scroll_badge_images_gamebadge_550650_1_0"></div><script type="text/javascript">$J( function() { LoadImageGroupOnScroll( 'image_group_scroll_badge_images_gamebadge_550650_1_0', 'badge_images_gamebadge_550650_1_0' ); } );</script>				<div data-panel="{&quot;clickOnActivate&quot;:&quot;firstChild&quot;}" role="button" class="badge_row is_link">
+					<a class="badge_row_overlay" href="https://steamcommunity.com/profiles/76561198817207279/gamecards/550650/"></a>
+					<div class="badge_row_inner">
+						<div class="badge_title_row">
+															<div class="badge_title_stats">
+																		<div class="badge_title_stats_content">
+										<div class="badge_title_stats_playtime">
+											&nbsp;
+																							1.1 hrs on record																					</div>
+										<div class="badge_title_stats_drops">
+																																				<span class="progress_info_bold">No card drops remaining</span>
+													<span class="how_to_get_card_drops_ctn">
+														&nbsp;<a class="whiteLink how_to_get_card_drops" href="javascript:ShowCardDropInfo( &quot;Black Squad&quot;, 'card_drop_info_gamebadge_550650_1_0' );">How do I earn card drops?</a>
+													</span>
+													<div class="card_drop_info_dialog" id="card_drop_info_gamebadge_550650_1_0" style="display: none;">
+	<div class="card_drop_info_header">Card drops earned: 0</div>
+	<div class="card_drop_info_body">
+									</div>
+
+	<div class="card_drop_info_header">
+		Card drops received: 0	</div>
+	<div class="card_drop_info_body">
+		You don't have any more drops remaining for Black Squad.	</div>
+	<div class="card_drop_info_subarea">
+		<div class="card_drop_info_breakafter">How can I earn more drops?</div>
+
+					<div class="card_drop_info_breakafter">
+				Card drops in free to play games are rewards for spending money in game.			</div>
+			<div class="card_drop_info_breakafter">
+									You have not purchased anything in game after this card set was released.							</div>
+			<div class="card_drop_info_progress">
+				<div>Progress to next card drop</div>
+				<div class="card_drop_info_progress_bar_ctn">
+					<div class="card_drop_info_progress_bar" style="width: 0%;"></div>
+				</div>
+				<div>
+					<div style="float: right;">
+						(approximately $9.00 USD per card drop)					</div>
+					<div style="clear: right;"></div>
+				</div>
+			</div>
+			<div class="card_drop_info_breakafter"></div>
+				<div class="card_drop_info_header disabled">
+			You are not currently eligible for a booster pack		</div>
+		<div class="">
+			Once you have received all of your card drops, you become eligible for a booster pack containing 3 additional cards.  Booster packs are granted randomly to eligible users as more badges are crafted by members of the community.  Make sure you log in to Steam each week to maintain eligibility.		</div>
+	</div>
+</div>																																	</div>
+									</div>
+								</div>
+								<div class="badge_title">
+									Black Squad																		&nbsp;<span class="badge_view_details">View details</span>
+								</div>
+													</div>
+						<div class="badge_title_rule"></div>
+						<div class="badge_content">
+															<div class="badge_progress_info">
+																			0 of 14 cards collected																	</div>
+							
+							<div class="badge_current">
+																	<div class="badge_empty">
+										<div class="badge_empty_circle"></div>
+										<div class="badge_empty_right">
+											<div class="badge_empty_name">Squad</div>
+											<div class="badge_empty_name">100 XP</div>
+											<div style="clear: both"></div>
+										</div>
+									</div>
+																							</div>
+
+																								<div class="badge_progress_tasks badge_cards">
+																																									<div class="badge_progress_card_ctn">
+												<div class="badge_progress_card unowned"><img src="https://community.fastly.steamstatic.com/public/shared/images/trans.gif" data-delayed-image-group="badge_images_gamebadge_550650_1_0" data-delayed-image="https://community.fastly.steamstatic.com/economy/image/IzMF03bk9WpSBq-S-ekoE33L-iLqGFHVaU25ZzQNQcXdA3g5gMEPvUZZEfSMJ6dESN8p_2SVTY7V2NwKxHUJmChCIzb02CleceRifZme9iawgu2eCGH6bXKWdmfQEV9vGL5dNGjfqDCj5-qcQz2dSOt6EF0EL6EHozJLaMiBbRM509QPr2DukUEqUAYmdYNEfx2_z2YsOLAkzyRPcp9QzSGkIcfR1l0zaEdjXLy2A77BbYXxmSwjDhoyHKcYYoOc7XS_rYmxNKCQa_U1DPQms9I/98x115"></div>
+											</div>
+																					<div class="badge_progress_card_ctn">
+												<div class="badge_progress_card unowned"><img src="https://community.fastly.steamstatic.com/public/shared/images/trans.gif" data-delayed-image-group="badge_images_gamebadge_550650_1_0" data-delayed-image="https://community.fastly.steamstatic.com/economy/image/IzMF03bk9WpSBq-S-ekoE33L-iLqGFHVaU25ZzQNQcXdA3g5gMEPvUZZEfSMJ6dESN8p_2SVTY7V2NwKxHUJmChCIzb02CleceRifZme8Ciwgu2eCGH6bXKWdmfQEV9vGL5cYDmN_GD2trnAEWnNF7okQlxVL6UA92BOP8CKPhc70NNe82O8z0EsUAYmdYNEfx2_z2YsOLAkzyRPcp9QzSGkIcfR1l0zaEdjXLy2A77BbYXxmSwjDhoyHKcYYoOc7XS_rYmxNKCQa_U1PK248EU/98x115"></div>
+											</div>
+																					<div class="badge_progress_card_ctn">
+												<div class="badge_progress_card unowned"><img src="https://community.fastly.steamstatic.com/public/shared/images/trans.gif" data-delayed-image-group="badge_images_gamebadge_550650_1_0" data-delayed-image="https://community.fastly.steamstatic.com/economy/image/IzMF03bk9WpSBq-S-ekoE33L-iLqGFHVaU25ZzQNQcXdA3g5gMEPvUZZEfSMJ6dESN8p_2SVTY7V2NwKxHUJmChCIzb02ClJcOFgPdKDkl3NgqmuE2fjfTrBanOAWldlHOQLOGnerGassb6VQjjIFL4tQgtQdaYBpGZPO87aaxVv1oFYrWDolhF4SxJmYstBNg202HAWI4IsxSAVIJZVnSakI8De1lcxahdqW7HhUu2XbYKnlHstXh00H_UZY4mTsCy5qcSkdLfYeu5xafOWFDjriQ/98x115"></div>
+											</div>
+																					<div class="badge_progress_card_ctn">
+												<div class="badge_progress_card unowned"><img src="https://community.fastly.steamstatic.com/public/shared/images/trans.gif" data-delayed-image-group="badge_images_gamebadge_550650_1_0" data-delayed-image="https://community.fastly.steamstatic.com/economy/image/IzMF03bk9WpSBq-S-ekoE33L-iLqGFHVaU25ZzQNQcXdA3g5gMEPvUZZEfSMJ6dESN8p_2SVTY7V2NwKxHUJmChCIzb02ClJcOFgPdKDkl3LjKmuE2fjfTrBanOAWldlHOQLOGrc_WWn4u7GEDvIE-8uQg0BfvEB9WFObMGANxpshdIC_DO9kRwoHEVmYstBNg202HAWI4IsxSAVIJZVnSakI8De1lcxahdqW7HhUu2XbYKnlHstXh00H_UZY4mTsCy5qcSkdLfYeu5xafNE3bhKqA/98x115"></div>
+											</div>
+																					<div class="badge_progress_card_ctn">
+												<div class="badge_progress_card unowned"><img src="https://community.fastly.steamstatic.com/public/shared/images/trans.gif" data-delayed-image-group="badge_images_gamebadge_550650_1_0" data-delayed-image="https://community.fastly.steamstatic.com/economy/image/IzMF03bk9WpSBq-S-ekoE33L-iLqGFHVaU25ZzQNQcXdA3g5gMEPvUZZEfSMJ6dESN8p_2SVTY7V2NwKxHUJmChCIzb02ClPbOInFcrFhVej5LDVKle8SzjXOzTUGRs6RKUHaDmOqz72t-jCSjjIFLt9RgoNL6JS-2Mdb5uIPkM414ZZ-jHuwBIqR0JxJZEQPh-1zTIRPq8hzTMtLMYDznH9IZDb0Vo2bxViCbq2Vr3LaYX0xS0nXx4zFqMdN4vAuyLu_p_4P6bVeOZ3OqYh6ZjV5QJZcs4/98x115"></div>
+											</div>
+																			</div>
+															
+							<div style="clear: both;"></div>
+						</div>
+					</div>
+				</div>
+							<div id="image_group_scroll_badge_images_gamebadge_253940_1_0"></div><script type="text/javascript">$J( function() { LoadImageGroupOnScroll( 'image_group_scroll_badge_images_gamebadge_253940_1_0', 'badge_images_gamebadge_253940_1_0' ); } );</script>				<div data-panel="{&quot;clickOnActivate&quot;:&quot;firstChild&quot;}" role="button" class="badge_row is_link">
+					<a class="badge_row_overlay" href="https://steamcommunity.com/profiles/76561198817207279/gamecards/253940/"></a>
+					<div class="badge_row_inner">
+						<div class="badge_title_row">
+															<div class="badge_title_stats">
+																		<div class="badge_title_stats_content">
+										<div class="badge_title_stats_playtime">
+											&nbsp;
+																							5.9 hrs on record																					</div>
+										<div class="badge_title_stats_drops">
+																																				<span class="progress_info_bold">No card drops remaining</span>
+													<span class="how_to_get_card_drops_ctn">
+														&nbsp;<a class="whiteLink how_to_get_card_drops" href="javascript:ShowCardDropInfo( &quot;Septerra Core&quot;, 'card_drop_info_gamebadge_253940_1_0' );">How do I earn card drops?</a>
+													</span>
+													<div class="card_drop_info_dialog" id="card_drop_info_gamebadge_253940_1_0" style="display: none;">
+	<div class="card_drop_info_header">Card drops earned: 4</div>
+	<div class="card_drop_info_body">
+									<div>Drops earned by purchasing: 4</div>
+					</div>
+
+	<div class="card_drop_info_header">
+		Card drops received: 4	</div>
+	<div class="card_drop_info_body">
+		You don't have any more drops remaining for Septerra Core.	</div>
+	<div class="card_drop_info_subarea">
+		<div class="card_drop_info_breakafter">How can I earn more drops?</div>
+
+				<div class="card_drop_info_header ">
+			You are now eligible for a booster pack		</div>
+		<div class="">
+			Once you have received all of your card drops, you become eligible for a booster pack containing 3 additional cards.  Booster packs are granted randomly to eligible users as more badges are crafted by members of the community.  Make sure you log in to Steam each week to maintain eligibility.		</div>
+	</div>
+</div>																																	</div>
+									</div>
+								</div>
+								<div class="badge_title">
+									Septerra Core																		&nbsp;<span class="badge_view_details">View details</span>
+								</div>
+													</div>
+						<div class="badge_title_rule"></div>
+						<div class="badge_content">
+															<div class="badge_progress_info">
+																			0 of 8 cards collected																	</div>
+							
+							<div class="badge_current">
+																	<div class="badge_empty">
+										<div class="badge_empty_circle"></div>
+										<div class="badge_empty_right">
+											<div class="badge_empty_name">Activated Core</div>
+											<div class="badge_empty_name">100 XP</div>
+											<div style="clear: both"></div>
+										</div>
+									</div>
+																							</div>
+
+																								<div class="badge_progress_tasks badge_cards">
+																																									<div class="badge_progress_card_ctn">
+												<div class="badge_progress_card unowned"><img src="https://community.fastly.steamstatic.com/public/shared/images/trans.gif" data-delayed-image-group="badge_images_gamebadge_253940_1_0" data-delayed-image="https://community.fastly.steamstatic.com/economy/image/IzMF03bk9WpSBq-S-ekoE33L-iLqGFHVaU25ZzQNQcXdA3g5gMEPvUZZEfSMJ6dESN8p_2SVTY7V2NsKx3oImChCIzb02ClOavdrOcWAyQj6pufQGXCkamGUd3mNRQg9TbQLMGiPq2em4L7FQTidEO1-RFxRePAB-zIda9fJYUUrhthJr2CqqE1wHxEtL5xEdV65ziAQZulwmHVEI5kAkXX5dZfZgw0xa0Y8DL22VLjEZtOmw3k6HUQwCeYXZo2QP7cX/98x115"></div>
+											</div>
+																					<div class="badge_progress_card_ctn">
+												<div class="badge_progress_card unowned"><img src="https://community.fastly.steamstatic.com/public/shared/images/trans.gif" data-delayed-image-group="badge_images_gamebadge_253940_1_0" data-delayed-image="https://community.fastly.steamstatic.com/economy/image/IzMF03bk9WpSBq-S-ekoE33L-iLqGFHVaU25ZzQNQcXdA3g5gMEPvUZZEfSMJ6dESN8p_2SVTY7V2NsKx3oImChCIzb02ClMd-R1NY3PzQT8pL_ZGiGvbGbFfSXYRFprS7YNMW7b-2Km5uudED3PF-t5EQhQevQA8WUcI4nXaARvi8VfrneHnkl8GRN1K8dDIQ2_nndEZeh1nHcUd8layC2jJZTf1wxhaBA8X-nlUrrLPYL2xjFkA01xWa0YgwZOWKM/98x115"></div>
+											</div>
+																					<div class="badge_progress_card_ctn">
+												<div class="badge_progress_card unowned"><img src="https://community.fastly.steamstatic.com/public/shared/images/trans.gif" data-delayed-image-group="badge_images_gamebadge_253940_1_0" data-delayed-image="https://community.fastly.steamstatic.com/economy/image/IzMF03bk9WpSBq-S-ekoE33L-iLqGFHVaU25ZzQNQcXdA3g5gMEPvUZZEfSMJ6dESN8p_2SVTY7V2NsKx3oImChCIzb02ClBYOEqMcbHxwCm8bPdTHalaTbGdyKAT186GbZXZj7R-DX35ruVRT7LQL0lSgkHeqQMoHoJY56fbU1_gNJJlGy1lkN4Q08qd5REdFu4nSBGYelzznMQfcpbyifwIMaKhl80PkM7WLzhX-7BPNe70HFzS1xqHfH7vlVI/98x115"></div>
+											</div>
+																					<div class="badge_progress_card_ctn">
+												<div class="badge_progress_card unowned"><img src="https://community.fastly.steamstatic.com/public/shared/images/trans.gif" data-delayed-image-group="badge_images_gamebadge_253940_1_0" data-delayed-image="https://community.fastly.steamstatic.com/economy/image/IzMF03bk9WpSBq-S-ekoE33L-iLqGFHVaU25ZzQNQcXdA3g5gMEPvUZZEfSMJ6dESN8p_2SVTY7V2NsKx3oImChCIzb02ClJavZnMcrVhgz2oOWIQSKuOGacfHPaSw9sGLtdZm2K_2ats-mSQj-cR7wqSl9SL_EGpmBLacmXf0xqwtVUuWG9hXt0Excvd5gfcgrqyHBHMupxnXFGc81QyyyhL8fahVkwO0VqDO7iB77GaYj3k3xyQ1o5SLZcaYnefURszg/98x115"></div>
+											</div>
+																					<div class="badge_progress_card_ctn">
+												<div class="badge_progress_card unowned"><img src="https://community.fastly.steamstatic.com/public/shared/images/trans.gif" data-delayed-image-group="badge_images_gamebadge_253940_1_0" data-delayed-image="https://community.fastly.steamstatic.com/economy/image/IzMF03bk9WpSBq-S-ekoE33L-iLqGFHVaU25ZzQNQcXdA3g5gMEPvUZZEfSMJ6dESN8p_2SVTY7V2NsKx3oImChCIzb02ClKd_BuOo3PzQT8pL-JTiSjbGKSeyeNTw8_ReFZPWqM_Tei4uyQRGzORL0vRApSLPZW82YcI4nXaARvi8VfrneHnkl8GRN1K8dDIQ2_nndEZeh1nHcUd8layC2jJZTf1wxhaBA8X-nlUrrLPYL2xjFkA01xWa0YlQ2GObA/98x115"></div>
+											</div>
+																			</div>
+															
+							<div style="clear: both;"></div>
+						</div>
+					</div>
+				</div>
+							<div id="image_group_scroll_badge_images_gamebadge_304050_1_0"></div><script type="text/javascript">$J( function() { LoadImageGroupOnScroll( 'image_group_scroll_badge_images_gamebadge_304050_1_0', 'badge_images_gamebadge_304050_1_0' ); } );</script>				<div data-panel="{&quot;clickOnActivate&quot;:&quot;firstChild&quot;}" role="button" class="badge_row is_link">
+					<a class="badge_row_overlay" href="https://steamcommunity.com/profiles/76561198817207279/gamecards/304050/"></a>
+					<div class="badge_row_inner">
+						<div class="badge_title_row">
+															<div class="badge_title_stats">
+																		<div class="badge_title_stats_content">
+										<div class="badge_title_stats_playtime">
+											&nbsp;
+																							1.0 hrs on record																					</div>
+										<div class="badge_title_stats_drops">
+																																				<span class="progress_info_bold">No card drops remaining</span>
+													<span class="how_to_get_card_drops_ctn">
+														&nbsp;<a class="whiteLink how_to_get_card_drops" href="javascript:ShowCardDropInfo( &quot;Trove&quot;, 'card_drop_info_gamebadge_304050_1_0' );">How do I earn card drops?</a>
+													</span>
+													<div class="card_drop_info_dialog" id="card_drop_info_gamebadge_304050_1_0" style="display: none;">
+	<div class="card_drop_info_header">Card drops earned: 0</div>
+	<div class="card_drop_info_body">
+									</div>
+
+	<div class="card_drop_info_header">
+		Card drops received: 0	</div>
+	<div class="card_drop_info_body">
+		You don't have any more drops remaining for Trove.	</div>
+	<div class="card_drop_info_subarea">
+		<div class="card_drop_info_breakafter">How can I earn more drops?</div>
+
+					<div class="card_drop_info_breakafter">
+				Card drops in free to play games are rewards for spending money in game.			</div>
+			<div class="card_drop_info_breakafter">
+									You have not purchased anything in game after this card set was released.							</div>
+			<div class="card_drop_info_progress">
+				<div>Progress to next card drop</div>
+				<div class="card_drop_info_progress_bar_ctn">
+					<div class="card_drop_info_progress_bar" style="width: 0%;"></div>
+				</div>
+				<div>
+					<div style="float: right;">
+						(approximately $9.00 USD per card drop)					</div>
+					<div style="clear: right;"></div>
+				</div>
+			</div>
+			<div class="card_drop_info_breakafter"></div>
+				<div class="card_drop_info_header disabled">
+			You are not currently eligible for a booster pack		</div>
+		<div class="">
+			Once you have received all of your card drops, you become eligible for a booster pack containing 3 additional cards.  Booster packs are granted randomly to eligible users as more badges are crafted by members of the community.  Make sure you log in to Steam each week to maintain eligibility.		</div>
+	</div>
+</div>																																	</div>
+									</div>
+								</div>
+								<div class="badge_title">
+									Trove																		&nbsp;<span class="badge_view_details">View details</span>
+								</div>
+													</div>
+						<div class="badge_title_rule"></div>
+						<div class="badge_content">
+															<div class="badge_progress_info">
+																			0 of 9 cards collected																	</div>
+							
+							<div class="badge_current">
+																	<div class="badge_empty">
+										<div class="badge_empty_circle"></div>
+										<div class="badge_empty_right">
+											<div class="badge_empty_name">Silver</div>
+											<div class="badge_empty_name">100 XP</div>
+											<div style="clear: both"></div>
+										</div>
+									</div>
+																							</div>
+
+																								<div class="badge_progress_tasks badge_cards">
+																																									<div class="badge_progress_card_ctn">
+												<div class="badge_progress_card unowned"><img src="https://community.fastly.steamstatic.com/public/shared/images/trans.gif" data-delayed-image-group="badge_images_gamebadge_304050_1_0" data-delayed-image="https://community.fastly.steamstatic.com/economy/image/IzMF03bk9WpSBq-S-ekoE33L-iLqGFHVaU25ZzQNQcXdA3g5gMEPvUZZEfSMJ6dESN8p_2SVTY7V2NoPwHMJmChCIzb02ClPauphPdnHzgL-s6SEEXXwbWqWLXWMHV06G-dXM2HZr2Gh5--XEDCaQOErQF0GefACoDAaaZraakdsyt1LrCO6mFZ5GwQXe8hHdwrmmXBBZOgkmHARfJlTyCX0JpOLjVg3PkZiWruxX-_EbYaixCYhCxJmHL5aOtyD_iju30r92og/98x115"></div>
+											</div>
+																					<div class="badge_progress_card_ctn">
+												<div class="badge_progress_card unowned"><img src="https://community.fastly.steamstatic.com/public/shared/images/trans.gif" data-delayed-image-group="badge_images_gamebadge_304050_1_0" data-delayed-image="https://community.fastly.steamstatic.com/economy/image/IzMF03bk9WpSBq-S-ekoE33L-iLqGFHVaU25ZzQNQcXdA3g5gMEPvUZZEfSMJ6dESN8p_2SVTY7V2NoPwHMJmChCIzb02ClJd-RvN8ff1AC9qO-MG3GqMDacfCeMGFsxTeELNTzerzSh5eXCEDzPROh4Fw5ReqcA82JMOs-KOwxnlNAdqWqqk0FvIR8lc8JDLVy_mCFGMO10y3hAdMpTnST3dJze0AliYEZpDLG0UL7FaNWslXksXBl5X_5Ncs2YuipntRjM/98x115"></div>
+											</div>
+																					<div class="badge_progress_card_ctn">
+												<div class="badge_progress_card unowned"><img src="https://community.fastly.steamstatic.com/public/shared/images/trans.gif" data-delayed-image-group="badge_images_gamebadge_304050_1_0" data-delayed-image="https://community.fastly.steamstatic.com/economy/image/IzMF03bk9WpSBq-S-ekoE33L-iLqGFHVaU25ZzQNQcXdA3g5gMEPvUZZEfSMJ6dESN8p_2SVTY7V2NoPwHMJmChCIzb02ClKcOt_NMLIxwDp5-uAHXPyNWbFLHSJTAg5H7oPNmDZqjSh5biRQj7LQ-h5FgkFe6IE9WYYa5qAORMjjsdc7We3hUB4DCkhf8RBdVLoziZGZLx1mSJLd5oDmCDwIcbRggo0aE5qWe7uBbrAaIbxmSpyVRtkAeBEM53TtScVU9bSIg/98x115"></div>
+											</div>
+																					<div class="badge_progress_card_ctn">
+												<div class="badge_progress_card unowned"><img src="https://community.fastly.steamstatic.com/public/shared/images/trans.gif" data-delayed-image-group="badge_images_gamebadge_304050_1_0" data-delayed-image="https://community.fastly.steamstatic.com/economy/image/IzMF03bk9WpSBq-S-ekoE33L-iLqGFHVaU25ZzQNQcXdA3g5gMEPvUZZEfSMJ6dESN8p_2SVTY7V2NoPwHMJmChCIzb02ClEZuAnC8rBxUPyrOOKGSnzPG6VeSfbTFw_TedfZGHRqjKi7OWdRTGbErwvFVgMeqEF9WIdO8GPIUh9g5FZpHe8klZCFxspdcAbIwvpnyESYewmkXNDJJpWmSOiLpOM019qaEU8U-vhVLvFO4igxiclXgQnQfcMIoaXoRistM8/98x115"></div>
+											</div>
+																					<div class="badge_progress_card_ctn">
+												<div class="badge_progress_card unowned"><img src="https://community.fastly.steamstatic.com/public/shared/images/trans.gif" data-delayed-image-group="badge_images_gamebadge_304050_1_0" data-delayed-image="https://community.fastly.steamstatic.com/economy/image/IzMF03bk9WpSBq-S-ekoE33L-iLqGFHVaU25ZzQNQcXdA3g5gMEPvUZZEfSMJ6dESN8p_2SVTY7V2NoPwHMJmChCIzb02ClGa-xrMN-AyQj6pufQGXWlPDOVd3eKRQ1tG7pWYGra9jL35uWRRWyYSOglFQ4AK6tW-zdNbtfTf0UrhthJr2CqqE1wHxEtL5ZCIlruyyRCMuR3mSBDcZtVyyz3c8LZjV9hPk85XLrgUejLatetkSw6HUQwCeYXZge4HDRo/98x115"></div>
+											</div>
+																			</div>
+															
+							<div style="clear: both;"></div>
+						</div>
+					</div>
+				</div>
+							<div id="image_group_scroll_badge_images_badge_1"></div><script type="text/javascript">$J( function() { LoadImageGroupOnScroll( 'image_group_scroll_badge_images_badge_1', 'badge_images_badge_1' ); } );</script>				<div data-panel="{&quot;clickOnActivate&quot;:&quot;firstChild&quot;}" role="button" class="badge_row is_link">
+					<a class="badge_row_overlay" href="https://steamcommunity.com/profiles/76561198817207279/badges/1"></a>
+					<div class="badge_row_inner">
+						<div class="badge_title_row">
+															<div class="badge_title">
+									Years of Service									&nbsp;<span class="badge_view_details">View details</span>
+								</div>
+													</div>
+						<div class="badge_title_rule"></div>
+						<div class="badge_content">
+							
+							<div class="badge_current">
+																	<div class="badge_info">
+										<div class="badge_info_image">
+											<img src="https://community.fastly.steamstatic.com/public/shared/images/trans.gif" data-delayed-image-group="badge_images_badge_1" data-delayed-image="https://community.fastly.steamstatic.com/public/images/badges/02_years/steamyears8_80.png" class="badge_icon">
+										</div>
+										<div class="badge_info_description">
+											<div class="badge_info_title">Years of Service</div>
+											<div>
+																								400 XP											</div>
+											<div class="badge_info_unlocked">
+												Unlocked 22 Feb @ 1:11am											</div>
+										</div>
+									</div>
+																							</div>
+
+							
+							<div style="clear: both;"></div>
+						</div>
+					</div>
+				</div>
+							<div id="image_group_scroll_badge_images_badge_68"></div><script type="text/javascript">$J( function() { LoadImageGroupOnScroll( 'image_group_scroll_badge_images_badge_68', 'badge_images_badge_68' ); } );</script>				<div data-panel="{&quot;clickOnActivate&quot;:&quot;firstChild&quot;}" role="button" class="badge_row is_link">
+					<a class="badge_row_overlay" href="https://steamcommunity.com/profiles/76561198817207279/badges/68"></a>
+					<div class="badge_row_inner">
+						<div class="badge_title_row">
+															<div class="badge_title">
+									Steam Replay 2024									&nbsp;<span class="badge_view_details">View details</span>
+								</div>
+													</div>
+						<div class="badge_title_rule"></div>
+						<div class="badge_content">
+							
+							<div class="badge_current">
+																	<div class="badge_info">
+										<div class="badge_info_image">
+											<img src="https://community.fastly.steamstatic.com/public/shared/images/trans.gif" data-delayed-image-group="badge_images_badge_68" data-delayed-image="https://community.fastly.steamstatic.com/public/images/badges/generic/YIR2024_80.png" class="badge_icon">
+										</div>
+										<div class="badge_info_description">
+											<div class="badge_info_title">Steam Replay 2024</div>
+											<div>
+																								50 XP											</div>
+											<div class="badge_info_unlocked">
+												Unlocked 27 May, 2025 @ 12:13pm											</div>
+										</div>
+									</div>
+																							</div>
+
+							
+							<div style="clear: both;"></div>
+						</div>
+					</div>
+				</div>
+							<div id="image_group_scroll_badge_images_badge_13"></div><script type="text/javascript">$J( function() { LoadImageGroupOnScroll( 'image_group_scroll_badge_images_badge_13', 'badge_images_badge_13' ); } );</script>				<div data-panel="{&quot;clickOnActivate&quot;:&quot;firstChild&quot;}" role="button" class="badge_row is_link">
+					<a class="badge_row_overlay" href="https://steamcommunity.com/profiles/76561198817207279/badges/13"></a>
+					<div class="badge_row_inner">
+						<div class="badge_title_row">
+															<div class="badge_title">
+									Adept Accumulator									&nbsp;<span class="badge_view_details">View details</span>
+								</div>
+													</div>
+						<div class="badge_title_rule"></div>
+						<div class="badge_content">
+							
+							<div class="badge_current">
+																	<div class="badge_info">
+										<div class="badge_info_image">
+											<img src="https://community.fastly.steamstatic.com/public/shared/images/trans.gif" data-delayed-image-group="badge_images_badge_13" data-delayed-image="https://community.fastly.steamstatic.com/public/images/badges/13_gamecollector/10_80.png?v=4" class="badge_icon">
+										</div>
+										<div class="badge_info_description">
+											<div class="badge_info_title">Adept Accumulator</div>
+											<div>
+																								163 XP											</div>
+											<div class="badge_info_unlocked">
+												Unlocked 1 Dec, 2024 @ 11:16am											</div>
+										</div>
+									</div>
+																							</div>
+
+							
+							<div style="clear: both;"></div>
+						</div>
+					</div>
+				</div>
+							<div id="image_group_scroll_badge_images_badge_64"></div><script type="text/javascript">$J( function() { LoadImageGroupOnScroll( 'image_group_scroll_badge_images_badge_64', 'badge_images_badge_64' ); } );</script>				<div data-panel="{&quot;clickOnActivate&quot;:&quot;firstChild&quot;}" role="button" class="badge_row is_link">
+					<a class="badge_row_overlay" href="https://steamcommunity.com/profiles/76561198817207279/badges/64"></a>
+					<div class="badge_row_inner">
+						<div class="badge_title_row">
+															<div class="badge_title">
+									Steam Replay 2022									&nbsp;<span class="badge_view_details">View details</span>
+								</div>
+													</div>
+						<div class="badge_title_rule"></div>
+						<div class="badge_content">
+							
+							<div class="badge_current">
+																	<div class="badge_info">
+										<div class="badge_info_image">
+											<img src="https://community.fastly.steamstatic.com/public/shared/images/trans.gif" data-delayed-image-group="badge_images_badge_64" data-delayed-image="https://community.fastly.steamstatic.com/public/images/badges/generic/Replay2022_80.png" class="badge_icon">
+										</div>
+										<div class="badge_info_description">
+											<div class="badge_info_title">Steam Replay 2022</div>
+											<div>
+																								50 XP											</div>
+											<div class="badge_info_unlocked">
+												Unlocked 16 Jul, 2024 @ 4:20pm											</div>
+										</div>
+									</div>
+																							</div>
+
+							
+							<div style="clear: both;"></div>
+						</div>
+					</div>
+				</div>
+							<div id="image_group_scroll_badge_images_badge_33"></div><script type="text/javascript">$J( function() { LoadImageGroupOnScroll( 'image_group_scroll_badge_images_badge_33', 'badge_images_badge_33' ); } );</script>				<div data-panel="{&quot;clickOnActivate&quot;:&quot;firstChild&quot;}" role="button" class="badge_row is_link">
+					<a class="badge_row_overlay" href="https://steamcommunity.com/profiles/76561198817207279/badges/33"></a>
+					<div class="badge_row_inner">
+						<div class="badge_title_row">
+															<div class="badge_title">
+									Winter 2018 Knick-Knack Collector									&nbsp;<span class="badge_view_details">View details</span>
+								</div>
+													</div>
+						<div class="badge_title_rule"></div>
+						<div class="badge_content">
+							
+							<div class="badge_current">
+																	<div class="badge_info">
+										<div class="badge_info_image">
+											<img src="https://community.fastly.steamstatic.com/public/shared/images/trans.gif" data-delayed-image-group="badge_images_badge_33" data-delayed-image="https://community.fastly.steamstatic.com/public/images/badges/33_cozycottage2018/25_80.png" class="badge_icon">
+										</div>
+										<div class="badge_info_description">
+											<div class="badge_info_title">Winter 2018 Knick-Knack Collector</div>
+											<div>
+																								261 XP											</div>
+											<div class="badge_info_unlocked">
+												Unlocked 5 Jan, 2019 @ 2:20am											</div>
+										</div>
+									</div>
+																							</div>
+
+							
+							<div style="clear: both;"></div>
+						</div>
+					</div>
+				</div>
+							<div id="image_group_scroll_badge_images_badge_31"></div><script type="text/javascript">$J( function() { LoadImageGroupOnScroll( 'image_group_scroll_badge_images_badge_31', 'badge_images_badge_31' ); } );</script>				<div data-panel="{&quot;clickOnActivate&quot;:&quot;firstChild&quot;}" role="button" class="badge_row is_link">
+					<a class="badge_row_overlay" href="https://steamcommunity.com/profiles/76561198817207279/badges/31"></a>
+					<div class="badge_row_inner">
+						<div class="badge_title_row">
+															<div class="badge_title">
+									Steam Awards Nomination Committee 2018									&nbsp;<span class="badge_view_details">View details</span>
+								</div>
+													</div>
+						<div class="badge_title_rule"></div>
+						<div class="badge_content">
+							
+							<div class="badge_current">
+																	<div class="badge_info">
+										<div class="badge_info_image">
+											<img src="https://community.fastly.steamstatic.com/public/shared/images/trans.gif" data-delayed-image-group="badge_images_badge_31" data-delayed-image="https://community.fastly.steamstatic.com/public/images/badges/30_steamawardnominations/level01_80.png" class="badge_icon">
+										</div>
+										<div class="badge_info_description">
+											<div class="badge_info_title">Steam Awards Nomination Committee 2018</div>
+											<div>
+																								25 XP											</div>
+											<div class="badge_info_unlocked">
+												Unlocked 22 Nov, 2018 @ 3:15am											</div>
+										</div>
+									</div>
+																									<div style="clear: left;"></div>
+									<div class="badge_description">
+										 									</div>
+															</div>
+
+							
+							<div style="clear: both;"></div>
+						</div>
+					</div>
+				</div>
+							<div id="image_group_scroll_badge_images_gamebadge_252490_1_0"></div><script type="text/javascript">$J( function() { LoadImageGroupOnScroll( 'image_group_scroll_badge_images_gamebadge_252490_1_0', 'badge_images_gamebadge_252490_1_0' ); } );</script>				<div data-panel="{&quot;clickOnActivate&quot;:&quot;firstChild&quot;}" role="button" class="badge_row is_link">
+					<a class="badge_row_overlay" href="https://steamcommunity.com/profiles/76561198817207279/gamecards/252490/"></a>
+					<div class="badge_row_inner">
+						<div class="badge_title_row">
+															<div class="badge_title_stats">
+																		<div class="badge_title_stats_content">
+										<div class="badge_title_stats_playtime">
+											&nbsp;
+																							1,883 hrs on record																					</div>
+										<div class="badge_title_stats_drops">
+																																				<span class="progress_info_bold">No card drops remaining</span>
+													<span class="how_to_get_card_drops_ctn">
+														&nbsp;<a class="whiteLink how_to_get_card_drops" href="javascript:ShowCardDropInfo( &quot;Rust&quot;, 'card_drop_info_gamebadge_252490_1_0' );">How do I earn card drops?</a>
+													</span>
+													<div class="card_drop_info_dialog" id="card_drop_info_gamebadge_252490_1_0" style="display: none;">
+	<div class="card_drop_info_header">Card drops earned: 3</div>
+	<div class="card_drop_info_body">
+									<div>Drops earned by purchasing: 3</div>
+					</div>
+
+	<div class="card_drop_info_header">
+		Card drops received: 3	</div>
+	<div class="card_drop_info_body">
+		You don't have any more drops remaining for Rust.	</div>
+	<div class="card_drop_info_subarea">
+		<div class="card_drop_info_breakafter">How can I earn more drops?</div>
+
+				<div class="card_drop_info_header ">
+			You are now eligible for a booster pack		</div>
+		<div class="">
+			Once you have received all of your card drops, you become eligible for a booster pack containing 3 additional cards.  Booster packs are granted randomly to eligible users as more badges are crafted by members of the community.  Make sure you log in to Steam each week to maintain eligibility.		</div>
+	</div>
+</div>																																	</div>
+									</div>
+								</div>
+								<div class="badge_title">
+									Rust																		&nbsp;<span class="badge_view_details">View details</span>
+								</div>
+													</div>
+						<div class="badge_title_rule"></div>
+						<div class="badge_content">
+															<div class="badge_progress_info">
+																	</div>
+							
+							<div class="badge_current">
+																	<div class="badge_info">
+										<div class="badge_info_image">
+											<img src="https://community.fastly.steamstatic.com/public/shared/images/trans.gif" data-delayed-image-group="badge_images_gamebadge_252490_1_0" data-delayed-image="https://cdn.fastly.steamstatic.com/steamcommunity/public/images/items/252490/6a60438198b0c73b62669296aee3e3e0f64113b8.png" class="badge_icon">
+										</div>
+										<div class="badge_info_description">
+											<div class="badge_info_title">Professional Caveman</div>
+											<div>
+																									Level 5,
+																								500 XP											</div>
+											<div class="badge_info_unlocked">
+												Unlocked 12 Jul, 2018 @ 9:49am											</div>
+										</div>
+									</div>
+																							</div>
+
+																						
+							<div style="clear: both;"></div>
+						</div>
+					</div>
+				</div>
+							<div id="image_group_scroll_badge_images_gamebadge_730_1_0"></div><script type="text/javascript">$J( function() { LoadImageGroupOnScroll( 'image_group_scroll_badge_images_gamebadge_730_1_0', 'badge_images_gamebadge_730_1_0' ); } );</script>				<div data-panel="{&quot;clickOnActivate&quot;:&quot;firstChild&quot;}" role="button" class="badge_row is_link">
+					<a class="badge_row_overlay" href="https://steamcommunity.com/profiles/76561198817207279/gamecards/730/"></a>
+					<div class="badge_row_inner">
+						<div class="badge_title_row">
+															<div class="badge_title_stats">
+																		<div class="badge_title_stats_content">
+										<div class="badge_title_stats_playtime">
+											&nbsp;
+																							1,011 hrs on record																					</div>
+										<div class="badge_title_stats_drops">
+																																				<span class="progress_info_bold">No card drops remaining</span>
+													<span class="how_to_get_card_drops_ctn">
+														&nbsp;<a class="whiteLink how_to_get_card_drops" href="javascript:ShowCardDropInfo( &quot;Counter-Strike 2&quot;, 'card_drop_info_gamebadge_730_1_0' );">How do I earn card drops?</a>
+													</span>
+													<div class="card_drop_info_dialog" id="card_drop_info_gamebadge_730_1_0" style="display: none;">
+	<div class="card_drop_info_header">Card drops earned: 0</div>
+	<div class="card_drop_info_body">
+									</div>
+
+	<div class="card_drop_info_header">
+		Card drops received: 3	</div>
+	<div class="card_drop_info_body">
+		You don't have any more drops remaining for Counter-Strike 2.	</div>
+	<div class="card_drop_info_subarea">
+		<div class="card_drop_info_breakafter">How can I earn more drops?</div>
+
+					<div class="card_drop_info_breakafter">
+				Card drops in free to play games are rewards for spending money in game.			</div>
+			<div class="card_drop_info_breakafter">
+									You have not purchased anything in game after this card set was released.							</div>
+			<div class="card_drop_info_progress">
+				<div>Progress to next card drop</div>
+				<div class="card_drop_info_progress_bar_ctn">
+					<div class="card_drop_info_progress_bar" style="width: 0%;"></div>
+				</div>
+				<div>
+					<div style="float: right;">
+						(approximately $9.00 USD per card drop)					</div>
+					<div style="clear: right;"></div>
+				</div>
+			</div>
+			<div class="card_drop_info_breakafter"></div>
+				<div class="card_drop_info_header ">
+			You are now eligible for a booster pack		</div>
+		<div class="">
+			Once you have received all of your card drops, you become eligible for a booster pack containing 3 additional cards.  Booster packs are granted randomly to eligible users as more badges are crafted by members of the community.  Make sure you log in to Steam each week to maintain eligibility.		</div>
+	</div>
+</div>																																	</div>
+									</div>
+								</div>
+								<div class="badge_title">
+									Counter-Strike 2																		&nbsp;<span class="badge_view_details">View details</span>
+								</div>
+													</div>
+						<div class="badge_title_rule"></div>
+						<div class="badge_content">
+															<div class="badge_progress_info">
+																	</div>
+							
+							<div class="badge_current">
+																	<div class="badge_info">
+										<div class="badge_info_image">
+											<img src="https://community.fastly.steamstatic.com/public/shared/images/trans.gif" data-delayed-image-group="badge_images_gamebadge_730_1_0" data-delayed-image="https://cdn.fastly.steamstatic.com/steamcommunity/public/images/items/730/400f2cdf69db174f5616038edbb7a3f8e917ae00.png" class="badge_icon">
+										</div>
+										<div class="badge_info_description">
+											<div class="badge_info_title">Global Sentinel</div>
+											<div>
+																									Level 5,
+																								500 XP											</div>
+											<div class="badge_info_unlocked">
+												Unlocked 12 Jul, 2018 @ 9:43am											</div>
+										</div>
+									</div>
+																							</div>
+
+																						
+							<div style="clear: both;"></div>
+						</div>
+					</div>
+				</div>
+							<div id="image_group_scroll_badge_images_gamebadge_489520_1_0"></div><script type="text/javascript">$J( function() { LoadImageGroupOnScroll( 'image_group_scroll_badge_images_gamebadge_489520_1_0', 'badge_images_gamebadge_489520_1_0' ); } );</script>				<div data-panel="{&quot;clickOnActivate&quot;:&quot;firstChild&quot;}" role="button" class="badge_row is_link">
+					<a class="badge_row_overlay" href="https://steamcommunity.com/profiles/76561198817207279/gamecards/489520/"></a>
+					<div class="badge_row_inner">
+						<div class="badge_title_row">
+															<div class="badge_title_stats">
+																		<div class="badge_title_stats_content">
+										<div class="badge_title_stats_playtime">
+											&nbsp;
+																							4.5 hrs on record																					</div>
+										<div class="badge_title_stats_drops">
+																					</div>
+									</div>
+								</div>
+								<div class="badge_title">
+									Minion Masters																		&nbsp;<span class="badge_view_details">View details</span>
+								</div>
+													</div>
+						<div class="badge_title_rule"></div>
+						<div class="badge_content">
+							
+							<div class="badge_current">
+																	<div class="badge_info">
+										<div class="badge_info_image">
+											<img src="https://community.fastly.steamstatic.com/public/shared/images/trans.gif" data-delayed-image-group="badge_images_gamebadge_489520_1_0" data-delayed-image="https://cdn.fastly.steamstatic.com/steamcommunity/public/images/items/489520/c5c21a5fb612245682ee03c8a9a19819d802e1ad.png" class="badge_icon">
+										</div>
+										<div class="badge_info_description">
+											<div class="badge_info_title">Wood</div>
+											<div>
+																									Level 1,
+																								100 XP											</div>
+											<div class="badge_info_unlocked">
+												Unlocked 5 Jul, 2018 @ 11:49pm											</div>
+										</div>
+									</div>
+																							</div>
+
+							
+							<div style="clear: both;"></div>
+						</div>
+					</div>
+				</div>
+							<div id="image_group_scroll_badge_images_badge_29"></div><script type="text/javascript">$J( function() { LoadImageGroupOnScroll( 'image_group_scroll_badge_images_badge_29', 'badge_images_badge_29' ); } );</script>				<div data-panel="{&quot;clickOnActivate&quot;:&quot;firstChild&quot;}" role="button" class="badge_row is_link">
+					<a class="badge_row_overlay" href="https://steamcommunity.com/profiles/76561198817207279/badges/29"></a>
+					<div class="badge_row_inner">
+						<div class="badge_title_row">
+															<div class="badge_title">
+									Salien Rank 1									&nbsp;<span class="badge_view_details">View details</span>
+								</div>
+													</div>
+						<div class="badge_title_rule"></div>
+						<div class="badge_content">
+							
+							<div class="badge_current">
+																	<div class="badge_info">
+										<div class="badge_info_image">
+											<img src="https://community.fastly.steamstatic.com/public/shared/images/trans.gif" data-delayed-image-group="badge_images_badge_29" data-delayed-image="https://community.fastly.steamstatic.com/public/images/badges/29_salien/1_80.png?v=1" class="badge_icon">
+										</div>
+										<div class="badge_info_description">
+											<div class="badge_info_title">Salien Rank 1</div>
+											<div>
+																								50 XP											</div>
+											<div class="badge_info_unlocked">
+												Unlocked 5 Jul, 2018 @ 2:42pm											</div>
+										</div>
+									</div>
+																							</div>
+
+							
+							<div style="clear: both;"></div>
+						</div>
+					</div>
+				</div>
+							<div id="image_group_scroll_badge_images_gamebadge_556110_1_0"></div><script type="text/javascript">$J( function() { LoadImageGroupOnScroll( 'image_group_scroll_badge_images_gamebadge_556110_1_0', 'badge_images_gamebadge_556110_1_0' ); } );</script>				<div data-panel="{&quot;clickOnActivate&quot;:&quot;firstChild&quot;}" role="button" class="badge_row is_link">
+					<a class="badge_row_overlay" href="https://steamcommunity.com/profiles/76561198817207279/gamecards/556110/"></a>
+					<div class="badge_row_inner">
+						<div class="badge_title_row">
+															<div class="badge_title_stats">
+																		<div class="badge_title_stats_content">
+										<div class="badge_title_stats_playtime">
+											&nbsp;
+																					</div>
+										<div class="badge_title_stats_drops">
+																					</div>
+									</div>
+								</div>
+								<div class="badge_title">
+									Galactic Fighter																		&nbsp;<span class="badge_view_details">View details</span>
+								</div>
+													</div>
+						<div class="badge_title_rule"></div>
+						<div class="badge_content">
+							
+							<div class="badge_current">
+																	<div class="badge_info">
+										<div class="badge_info_image">
+											<img src="https://community.fastly.steamstatic.com/public/shared/images/trans.gif" data-delayed-image-group="badge_images_gamebadge_556110_1_0" data-delayed-image="https://cdn.fastly.steamstatic.com/steamcommunity/public/images/items/556110/6f7a40c6ca21b56038f07c3616ed0160042b42a1.png" class="badge_icon">
+										</div>
+										<div class="badge_info_description">
+											<div class="badge_info_title">Ensign</div>
+											<div>
+																									Level 1,
+																								100 XP											</div>
+											<div class="badge_info_unlocked">
+												Unlocked 4 Jul, 2018 @ 3:38am											</div>
+										</div>
+									</div>
+																							</div>
+
+							
+							<div style="clear: both;"></div>
+						</div>
+					</div>
+				</div>
+							<div id="image_group_scroll_badge_images_gamebadge_466560_1_0"></div><script type="text/javascript">$J( function() { LoadImageGroupOnScroll( 'image_group_scroll_badge_images_gamebadge_466560_1_0', 'badge_images_gamebadge_466560_1_0' ); } );</script>				<div data-panel="{&quot;clickOnActivate&quot;:&quot;firstChild&quot;}" role="button" class="badge_row is_link">
+					<a class="badge_row_overlay" href="https://steamcommunity.com/profiles/76561198817207279/gamecards/466560/"></a>
+					<div class="badge_row_inner">
+						<div class="badge_title_row">
+															<div class="badge_title_stats">
+																		<div class="badge_title_stats_content">
+										<div class="badge_title_stats_playtime">
+											&nbsp;
+																					</div>
+										<div class="badge_title_stats_drops">
+																					</div>
+									</div>
+								</div>
+								<div class="badge_title">
+									Northgard: Definitive Edition																		&nbsp;<span class="badge_view_details">View details</span>
+								</div>
+													</div>
+						<div class="badge_title_rule"></div>
+						<div class="badge_content">
+							
+							<div class="badge_current">
+																	<div class="badge_info">
+										<div class="badge_info_image">
+											<img src="https://community.fastly.steamstatic.com/public/shared/images/trans.gif" data-delayed-image-group="badge_images_gamebadge_466560_1_0" data-delayed-image="https://cdn.fastly.steamstatic.com/steamcommunity/public/images/items/466560/7edb00ce457322af7279d61ce613b7e5fafd0ebd.png" class="badge_icon">
+										</div>
+										<div class="badge_info_description">
+											<div class="badge_info_title">Sheep</div>
+											<div>
+																									Level 1,
+																								100 XP											</div>
+											<div class="badge_info_unlocked">
+												Unlocked 3 Jul, 2018 @ 12:17am											</div>
+										</div>
+									</div>
+																							</div>
+
+							
+							<div style="clear: both;"></div>
+						</div>
+					</div>
+				</div>
+							<div id="image_group_scroll_badge_images_gamebadge_876740_1_0"></div><script type="text/javascript">$J( function() { LoadImageGroupOnScroll( 'image_group_scroll_badge_images_gamebadge_876740_1_0', 'badge_images_gamebadge_876740_1_0' ); } );</script>				<div data-panel="{&quot;clickOnActivate&quot;:&quot;firstChild&quot;}" role="button" class="badge_row is_link">
+					<a class="badge_row_overlay" href="https://steamcommunity.com/profiles/76561198817207279/gamecards/876740/"></a>
+					<div class="badge_row_inner">
+						<div class="badge_title_row">
+															<div class="badge_title_stats">
+																		<div class="badge_title_stats_content">
+										<div class="badge_title_stats_playtime">
+											&nbsp;
+																					</div>
+										<div class="badge_title_stats_drops">
+																					</div>
+									</div>
+								</div>
+								<div class="badge_title">
+									Intergalactic Steam Summer Sale																		&nbsp;<span class="badge_view_details">View details</span>
+								</div>
+													</div>
+						<div class="badge_title_rule"></div>
+						<div class="badge_content">
+							
+							<div class="badge_current">
+																	<div class="badge_info">
+										<div class="badge_info_image">
+											<img src="https://community.fastly.steamstatic.com/public/shared/images/trans.gif" data-delayed-image-group="badge_images_gamebadge_876740_1_0" data-delayed-image="https://cdn.fastly.steamstatic.com/steamcommunity/public/images/items/876740/19c6b9dc77257c14b57dc16958b815748b52bec3.png" class="badge_icon">
+										</div>
+										<div class="badge_info_description">
+											<div class="badge_info_title">Intergalactic - Lvl 20+</div>
+											<div>
+																									Level 22,
+																								2,200 XP											</div>
+											<div class="badge_info_unlocked">
+												Unlocked 1 Jul, 2018 @ 7:54am											</div>
+										</div>
+									</div>
+																							</div>
+
+							
+							<div style="clear: both;"></div>
+						</div>
+					</div>
+				</div>
+							<div id="image_group_scroll_badge_images_gamebadge_592200_1_0"></div><script type="text/javascript">$J( function() { LoadImageGroupOnScroll( 'image_group_scroll_badge_images_gamebadge_592200_1_0', 'badge_images_gamebadge_592200_1_0' ); } );</script>				<div data-panel="{&quot;clickOnActivate&quot;:&quot;firstChild&quot;}" role="button" class="badge_row is_link">
+					<a class="badge_row_overlay" href="https://steamcommunity.com/profiles/76561198817207279/gamecards/592200/"></a>
+					<div class="badge_row_inner">
+						<div class="badge_title_row">
+															<div class="badge_title_stats">
+																		<div class="badge_title_stats_content">
+										<div class="badge_title_stats_playtime">
+											&nbsp;
+																					</div>
+										<div class="badge_title_stats_drops">
+																					</div>
+									</div>
+								</div>
+								<div class="badge_title">
+									Super Army of Tentacles 3: The Search for Army of Tentacles 2																		&nbsp;<span class="badge_view_details">View details</span>
+								</div>
+													</div>
+						<div class="badge_title_rule"></div>
+						<div class="badge_content">
+							
+							<div class="badge_current">
+																	<div class="badge_info">
+										<div class="badge_info_image">
+											<img src="https://community.fastly.steamstatic.com/public/shared/images/trans.gif" data-delayed-image-group="badge_images_gamebadge_592200_1_0" data-delayed-image="https://cdn.fastly.steamstatic.com/steamcommunity/public/images/items/592200/17e8baf8df6a22ae90b1421c868f2b932305f12e.png" class="badge_icon">
+										</div>
+										<div class="badge_info_description">
+											<div class="badge_info_title">Another Girl Werewolf Hamlet</div>
+											<div>
+																									Level 3,
+																								300 XP											</div>
+											<div class="badge_info_unlocked">
+												Unlocked 30 Jun, 2018 @ 1:30pm											</div>
+										</div>
+									</div>
+																							</div>
+
+							
+							<div style="clear: both;"></div>
+						</div>
+					</div>
+				</div>
+							<div id="image_group_scroll_badge_images_gamebadge_7530_1_0"></div><script type="text/javascript">$J( function() { LoadImageGroupOnScroll( 'image_group_scroll_badge_images_gamebadge_7530_1_0', 'badge_images_gamebadge_7530_1_0' ); } );</script>				<div data-panel="{&quot;clickOnActivate&quot;:&quot;firstChild&quot;}" role="button" class="badge_row is_link">
+					<a class="badge_row_overlay" href="https://steamcommunity.com/profiles/76561198817207279/gamecards/7530/"></a>
+					<div class="badge_row_inner">
+						<div class="badge_title_row">
+															<div class="badge_title_stats">
+																		<div class="badge_title_stats_content">
+										<div class="badge_title_stats_playtime">
+											&nbsp;
+																							6.7 hrs on record																					</div>
+										<div class="badge_title_stats_drops">
+																																				<span class="progress_info_bold">No card drops remaining</span>
+													<span class="how_to_get_card_drops_ctn">
+														&nbsp;<a class="whiteLink how_to_get_card_drops" href="javascript:ShowCardDropInfo( &quot;Two Worlds II Castle Defense&quot;, 'card_drop_info_gamebadge_7530_1_0' );">How do I earn card drops?</a>
+													</span>
+													<div class="card_drop_info_dialog" id="card_drop_info_gamebadge_7530_1_0" style="display: none;">
+	<div class="card_drop_info_header">Card drops earned: 5</div>
+	<div class="card_drop_info_body">
+									<div>Drops earned by purchasing: 5</div>
+					</div>
+
+	<div class="card_drop_info_header">
+		Card drops received: 5	</div>
+	<div class="card_drop_info_body">
+		You don't have any more drops remaining for Two Worlds II Castle Defense.	</div>
+	<div class="card_drop_info_subarea">
+		<div class="card_drop_info_breakafter">How can I earn more drops?</div>
+
+				<div class="card_drop_info_header ">
+			You are now eligible for a booster pack		</div>
+		<div class="">
+			Once you have received all of your card drops, you become eligible for a booster pack containing 3 additional cards.  Booster packs are granted randomly to eligible users as more badges are crafted by members of the community.  Make sure you log in to Steam each week to maintain eligibility.		</div>
+	</div>
+</div>																																	</div>
+									</div>
+								</div>
+								<div class="badge_title">
+									Two Worlds II Castle Defense																		&nbsp;<span class="badge_view_details">View details</span>
+								</div>
+													</div>
+						<div class="badge_title_rule"></div>
+						<div class="badge_content">
+															<div class="badge_progress_info">
+																	</div>
+							
+							<div class="badge_current">
+																	<div class="badge_info">
+										<div class="badge_info_image">
+											<img src="https://community.fastly.steamstatic.com/public/shared/images/trans.gif" data-delayed-image-group="badge_images_gamebadge_7530_1_0" data-delayed-image="https://cdn.fastly.steamstatic.com/steamcommunity/public/images/items/7530/f40c9867af22788309286e112653e860dc2303f4.png" class="badge_icon">
+										</div>
+										<div class="badge_info_description">
+											<div class="badge_info_title">Powerful Mage</div>
+											<div>
+																									Level 5,
+																								500 XP											</div>
+											<div class="badge_info_unlocked">
+												Unlocked 30 Jun, 2018 @ 1:26pm											</div>
+										</div>
+									</div>
+																							</div>
+
+																						
+							<div style="clear: both;"></div>
+						</div>
+					</div>
+				</div>
+							<div id="image_group_scroll_badge_images_gamebadge_351940_1_0"></div><script type="text/javascript">$J( function() { LoadImageGroupOnScroll( 'image_group_scroll_badge_images_gamebadge_351940_1_0', 'badge_images_gamebadge_351940_1_0' ); } );</script>				<div data-panel="{&quot;clickOnActivate&quot;:&quot;firstChild&quot;}" role="button" class="badge_row is_link">
+					<a class="badge_row_overlay" href="https://steamcommunity.com/profiles/76561198817207279/gamecards/351940/"></a>
+					<div class="badge_row_inner">
+						<div class="badge_title_row">
+															<div class="badge_title_stats">
+																		<div class="badge_title_stats_content">
+										<div class="badge_title_stats_playtime">
+											&nbsp;
+																					</div>
+										<div class="badge_title_stats_drops">
+																					</div>
+									</div>
+								</div>
+								<div class="badge_title">
+									The Descendant																		&nbsp;<span class="badge_view_details">View details</span>
+								</div>
+													</div>
+						<div class="badge_title_rule"></div>
+						<div class="badge_content">
+							
+							<div class="badge_current">
+																	<div class="badge_info">
+										<div class="badge_info_image">
+											<img src="https://community.fastly.steamstatic.com/public/shared/images/trans.gif" data-delayed-image-group="badge_images_gamebadge_351940_1_0" data-delayed-image="https://cdn.fastly.steamstatic.com/steamcommunity/public/images/items/351940/67ec0c4bb9558432ba217ad89fa2ef4387b17f76.png" class="badge_icon">
+										</div>
+										<div class="badge_info_description">
+											<div class="badge_info_title">VIP</div>
+											<div>
+																									Level 5,
+																								500 XP											</div>
+											<div class="badge_info_unlocked">
+												Unlocked 30 Jun, 2018 @ 1:08pm											</div>
+										</div>
+									</div>
+																							</div>
+
+							
+							<div style="clear: both;"></div>
+						</div>
+					</div>
+				</div>
+							<div id="image_group_scroll_badge_images_gamebadge_533300_1_0"></div><script type="text/javascript">$J( function() { LoadImageGroupOnScroll( 'image_group_scroll_badge_images_gamebadge_533300_1_0', 'badge_images_gamebadge_533300_1_0' ); } );</script>				<div data-panel="{&quot;clickOnActivate&quot;:&quot;firstChild&quot;}" role="button" class="badge_row is_link">
+					<a class="badge_row_overlay" href="https://steamcommunity.com/profiles/76561198817207279/gamecards/533300/"></a>
+					<div class="badge_row_inner">
+						<div class="badge_title_row">
+															<div class="badge_title_stats">
+																		<div class="badge_title_stats_content">
+										<div class="badge_title_stats_playtime">
+											&nbsp;
+																					</div>
+										<div class="badge_title_stats_drops">
+																					</div>
+									</div>
+								</div>
+								<div class="badge_title">
+									Zup!																		&nbsp;<span class="badge_view_details">View details</span>
+								</div>
+													</div>
+						<div class="badge_title_rule"></div>
+						<div class="badge_content">
+							
+							<div class="badge_current">
+																	<div class="badge_info">
+										<div class="badge_info_image">
+											<img src="https://community.fastly.steamstatic.com/public/shared/images/trans.gif" data-delayed-image-group="badge_images_gamebadge_533300_1_0" data-delayed-image="https://cdn.fastly.steamstatic.com/steamcommunity/public/images/items/533300/c7579e158931fd0dca2fb24436b1d9bb4bd8f203.png" class="badge_icon">
+										</div>
+										<div class="badge_info_description">
+											<div class="badge_info_title">Pikabu</div>
+											<div>
+																									Level 1,
+																								100 XP											</div>
+											<div class="badge_info_unlocked">
+												Unlocked 30 Jun, 2018 @ 3:54am											</div>
+										</div>
+									</div>
+																							</div>
+
+							
+							<div style="clear: both;"></div>
+						</div>
+					</div>
+				</div>
+							<div id="image_group_scroll_badge_images_gamebadge_570_1_0"></div><script type="text/javascript">$J( function() { LoadImageGroupOnScroll( 'image_group_scroll_badge_images_gamebadge_570_1_0', 'badge_images_gamebadge_570_1_0' ); } );</script>				<div data-panel="{&quot;clickOnActivate&quot;:&quot;firstChild&quot;}" role="button" class="badge_row is_link">
+					<a class="badge_row_overlay" href="https://steamcommunity.com/profiles/76561198817207279/gamecards/570/"></a>
+					<div class="badge_row_inner">
+						<div class="badge_title_row">
+															<div class="badge_title_stats">
+																		<div class="badge_title_stats_content">
+										<div class="badge_title_stats_playtime">
+											&nbsp;
+																							1,055 hrs on record																					</div>
+										<div class="badge_title_stats_drops">
+																					</div>
+									</div>
+								</div>
+								<div class="badge_title">
+									Dota 2																		&nbsp;<span class="badge_view_details">View details</span>
+								</div>
+													</div>
+						<div class="badge_title_rule"></div>
+						<div class="badge_content">
+							
+							<div class="badge_current">
+																	<div class="badge_info">
+										<div class="badge_info_image">
+											<img src="https://community.fastly.steamstatic.com/public/shared/images/trans.gif" data-delayed-image-group="badge_images_gamebadge_570_1_0" data-delayed-image="https://cdn.fastly.steamstatic.com/steamcommunity/public/images/items/570/05b1b9d504df01096b406777be0d7331d995cf9e.png" class="badge_icon">
+										</div>
+										<div class="badge_info_description">
+											<div class="badge_info_title">Ganker</div>
+											<div>
+																									Level 5,
+																								500 XP											</div>
+											<div class="badge_info_unlocked">
+												Unlocked 29 Jun, 2018 @ 9:45am											</div>
+										</div>
+									</div>
+																							</div>
+
+							
+							<div style="clear: both;"></div>
+						</div>
+					</div>
+				</div>
+							<div id="image_group_scroll_badge_images_gamebadge_474050_1_0"></div><script type="text/javascript">$J( function() { LoadImageGroupOnScroll( 'image_group_scroll_badge_images_gamebadge_474050_1_0', 'badge_images_gamebadge_474050_1_0' ); } );</script>				<div data-panel="{&quot;clickOnActivate&quot;:&quot;firstChild&quot;}" role="button" class="badge_row is_link">
+					<a class="badge_row_overlay" href="https://steamcommunity.com/profiles/76561198817207279/gamecards/474050/"></a>
+					<div class="badge_row_inner">
+						<div class="badge_title_row">
+															<div class="badge_title_stats">
+																		<div class="badge_title_stats_content">
+										<div class="badge_title_stats_playtime">
+											&nbsp;
+																					</div>
+										<div class="badge_title_stats_drops">
+																					</div>
+									</div>
+								</div>
+								<div class="badge_title">
+									Candy Blast																		&nbsp;<span class="badge_view_details">View details</span>
+								</div>
+													</div>
+						<div class="badge_title_rule"></div>
+						<div class="badge_content">
+							
+							<div class="badge_current">
+																	<div class="badge_info">
+										<div class="badge_info_image">
+											<img src="https://community.fastly.steamstatic.com/public/shared/images/trans.gif" data-delayed-image-group="badge_images_gamebadge_474050_1_0" data-delayed-image="https://cdn.fastly.steamstatic.com/steamcommunity/public/images/items/474050/3d5ef3cd8199612ac9395f475f4ce1192993d946.png" class="badge_icon">
+										</div>
+										<div class="badge_info_description">
+											<div class="badge_info_title">Strawberry cupcake</div>
+											<div>
+																									Level 2,
+																								200 XP											</div>
+											<div class="badge_info_unlocked">
+												Unlocked 26 Jun, 2018 @ 12:19pm											</div>
+										</div>
+									</div>
+																							</div>
+
+							
+							<div style="clear: both;"></div>
+						</div>
+					</div>
+				</div>
+							<div id="image_group_scroll_badge_images_gamebadge_412170_1_0"></div><script type="text/javascript">$J( function() { LoadImageGroupOnScroll( 'image_group_scroll_badge_images_gamebadge_412170_1_0', 'badge_images_gamebadge_412170_1_0' ); } );</script>				<div data-panel="{&quot;clickOnActivate&quot;:&quot;firstChild&quot;}" role="button" class="badge_row is_link">
+					<a class="badge_row_overlay" href="https://steamcommunity.com/profiles/76561198817207279/gamecards/412170/"></a>
+					<div class="badge_row_inner">
+						<div class="badge_title_row">
+															<div class="badge_title_stats">
+																		<div class="badge_title_stats_content">
+										<div class="badge_title_stats_playtime">
+											&nbsp;
+																					</div>
+										<div class="badge_title_stats_drops">
+																					</div>
+									</div>
+								</div>
+								<div class="badge_title">
+									City of Chains																		&nbsp;<span class="badge_view_details">View details</span>
+								</div>
+													</div>
+						<div class="badge_title_rule"></div>
+						<div class="badge_content">
+							
+							<div class="badge_current">
+																	<div class="badge_info">
+										<div class="badge_info_image">
+											<img src="https://community.fastly.steamstatic.com/public/shared/images/trans.gif" data-delayed-image-group="badge_images_gamebadge_412170_1_0" data-delayed-image="https://cdn.fastly.steamstatic.com/steamcommunity/public/images/items/412170/c0d1928bfd376f103c6de048822ec60e61d4b3ac.png" class="badge_icon">
+										</div>
+										<div class="badge_info_description">
+											<div class="badge_info_title">Spec Ops Cyborg</div>
+											<div>
+																									Level 5,
+																								500 XP											</div>
+											<div class="badge_info_unlocked">
+												Unlocked 28 Apr, 2018 @ 11:05pm											</div>
+										</div>
+									</div>
+																							</div>
+
+							
+							<div style="clear: both;"></div>
+						</div>
+					</div>
+				</div>
+							<div id="image_group_scroll_badge_images_badge_21"></div><script type="text/javascript">$J( function() { LoadImageGroupOnScroll( 'image_group_scroll_badge_images_badge_21', 'badge_images_badge_21' ); } );</script>				<div data-panel="{&quot;clickOnActivate&quot;:&quot;firstChild&quot;}" role="button" class="badge_row is_link">
+					<a class="badge_row_overlay" href="https://steamcommunity.com/profiles/76561198817207279/badges/21"></a>
+					<div class="badge_row_inner">
+						<div class="badge_title_row">
+															<div class="badge_title">
+									Gem Maker									&nbsp;<span class="badge_view_details">View details</span>
+								</div>
+													</div>
+						<div class="badge_title_rule"></div>
+						<div class="badge_content">
+							
+							<div class="badge_current">
+																	<div class="badge_info">
+										<div class="badge_info_image">
+											<img src="https://community.fastly.steamstatic.com/public/shared/images/trans.gif" data-delayed-image-group="badge_images_badge_21" data-delayed-image="https://community.fastly.steamstatic.com/public/images/badges/21_auction/scrapper_80.png?v=2" class="badge_icon">
+										</div>
+										<div class="badge_info_description">
+											<div class="badge_info_title">Gem Maker</div>
+											<div>
+																								100 XP											</div>
+											<div class="badge_info_unlocked">
+												Unlocked 27 Apr, 2018 @ 2:41am											</div>
+										</div>
+									</div>
+																							</div>
+
+							
+							<div style="clear: both;"></div>
+						</div>
+					</div>
+				</div>
+							<div id="image_group_scroll_badge_images_badge_2"></div><script type="text/javascript">$J( function() { LoadImageGroupOnScroll( 'image_group_scroll_badge_images_badge_2', 'badge_images_badge_2' ); } );</script>				<div data-panel="{&quot;clickOnActivate&quot;:&quot;firstChild&quot;}" role="button" class="badge_row is_link">
+					<a class="badge_row_overlay" href="https://steamcommunity.com/profiles/76561198817207279/badges/2"></a>
+					<div class="badge_row_inner">
+						<div class="badge_title_row">
+															<div class="badge_title">
+									Community Leader									&nbsp;<span class="badge_view_details">View details</span>
+								</div>
+													</div>
+						<div class="badge_title_rule"></div>
+						<div class="badge_content">
+							
+							<div class="badge_current">
+																	<div class="badge_info">
+										<div class="badge_info_image">
+											<img src="https://community.fastly.steamstatic.com/public/shared/images/trans.gif" data-delayed-image-group="badge_images_badge_2" data-delayed-image="https://community.fastly.steamstatic.com/public/images/badges/01_community/communityleader_80.png" class="badge_icon">
+										</div>
+										<div class="badge_info_description">
+											<div class="badge_info_title">Community Leader</div>
+											<div>
+																								500 XP											</div>
+											<div class="badge_info_unlocked">
+												Unlocked 25 Apr, 2018 @ 5:06am											</div>
+										</div>
+									</div>
+																							</div>
+
+							
+							<div style="clear: both;"></div>
+						</div>
+					</div>
+				</div>
+					</div>
+
+			</div>
+</div>
+
+<script type="text/javascript">
+	$J( function() {
+		$J('.badge_progress_task .quest_icon').v_tooltip( {'location':'bottom', 'tooltipClass': 'badge_task_tooltip', 'offsetY': 0, 'tooltipParent': null } );
+	});
+</script>
+
+		</div>	<!-- responsive_page_legacy_content -->
+
+		<div  data-featuretarget="footer"></div><script type="text/javascript">g_rgDelayedLoadImages={"badge_images_gamebadge_3558940_1_0":true,"badge_images_gamebadge_304930_1_0":true,"badge_images_gamebadge_206610_1_0":true,"badge_images_gamebadge_550650_1_0":true,"badge_images_gamebadge_253940_1_0":true,"badge_images_gamebadge_304050_1_0":true,"badge_images_badge_1":true,"badge_images_badge_68":true,"badge_images_badge_13":true,"badge_images_badge_64":true,"badge_images_badge_33":true,"badge_images_badge_31":true,"badge_images_gamebadge_252490_1_0":true,"badge_images_gamebadge_730_1_0":true,"badge_images_gamebadge_489520_1_0":true,"badge_images_badge_29":true,"badge_images_gamebadge_556110_1_0":true,"badge_images_gamebadge_466560_1_0":true,"badge_images_gamebadge_876740_1_0":true,"badge_images_gamebadge_592200_1_0":true,"badge_images_gamebadge_7530_1_0":true,"badge_images_gamebadge_351940_1_0":true,"badge_images_gamebadge_533300_1_0":true,"badge_images_gamebadge_570_1_0":true,"badge_images_gamebadge_474050_1_0":true,"badge_images_gamebadge_412170_1_0":true,"badge_images_badge_21":true,"badge_images_badge_2":true};</script>
+	</div>	<!-- responsive_page_content -->
+
+</div>	<!-- responsive_page_frame -->
+</body>
+</html>

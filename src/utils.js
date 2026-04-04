@@ -1,0 +1,42 @@
+export const formatAccountList = (accounts) => {
+  if (!accounts || accounts.length === 0) {
+    return '📭 У вас пока нет добавленных аккаунтов';
+  }
+
+  return accounts.map((acc, idx) => {
+    const status = acc.is_farming ? '🟢' : '🔴';
+    return `${idx + 1}. ${status} ${acc.account_name}`;
+  }).join('\n');
+};
+
+export const formatGamesList = (games) => {
+  if (!games || games.length === 0) {
+    return '📭 Список игр пуст';
+  }
+
+  return games.map((game, idx) => {
+    const name = game.game_name || `App ${game.app_id}`;
+    return `${idx + 1}. ${name} (${game.app_id})`;
+  }).join('\n');
+};
+
+export const formatUserProfile = (user, accountsCount) => {
+  const now = Math.floor(Date.now() / 1000);
+  const isPremium = user.is_premium === 1;
+  const trialActive = user.trial_ends_at && user.trial_ends_at > now;
+  
+  let status = '❌ Неактивен';
+  if (isPremium) {
+    status = '⭐ Premium';
+  } else if (trialActive) {
+    const daysLeft = Math.ceil((user.trial_ends_at - now) / 86400);
+    status = `🎁 Триал (${daysLeft} дн.)`;
+  }
+
+  const limit = isPremium ? 10 : 5;
+
+  return `👤 Профиль\n\n` +
+    `Статус: ${status}\n` +
+    `Аккаунтов: ${accountsCount}/${limit}\n` +
+    `Telegram ID: ${user.telegram_id}`;
+};

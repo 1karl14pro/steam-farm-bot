@@ -1,0 +1,29 @@
+{
+  "name": "steam-farm-bot",
+  "version": "1.8.0",
+  "description": "Telegram bot for Steam hours farming",
+  "main": "src/index.js",
+  "type": "module",
+  "scripts": {
+    "start": "node src/index.js",
+    "stop": "node stop.js",
+    "dev": "node --watch src/index.js"
+  },
+  "keywords": [
+    "telegram",
+    "steam",
+    "farming"
+  ],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "axios": "^1.14.0",
+    "better-sqlite3": "^11.0.0",
+    "dotenv": "^16.4.5",
+    "https-proxy-agent": "^7.0.6",
+    "qrcode": "^1.5.3",
+    "steam-session": "^1.7.2",
+    "steam-user": "^5.0.8",
+    "telegraf": "^4.16.3"
+  }
+}
