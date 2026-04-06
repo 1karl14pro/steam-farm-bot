@@ -144,6 +144,45 @@ db.exec(`
     status TEXT DEFAULT 'pending',
     created_at INTEGER DEFAULT (strftime('%s', 'now'))
   );
+
+  CREATE TABLE IF NOT EXISTS farm_stats (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    account_id INTEGER NOT NULL,
+    date TEXT NOT NULL,
+    hours_farmed REAL DEFAULT 0,
+    FOREIGN KEY (account_id) REFERENCES steam_accounts(id) ON DELETE CASCADE,
+    UNIQUE(account_id, date)
+  );
+
+  CREATE TABLE IF NOT EXISTS farm_goals (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    account_id INTEGER NOT NULL,
+    game_id INTEGER,
+    target_hours REAL NOT NULL,
+    current_hours REAL DEFAULT 0,
+    deadline INTEGER,
+    completed INTEGER DEFAULT 0,
+    created_at INTEGER DEFAULT (strftime('%s', 'now')),
+    FOREIGN KEY (account_id) REFERENCES steam_accounts(id) ON DELETE CASCADE
+  );
+
+  CREATE TABLE IF NOT EXISTS farm_schedules (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    account_id INTEGER NOT NULL,
+    start_time TEXT NOT NULL,
+    end_time TEXT NOT NULL,
+    days_of_week TEXT NOT NULL,
+    enabled INTEGER DEFAULT 1,
+    FOREIGN KEY (account_id) REFERENCES steam_accounts(id) ON DELETE CASCADE
+  );
+
+  CREATE TABLE IF NOT EXISTS notifications (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id INTEGER NOT NULL,
+    type TEXT NOT NULL,
+    enabled INTEGER DEFAULT 1,
+    FOREIGN KEY (user_id) REFERENCES users(telegram_id) ON DELETE CASCADE
+  );
 `);
 
 // ===== USERS =====
@@ -191,8 +230,6 @@ export const getAccountLimit = (telegramId) => {
   if (user.trial_ends_at && user.trial_ends_at > now) {
     return 5;
   }
-  
-  return 5;
   
   return 0;
 };
@@ -465,6 +502,174 @@ export const getSteamPaused = (accountId) => {
 
 export const setSteamPaused = (accountId, paused) => {
   return db.prepare('UPDATE steam_accounts SET steam_paused = ? WHERE id = ?').run(paused ? 1 : 0, accountId);
+};
+
+// ===== FARM STATISTICS =====
+
+/**
+ * Записывает статистику фарма за день
+ */
+export const recordFarmStats = (accountId, hours) => {
+  const today = new Date().toISOString().split('T')[0]; // YYYY-MM-DD
+  
+  return db.prepare(`
+    INSERT INTO farm_stats (account_id, date, hours_farmed)
+    VALUES (?, ?, ?)
+    ON CONFLICT(account_id, date) 
+    DO UPDATE SET hours_farmed = hours_farmed + ?
+  `).run(accountId, today, hours, hours);
+};
+
+/**
+ * Получает статистику за последние N дней
+ */
+export const getFarmStats = (accountId, days = 7) => {
+  return db.prepare(`
+    SELECT date, hours_farmed 
+    FROM farm_stats 
+    WHERE account_id = ? 
+    AND date >= date('now', '-${days} days')
+    ORDER BY date DESC
+  `).all(accountId);
+};
+
+/**
+ * Получает топ-5 игр по нафармленным часам
+ */
+export const getTopFarmedGames = (accountId) => {
+  // Пока возвращаем из games, позже можно добавить отдельную таблицу
+  return db.prepare(`
+    SELECT game_name, app_id
+    FROM games
+    WHERE account_id = ?
+    ORDER BY added_at DESC
+    LIMIT 5
+  `).all(accountId);
+};
+
+// ===== FARM GOALS =====
+
+/**
+ * Создает цель фарма
+ */
+export const createFarmGoal = (accountId, gameId, targetHours, deadline) => {
+  return db.prepare(`
+    INSERT INTO farm_goals (account_id, game_id, target_hours, deadline)
+    VALUES (?, ?, ?, ?)
+  `).run(accountId, gameId, targetHours, deadline);
+};
+
+/**
+ * Получает активные цели
+ */
+export const getActiveGoals = (accountId) => {
+  return db.prepare(`
+    SELECT * FROM farm_goals
+    WHERE account_id = ? AND completed = 0
+    ORDER BY deadline ASC
+  `).all(accountId);
+};
+
+/**
+ * Обновляет прогресс цели
+ */
+export const updateGoalProgress = (goalId, currentHours) => {
+  const goal = db.prepare('SELECT target_hours FROM farm_goals WHERE id = ?').get(goalId);
+  const completed = currentHours >= goal.target_hours ? 1 : 0;
+  
+  return db.prepare(`
+    UPDATE farm_goals 
+    SET current_hours = ?, completed = ?
+    WHERE id = ?
+  `).run(currentHours, completed, goalId);
+};
+
+// ===== FARM SCHEDULES =====
+
+/**
+ * Создает расписание фарма
+ */
+export const createSchedule = (accountId, startTime, endTime, daysOfWeek) => {
+  return db.prepare(`
+    INSERT INTO farm_schedules (account_id, start_time, end_time, days_of_week)
+    VALUES (?, ?, ?, ?)
+  `).run(accountId, startTime, endTime, daysOfWeek);
+};
+
+/**
+ * Получает расписания для аккаунта
+ */
+export const getSchedules = (accountId) => {
+  return db.prepare(`
+    SELECT * FROM farm_schedules
+    WHERE account_id = ? AND enabled = 1
+  `).all(accountId);
+};
+
+/**
+ * Удаляет расписание
+ */
+export const deleteSchedule = (scheduleId) => {
+  return db.prepare('DELETE FROM farm_schedules WHERE id = ?').run(scheduleId);
+};
+
+/**
+ * Проверяет должен ли аккаунт фармить сейчас
+ */
+export const shouldFarmNow = (accountId) => {
+  const schedules = getSchedules(accountId);
+  if (schedules.length === 0) return true; // Нет расписания = фармить всегда
+  
+  const now = new Date();
+  const currentTime = `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
+  const currentDay = now.getDay(); // 0 = Sunday, 1 = Monday, etc.
+  
+  for (const schedule of schedules) {
+    const days = schedule.days_of_week.split(',').map(Number);
+    if (days.includes(currentDay)) {
+      if (currentTime >= schedule.start_time && currentTime <= schedule.end_time) {
+        return true;
+      }
+    }
+  }
+  
+  return false;
+};
+
+// ===== NOTIFICATIONS =====
+
+/**
+ * Создает настройки уведомлений для пользователя
+ */
+export const initNotifications = (userId) => {
+  const types = ['hours_milestone', 'farm_error', 'weekly_report', 'premium_expiring'];
+  
+  const insert = db.prepare(`
+    INSERT OR IGNORE INTO notifications (user_id, type, enabled)
+    VALUES (?, ?, 1)
+  `);
+  
+  for (const type of types) {
+    insert.run(userId, type);
+  }
+};
+
+/**
+ * Получает настройки уведомлений
+ */
+export const getNotificationSettings = (userId) => {
+  return db.prepare('SELECT * FROM notifications WHERE user_id = ?').all(userId);
+};
+
+/**
+ * Обновляет настройку уведомления
+ */
+export const toggleNotification = (userId, type, enabled) => {
+  return db.prepare(`
+    UPDATE notifications 
+    SET enabled = ?
+    WHERE user_id = ? AND type = ?
+  `).run(enabled ? 1 : 0, userId, type);
 };
 
 // ===== DATABASE OPTIMIZATION =====

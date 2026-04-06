@@ -116,11 +116,17 @@ export async function startFarming(accountId) {
             `⏸ Фарм приостановлен для ${account.account_name}\n\n` +
             `Причина: Игра запущена на вашем ПК\n` +
             `Запустите фарм вручную когда закончите играть.`
-          ).catch(() => {});
-        } catch {}
+          ).catch((err) => {
+            console.error(`❌ Ошибка отправки уведомления пользователю ${account.user_id}:`, err.message);
+          });
+        } catch (err) {
+          console.error(`❌ Ошибка обработки конфликта для ${account.account_name}:`, err.message);
+        }
         
         // Останавливаем фарм
-        stopFarming(accountId).catch(() => {});
+        stopFarming(accountId).catch((err) => {
+          console.error(`❌ Ошибка остановки фарма для аккаунта ${accountId}:`, err.message);
+        });
         return;
       }
       
@@ -248,6 +254,16 @@ export async function stopFarming(accountId) {
     const farmingTime = Math.floor(Date.now() / 1000) - account.farming_started_at;
     const hours = farmingTime / 3600;
     await db.finalizeFarming(accountId, hours);
+    
+    // Записываем статистику за день
+    db.recordFarmStats(accountId, hours);
+    
+    // Обновляем прогресс целей
+    const goals = db.getActiveGoals(accountId);
+    for (const goal of goals) {
+      const totalHours = (account.total_hours_farmed || 0) + hours;
+      db.updateGoalProgress(goal.id, totalHours);
+    }
   } else {
     await db.updateAccountFarmingStatus(accountId, false);
   }
