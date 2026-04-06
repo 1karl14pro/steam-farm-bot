@@ -978,21 +978,34 @@ export function setupHandlers() {
 
     const users = db.getAllUsers();
     const accounts = db.getAllSteamAccounts();
-    const payments = db.getPendingPayments();
-    const now = Math.floor(Date.now() / 1000);
+    const activeFarms = farmManager.getActiveFarms();
+    
+    // Получаем использование ресурсов
+    const memUsage = process.memoryUsage();
+    const memUsedMB = (memUsage.heapUsed / 1024 / 1024).toFixed(2);
+    const memTotalMB = (memUsage.heapTotal / 1024 / 1024).toFixed(2);
+    const uptime = Math.floor(process.uptime());
+    const uptimeHours = Math.floor(uptime / 3600);
+    const uptimeMinutes = Math.floor((uptime % 3600) / 60);
 
     const activeUsers = users.filter(u => {
       const info = db.getUserSubscriptionInfo(u.telegram_id);
       return info.isPremium || info.isTrial;
     }).length;
 
-    let text = `👮‍♂️ Панель администратора\n━━━━━━━━━━━━━━━\n`;
-    text += `👥 Пользователей: ${users.length}\n`;
-    text += `👤 Активных: ${activeUsers}\n`;
-    text += `游戏代练 Аккаунтов: ${accounts.length}\n`;
-    text += `💳 Платежей: ${payments.length}\n\n`;
+    let text = `👮‍♂️ Админ-панель\n━━━━━━━━━━━━━━━\n\n`;
     
-    text += `📊 Статистика подписок:\n`;
+    text += `📊 Статистика:\n`;
+    text += `👥 Пользователей: ${users.length}\n`;
+    text += `✅ Активных: ${activeUsers}\n`;
+    text += `🎮 Аккаунтов: ${accounts.length}\n`;
+    text += `🟢 Фармит: ${activeFarms.length}\n\n`;
+    
+    text += `💻 Ресурсы:\n`;
+    text += `🧠 RAM: ${memUsedMB}/${memTotalMB} МБ\n`;
+    text += `⏱ Uptime: ${uptimeHours}ч ${uptimeMinutes}м\n\n`;
+    
+    text += `📦 Подписки:\n`;
     text += `📦 Базовый: ${users.filter(u => db.getUserSubscriptionInfo(u.telegram_id).tier === 1).length}\n`;
     text += `⭐ Полный: ${users.filter(u => db.getUserSubscriptionInfo(u.telegram_id).tier === 2).length}\n`;
     text += `🎁 Триал: ${users.filter(u => db.getUserSubscriptionInfo(u.telegram_id).isTrial).length}\n`;
@@ -1000,9 +1013,18 @@ export function setupHandlers() {
     await ctx.reply(text, {
       reply_markup: {
         inline_keyboard: [
-          [{ text: '💳 Список платежей', callback_data: 'admin_payments' }],
-          [{ text: '👤 Список пользователей', callback_data: 'admin_users' }],
-          [{ text: '📊 Статистика', callback_data: 'admin_stats' }]
+          [
+            { text: '👥 Пользователи', callback_data: 'admin_users' },
+            { text: '🎮 Фарм', callback_data: 'admin_farms' }
+          ],
+          [
+            { text: '💳 Платежи', callback_data: 'admin_payments' },
+            { text: '📊 Статистика', callback_data: 'admin_stats' }
+          ],
+          [
+            { text: '⚙️ Система', callback_data: 'admin_system' },
+            { text: '📋 Логи', callback_data: 'admin_logs' }
+          ]
         ]
       }
     });
@@ -1013,7 +1035,13 @@ export function setupHandlers() {
     
     const payments = db.getPendingPayments();
     if (payments.length === 0) {
-      await ctx.editMessageText('📭 Нет ожидающих платежей');
+      await ctx.editMessageText('📭 Нет ожидающих платежей', {
+        reply_markup: {
+          inline_keyboard: [
+            [{ text: '🔙 Назад', callback_data: 'admin_back' }]
+          ]
+        }
+      });
       return;
     }
 
@@ -1032,9 +1060,283 @@ export function setupHandlers() {
     await ctx.editMessageText(text, {
       reply_markup: {
         inline_keyboard: [
-          [{ text: '🔙 Назад', callback_data: 'admin_panel' }]
+          [{ text: '🔙 Назад', callback_data: 'admin_back' }]
         ]
       }
     });
+  });
+
+  bot.action('admin_users', async (ctx) => {
+    if (!ADMIN_IDS.includes(ctx.from.id)) return;
+    
+    await ctx.editMessageText('👥 Управление пользователями\n━━━━━━━━━━━━━━━\n\nВведите Telegram ID пользователя:', {
+      reply_markup: {
+        inline_keyboard: [
+          [{ text: '📋 Список всех', callback_data: 'admin_users_list' }],
+          [{ text: '🔙 Назад', callback_data: 'admin_back' }]
+        ]
+      }
+    });
+  });
+
+  bot.action('admin_users_list', async (ctx) => {
+    if (!ADMIN_IDS.includes(ctx.from.id)) return;
+    
+    const users = db.getAllUsers();
+    const page = 0;
+    const perPage = 10;
+    const totalPages = Math.ceil(users.length / perPage);
+    const pageUsers = users.slice(page * perPage, (page + 1) * perPage);
+    
+    let text = `👥 Пользователи (${page + 1}/${totalPages})\n━━━━━━━━━━━━━━━\n\n`;
+    
+    for (const user of pageUsers) {
+      const info = db.getUserSubscriptionInfo(user.telegram_id);
+      const status = info.isPremium ? '⭐' : info.isTrial ? '🎁' : '❌';
+      const banned = info.isBanned ? '🚫' : '';
+      text += `${status}${banned} ${user.username || 'NoName'} [${user.telegram_id}]\n`;
+    }
+    
+    const buttons = [];
+    if (totalPages > 1) {
+      buttons.push([
+        { text: '◀️', callback_data: `admin_users_list_${Math.max(0, page - 1)}` },
+        { text: `${page + 1}/${totalPages}`, callback_data: 'noop' },
+        { text: '▶️', callback_data: `admin_users_list_${Math.min(totalPages - 1, page + 1)}` }
+      ]);
+    }
+    buttons.push([{ text: '🔙 Назад', callback_data: 'admin_users' }]);
+    
+    await ctx.editMessageText(text, {
+      reply_markup: { inline_keyboard: buttons }
+    });
+  });
+
+  bot.action('admin_farms', async (ctx) => {
+    if (!ADMIN_IDS.includes(ctx.from.id)) return;
+    
+    const activeFarms = farmManager.getAllFarmsStatus();
+    
+    if (activeFarms.length === 0) {
+      await ctx.editMessageText('🎮 Активные фармы\n━━━━━━━━━━━━━━━\n\nНет активных фармов', {
+        reply_markup: {
+          inline_keyboard: [
+            [{ text: '🔙 Назад', callback_data: 'admin_back' }]
+          ]
+        }
+      });
+      return;
+    }
+    
+    let text = `🎮 Активные фармы (${activeFarms.length})\n━━━━━━━━━━━━━━━\n\n`;
+    
+    for (const farm of activeFarms.slice(0, 10)) {
+      const uptimeHours = Math.floor(farm.uptime / 3600);
+      const uptimeMinutes = Math.floor((farm.uptime % 3600) / 60);
+      text += `🟢 ${farm.accountName}\n`;
+      text += `   Игр: ${farm.gamesCount} | Uptime: ${uptimeHours}ч ${uptimeMinutes}м\n`;
+      text += `   Всего: ${farm.totalHoursFarmed.toFixed(1)}ч\n\n`;
+    }
+    
+    if (activeFarms.length > 10) {
+      text += `... и еще ${activeFarms.length - 10} фармов\n`;
+    }
+    
+    await ctx.editMessageText(text, {
+      reply_markup: {
+        inline_keyboard: [
+          [{ text: '🔄 Обновить', callback_data: 'admin_farms' }],
+          [{ text: '🔙 Назад', callback_data: 'admin_back' }]
+        ]
+      }
+    });
+  });
+
+  bot.action('admin_stats', async (ctx) => {
+    if (!ADMIN_IDS.includes(ctx.from.id)) return;
+    
+    const users = db.getAllUsers();
+    const accounts = db.getAllSteamAccounts();
+    const activeFarms = farmManager.getActiveFarms();
+    
+    // Статистика по дням
+    const now = Math.floor(Date.now() / 1000);
+    const oneDayAgo = now - 86400;
+    const oneWeekAgo = now - 604800;
+    
+    const newUsersToday = users.filter(u => u.created_at > oneDayAgo).length;
+    const newUsersWeek = users.filter(u => u.created_at > oneWeekAgo).length;
+    
+    // Статистика по аккаунтам
+    const totalHoursFarmed = accounts.reduce((sum, acc) => sum + (acc.total_hours_farmed || 0), 0);
+    
+    let text = `📊 Детальная статистика\n━━━━━━━━━━━━━━━\n\n`;
+    
+    text += `👥 Пользователи:\n`;
+    text += `Всего: ${users.length}\n`;
+    text += `Новых за день: ${newUsersToday}\n`;
+    text += `Новых за неделю: ${newUsersWeek}\n\n`;
+    
+    text += `🎮 Аккаунты:\n`;
+    text += `Всего: ${accounts.length}\n`;
+    text += `Активных: ${activeFarms.length}\n`;
+    text += `Остановлено: ${accounts.length - activeFarms.length}\n\n`;
+    
+    text += `⏱ Фарм:\n`;
+    text += `Всего нафармлено: ${totalHoursFarmed.toFixed(1)} часов\n`;
+    text += `Среднее на аккаунт: ${(totalHoursFarmed / accounts.length || 0).toFixed(1)}ч\n`;
+    
+    await ctx.editMessageText(text, {
+      reply_markup: {
+        inline_keyboard: [
+          [{ text: '🔄 Обновить', callback_data: 'admin_stats' }],
+          [{ text: '🔙 Назад', callback_data: 'admin_back' }]
+        ]
+      }
+    });
+  });
+
+  bot.action('admin_system', async (ctx) => {
+    if (!ADMIN_IDS.includes(ctx.from.id)) return;
+    
+    const memUsage = process.memoryUsage();
+    const memUsedMB = (memUsage.heapUsed / 1024 / 1024).toFixed(2);
+    const memTotalMB = (memUsage.heapTotal / 1024 / 1024).toFixed(2);
+    const uptime = Math.floor(process.uptime());
+    const uptimeHours = Math.floor(uptime / 3600);
+    const uptimeMinutes = Math.floor((uptime % 3600) / 60);
+    
+    const dbSize = db.getDatabaseSize();
+    const dbSizeMB = (dbSize / 1024 / 1024).toFixed(2);
+    
+    let text = `⚙️ Управление системой\n━━━━━━━━━━━━━━━\n\n`;
+    
+    text += `💻 Система:\n`;
+    text += `🧠 RAM: ${memUsedMB}/${memTotalMB} МБ\n`;
+    text += `⏱ Uptime: ${uptimeHours}ч ${uptimeMinutes}м\n`;
+    text += `💾 БД: ${dbSizeMB} МБ\n`;
+    text += `🔢 PID: ${process.pid}\n`;
+    
+    await ctx.editMessageText(text, {
+      reply_markup: {
+        inline_keyboard: [
+          [
+            { text: '🔄 Оптимизировать БД', callback_data: 'admin_optimize_db' },
+            { text: '🗑 Очистить кеш', callback_data: 'admin_clear_cache' }
+          ],
+          [{ text: '🔙 Назад', callback_data: 'admin_back' }]
+        ]
+      }
+    });
+  });
+
+  bot.action('admin_optimize_db', async (ctx) => {
+    if (!ADMIN_IDS.includes(ctx.from.id)) return;
+    
+    await ctx.answerCbQuery('⏳ Оптимизация БД...');
+    
+    try {
+      db.cleanupOldData();
+      db.optimizeDatabase();
+      await ctx.answerCbQuery('✅ БД оптимизирована', { show_alert: true });
+    } catch (err) {
+      await ctx.answerCbQuery('❌ Ошибка оптимизации', { show_alert: true });
+    }
+    
+    // Обновляем информацию
+    ctx.callbackQuery.data = 'admin_system';
+    await bot.handleUpdate({ callback_query: ctx.callbackQuery });
+  });
+
+  bot.action('admin_clear_cache', async (ctx) => {
+    if (!ADMIN_IDS.includes(ctx.from.id)) return;
+    
+    await ctx.answerCbQuery('⏳ Очистка кеша...');
+    
+    try {
+      const { cleanupOldCaches } = await import('../services/gameCache.js');
+      await cleanupOldCaches();
+      await ctx.answerCbQuery('✅ Кеш очищен', { show_alert: true });
+    } catch (err) {
+      await ctx.answerCbQuery('❌ Ошибка очистки', { show_alert: true });
+    }
+    
+    ctx.callbackQuery.data = 'admin_system';
+    await bot.handleUpdate({ callback_query: ctx.callbackQuery });
+  });
+
+  bot.action('admin_logs', async (ctx) => {
+    if (!ADMIN_IDS.includes(ctx.from.id)) return;
+    
+    await ctx.editMessageText('📋 Логи\n━━━━━━━━━━━━━━━\n\nФункция в разработке', {
+      reply_markup: {
+        inline_keyboard: [
+          [{ text: '🔙 Назад', callback_data: 'admin_back' }]
+        ]
+      }
+    });
+  });
+
+  bot.action('admin_back', async (ctx) => {
+    if (!ADMIN_IDS.includes(ctx.from.id)) return;
+    
+    await ctx.answerCbQuery();
+    
+    const users = db.getAllUsers();
+    const accounts = db.getAllSteamAccounts();
+    const activeFarms = farmManager.getActiveFarms();
+    
+    // Получаем использование ресурсов
+    const memUsage = process.memoryUsage();
+    const memUsedMB = (memUsage.heapUsed / 1024 / 1024).toFixed(2);
+    const memTotalMB = (memUsage.heapTotal / 1024 / 1024).toFixed(2);
+    const uptime = Math.floor(process.uptime());
+    const uptimeHours = Math.floor(uptime / 3600);
+    const uptimeMinutes = Math.floor((uptime % 3600) / 60);
+
+    const activeUsers = users.filter(u => {
+      const info = db.getUserSubscriptionInfo(u.telegram_id);
+      return info.isPremium || info.isTrial;
+    }).length;
+
+    let text = `👮‍♂️ Админ-панель\n━━━━━━━━━━━━━━━\n\n`;
+    
+    text += `📊 Статистика:\n`;
+    text += `👥 Пользователей: ${users.length}\n`;
+    text += `✅ Активных: ${activeUsers}\n`;
+    text += `🎮 Аккаунтов: ${accounts.length}\n`;
+    text += `🟢 Фармит: ${activeFarms.length}\n\n`;
+    
+    text += `💻 Ресурсы:\n`;
+    text += `🧠 RAM: ${memUsedMB}/${memTotalMB} МБ\n`;
+    text += `⏱ Uptime: ${uptimeHours}ч ${uptimeMinutes}м\n\n`;
+    
+    text += `📦 Подписки:\n`;
+    text += `📦 Базовый: ${users.filter(u => db.getUserSubscriptionInfo(u.telegram_id).tier === 1).length}\n`;
+    text += `⭐ Полный: ${users.filter(u => db.getUserSubscriptionInfo(u.telegram_id).tier === 2).length}\n`;
+    text += `🎁 Триал: ${users.filter(u => db.getUserSubscriptionInfo(u.telegram_id).isTrial).length}\n`;
+
+    await ctx.editMessageText(text, {
+      reply_markup: {
+        inline_keyboard: [
+          [
+            { text: '👥 Пользователи', callback_data: 'admin_users' },
+            { text: '🎮 Фарм', callback_data: 'admin_farms' }
+          ],
+          [
+            { text: '💳 Платежи', callback_data: 'admin_payments' },
+            { text: '📊 Статистика', callback_data: 'admin_stats' }
+          ],
+          [
+            { text: '⚙️ Система', callback_data: 'admin_system' },
+            { text: '📋 Логи', callback_data: 'admin_logs' }
+          ]
+        ]
+      }
+    });
+  });
+
+  bot.action('noop', async (ctx) => {
+    await ctx.answerCbQuery();
   });
 }
