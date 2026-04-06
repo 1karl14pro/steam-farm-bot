@@ -1,6 +1,5 @@
 import * as db from '../database.js';
 import * as farmManager from './farmManager.js';
-import { MAX_GAMES_PER_ACCOUNT } from '../constants.js';
 
 /**
  * Форматирует информацию об аккаунте с статистикой
@@ -32,7 +31,8 @@ export function formatAccountInfo(account, games) {
   }
   
   text += `━━━━━━━━━━━━━━━\n`;
-  text += `🎮 Игр: ${games.length}/${MAX_GAMES_PER_ACCOUNT}\n`;
+  const maxGames = db.getGamesLimit(account.user_id);
+  text += `🎮 Игр: ${games.length}/${maxGames}\n`;
   
   const currentFarmingTime = account.is_farming && account.farming_started_at
     ? Math.max(0, (Date.now() / 1000 - account.farming_started_at) / 3600)
@@ -86,7 +86,7 @@ export function formatUserProfileFull(user, accounts) {
     const daysLeft = Math.ceil(secondsLeft / 86400);
     const hoursLeft = Math.floor((secondsLeft % 86400) / 3600);
     const tierLabel = info.tier === 2 ? '⭐ Полный' : '📦 Базовый';
-    const limitLabel = info.tier === 2 ? '∞' : '30';
+    const limitLabel = info.tier === 2 ? '50' : '15';
     text += `${tierLabel} | ${accounts.length}/${limitLabel} акк.\n`;
     text += `⏱ ${daysLeft}д ${hoursLeft}ч до конца\n`;
   } else if (info.isTrial) {
@@ -96,7 +96,7 @@ export function formatUserProfileFull(user, accounts) {
     text += `🎁 Триал | ${accounts.length}/5 акк.\n`;
     text += `⏱ ${daysLeft}д ${hoursLeft}ч осталось\n`;
   } else {
-    text += `❌ Подписка неактивна | ${accounts.length}/5 акк.\n`;
+    text += `❌ Подписка неактивна | ${accounts.length}/0 акк.\n`;
   }
 
   text += `━━━━━━━━━━━━━━━\n`;

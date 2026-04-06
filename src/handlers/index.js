@@ -3,7 +3,6 @@ import * as db from '../database.js';
 import * as farmManager from '../services/farmManager.js';
 import * as steamLibrary from '../services/steamLibrary.js';
 import * as formatter from '../services/formatter.js';
-import { MAX_GAMES_PER_ACCOUNT } from '../constants.js';
 import { userStates } from '../utils.js';
 
 export function setupHandlers() {
@@ -200,10 +199,11 @@ export function setupHandlers() {
     await ctx.answerCbQuery();
 
     const games = db.getGames(accountId);
+    const maxGames = db.getGamesLimit(account.user_id);
 
     let text = `🎮 Игры для ${account.account_name}\n\n`;
     text += formatter.formatGamesList(games);
-    text += `\nВсего: ${games.length}/${MAX_GAMES_PER_ACCOUNT}`;
+    text += `\nВсего: ${games.length}/${maxGames}`;
 
     const buttons = [
       [{ text: '📚 Выбрать из библиотеки', callback_data: `library_${accountId}` }],
@@ -331,7 +331,7 @@ export function setupHandlers() {
       await ctx.answerCbQuery('➖ Игра удалена');
     } else {
       // Проверяем лимит
-      const maxGames = MAX_GAMES_PER_ACCOUNT;
+      const maxGames = db.getGamesLimit(account.user_id);
       if (games.length >= maxGames) {
         await ctx.answerCbQuery(`❌ Достигнут лимит игр (${maxGames})`, { show_alert: true });
         return;
@@ -413,7 +413,7 @@ export function setupHandlers() {
       const selectedAppIds = new Set(selectedGames.map(g => g.app_id));
       
       // Вычисляем лимит игр
-      const maxGames = MAX_GAMES_PER_ACCOUNT;
+      const maxGames = db.getGamesLimit(account.user_id);
       
       let text = `📚 Библиотека игр для ${account.account_name}\n\n`;
       text += `Всего: ${library.length} игр\n`;
@@ -508,8 +508,9 @@ export function setupHandlers() {
     }
     
     // Проверяем лимит
-    if (games.length >= MAX_GAMES_PER_ACCOUNT) {
-      await ctx.answerCbQuery(`❌ Достигнут лимит игр (${MAX_GAMES_PER_ACCOUNT})`, { show_alert: true });
+    const maxGames = db.getGamesLimit(account.user_id);
+    if (games.length >= maxGames) {
+      await ctx.answerCbQuery(`❌ Достигнут лимит игр (${maxGames})`, { show_alert: true });
       return;
     }
 
@@ -557,7 +558,7 @@ export function setupHandlers() {
       const selectedGames = db.getGames(accountId);
       const selectedAppIds = new Set(selectedGames.map(g => g.app_id));
       
-      const maxGames = MAX_GAMES_PER_ACCOUNT;
+      const maxGames = db.getGamesLimit(account.user_id);
       
       let text = `📚 Библиотека игр для ${account.account_name}\n\n`;
       text += `Всего: ${library.length} игр\n`;
@@ -865,7 +866,8 @@ export function setupHandlers() {
     // Обновляем сообщение с играми
     const acc = db.getSteamAccount(accountId);
     const updatedGames = db.getGames(accountId);
-    const text = `🎮 Игры для ${acc.account_name}\n\n${formatter.formatGamesList(updatedGames)}\nВсего: ${updatedGames.length}/${MAX_GAMES_PER_ACCOUNT}`;
+    const maxGames = db.getGamesLimit(acc.user_id);
+    const text = `🎮 Игры для ${acc.account_name}\n\n${formatter.formatGamesList(updatedGames)}\nВсего: ${updatedGames.length}/${maxGames}`;
 
     const buttons = [
       [{ text: '📚 Выбрать из библиотеки', callback_data: `library_${accountId}` }],
@@ -1801,8 +1803,9 @@ export function setupHandlers() {
           }
 
           const games = db.getGames(state.accountId);
-          if (games.length >= MAX_GAMES_PER_ACCOUNT) {
-            await ctx.reply(`❌ Достигнут лимит игр (${MAX_GAMES_PER_ACCOUNT})`);
+          const maxGames = db.getGamesLimit(account.user_id);
+          if (games.length >= maxGames) {
+            await ctx.reply(`❌ Достигнут лимит игр (${maxGames})`);
             userStates.delete(ctx.from.id);
             return;
           }
