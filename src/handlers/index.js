@@ -408,13 +408,17 @@ export function setupHandlers() {
       const pageGames = library.slice(page * 15, page * 15 + 15);
       const totalPages = Math.ceil(library.length / 15);
 
-      let text = `📚 Библиотека игр для ${account.account_name}\n\n`;
-      text += `Всего: ${library.length} игр\n`;
-      text += `Страница: ${page + 1}/${totalPages}\n`;
-
       // Получаем выбранные игры для отображения галочек
       const selectedGames = db.getGames(accountId);
       const selectedAppIds = new Set(selectedGames.map(g => g.app_id));
+      
+      // Вычисляем лимит игр
+      const maxGames = MAX_GAMES_PER_ACCOUNT;
+      
+      let text = `📚 Библиотека игр для ${account.account_name}\n\n`;
+      text += `Всего: ${library.length} игр\n`;
+      text += `Выбрано: ${selectedGames.length}/${maxGames}\n`;
+      text += `Страница: ${page + 1}/${totalPages}\n`;
 
       const gameButtons = pageGames.map(game => {
         let displayText = game.name;
@@ -483,18 +487,36 @@ export function setupHandlers() {
     }
 
     const games = db.getGames(accountId);
-    const maxGames = db.getAccountLimit(account.user_id) === -1 ? Infinity : db.getAccountLimit(account.user_id) * 32; // 32 игры на аккаунт для премиум пользователей
-    if (games.length >= Math.min(maxGames, 32)) { // Ограничиваем 32 играми на аккаунт
-      const limit = Math.min(maxGames, 32);
-      await ctx.answerCbQuery(`❌ Достигнут лимит игр (${limit})`, { show_alert: true });
+    const existingGame = games.find(g => g.app_id === appId);
+    
+    // Если игра уже добавлена - удаляем её
+    if (existingGame) {
+      db.deleteGame(existingGame.id);
+      await ctx.answerCbQuery('✅ Игра удалена');
+      
+      if (account.is_farming) {
+        try {
+          await farmManager.restartFarming(accountId);
+        } catch (err) {
+          console.error('Ошибка перезапуска:', err);
+        }
+      }
+      
+      // Обновляем только кнопки, не перезагружая библиотеку
+      await updateLibraryButtons(ctx, accountId);
+      return;
+    }
+    
+    // Проверяем лимит
+    if (games.length >= MAX_GAMES_PER_ACCOUNT) {
+      await ctx.answerCbQuery(`❌ Достигнут лимит игр (${MAX_GAMES_PER_ACCOUNT})`, { show_alert: true });
       return;
     }
 
     await ctx.answerCbQuery('⏳ Добавляю игру...');
 
-    // Получаем название игры для отображения
-    const { getOwnedGames } = await import('../services/steamLibrary.js');
-    const library = await getOwnedGames(accountId);
+    // Получаем название игры из кеша
+    const library = await steamLibrary.getOwnedGamesWithHours(accountId, false);
     const gameInfo = library.find(g => g.appId === appId);
     const gameName = gameInfo?.name || `App ${appId}`;
 
@@ -508,16 +530,85 @@ export function setupHandlers() {
       if (account.is_farming) {
         try {
           await farmManager.restartFarming(accountId);
-          await ctx.reply('🔄 Фарм перезапущен с новой игрой');
         } catch (err) {
           console.error('Ошибка перезапуска:', err);
         }
       }
     }
     
-    ctx.callbackQuery.data = `library_${accountId}`;
-    await bot.handleUpdate({ callback_query: ctx.callbackQuery });
+    // Обновляем только кнопки, не перезагружая библиотеку
+    await updateLibraryButtons(ctx, accountId);
   });
+
+  // Вспомогательная функция для обновления кнопок без перезагрузки
+  async function updateLibraryButtons(ctx, accountId) {
+    try {
+      const account = db.getSteamAccount(accountId);
+      const library = await steamLibrary.getOwnedGamesWithHours(accountId, false);
+      
+      // Получаем текущую страницу из сообщения
+      const currentText = ctx.callbackQuery.message.text;
+      const pageMatch = currentText.match(/Страница: (\d+)\/(\d+)/);
+      const page = pageMatch ? parseInt(pageMatch[1]) - 1 : 0;
+      
+      const pageGames = library.slice(page * 15, page * 15 + 15);
+      const totalPages = Math.ceil(library.length / 15);
+
+      const selectedGames = db.getGames(accountId);
+      const selectedAppIds = new Set(selectedGames.map(g => g.app_id));
+      
+      const maxGames = MAX_GAMES_PER_ACCOUNT;
+      
+      let text = `📚 Библиотека игр для ${account.account_name}\n\n`;
+      text += `Всего: ${library.length} игр\n`;
+      text += `Выбрано: ${selectedGames.length}/${maxGames}\n`;
+      text += `Страница: ${page + 1}/${totalPages}\n`;
+
+      const gameButtons = pageGames.map(game => {
+        let displayText = game.name;
+        
+        const isSelected = selectedAppIds.has(game.appId);
+        if (isSelected) {
+          displayText = '✅ ' + displayText;
+        }
+        
+        if (game.playtime_forever > 0) {
+          const hours = Math.floor(game.playtime_forever / 60);
+          const mins = game.playtime_forever % 60;
+          const timeStr = hours > 0 ? `${hours}ч ${mins}м` : `${mins}м`;
+          displayText += ` (${timeStr})`;
+        }
+        
+        return [{
+          text: displayText,
+          callback_data: `add_library_${accountId}_${game.appId}`
+        }];
+      });
+
+      const navButtons = [];
+      if (page > 0) {
+        navButtons.push({ text: '◀️ Назад', callback_data: `library_${accountId}_page_${page - 1}` });
+      }
+      if (page < totalPages - 1) {
+        navButtons.push({ text: 'Вперед ▶️', callback_data: `library_${accountId}_page_${page + 1}` });
+      }
+
+      if (navButtons.length > 0) {
+        gameButtons.push(navButtons);
+      }
+
+      gameButtons.push([
+        { text: '🔄 Обновить', callback_data: `library_${accountId}_refresh` }
+      ]);
+      gameButtons.push([{ text: '🔙 Назад', callback_data: `games_${accountId}` }]);
+
+      await ctx.editMessageText(text, {
+        reply_markup: { inline_keyboard: gameButtons }
+      });
+    } catch (error) {
+      console.error('Ошибка обновления кнопок:', error.message);
+    }
+  }
 
   bot.action(/^add_game_(\d+)$/, async (ctx) => {
     const accountId = parseInt(ctx.match[1]);
