@@ -74,6 +74,11 @@ try {
     db.exec("ALTER TABLE users ADD COLUMN is_banned INTEGER DEFAULT 0");
   }
 
+  const hasTermsAccepted = usersTableInfo.find((col) => col.name === 'terms_accepted');
+  if (!hasTermsAccepted) {
+    db.exec("ALTER TABLE users ADD COLUMN terms_accepted INTEGER DEFAULT 0");
+  }
+
 } catch (err) {
   // Migration failures are non-fatal; DB may already be migrated
 }
@@ -149,9 +154,13 @@ export const getUser = (telegramId) => {
 export const createUser = (telegramId, username) => {
   const trialEndsAt = Math.floor(Date.now() / 1000) + (7 * 24 * 60 * 60); // 7 дней
   return db.prepare(`
-    INSERT INTO users (telegram_id, username, trial_ends_at)
-    VALUES (?, ?, ?)
+    INSERT INTO users (telegram_id, username, trial_ends_at, terms_accepted)
+    VALUES (?, ?, ?, 0)
   `).run(telegramId, username, trialEndsAt);
+};
+
+export const acceptTerms = (telegramId) => {
+  return db.prepare('UPDATE users SET terms_accepted = 1 WHERE telegram_id = ?').run(telegramId);
 };
 
 export const updateUserPremium = (telegramId, isPremium) => {
