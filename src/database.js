@@ -224,11 +224,30 @@ export const getAccountLimit = (telegramId) => {
   const now = Math.floor(Date.now() / 1000);
   
   if (user.premium_expires_at > now) {
-    return user.premium_tier === 2 ? -1 : 30;
+    return user.premium_tier === 2 ? 50 : 15; // Полный: 50, Базовый: 15
   }
   
   if (user.trial_ends_at && user.trial_ends_at > now) {
     return 5;
+  }
+  
+  return 0;
+};
+
+export const getGamesLimit = (telegramId) => {
+  const user = getUser(telegramId);
+  if (!user || user.is_banned === 1) return 0;
+  
+  const now = Math.floor(Date.now() / 1000);
+  
+  // Premium пользователи
+  if (user.premium_expires_at > now) {
+    return user.premium_tier === 2 ? 15 : 10; // Полный: 15, Базовый: 10
+  }
+  
+  // Триал пользователи
+  if (user.trial_ends_at && user.trial_ends_at > now) {
+    return 4;
   }
   
   return 0;
