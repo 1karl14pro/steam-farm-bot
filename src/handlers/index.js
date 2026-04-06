@@ -1471,6 +1471,221 @@ export function setupHandlers() {
     await ctx.answerCbQuery();
   });
 
+  // ===== STATISTICS =====
+
+  bot.action(/^stats_(\d+)$/, async (ctx) => {
+    const accountId = parseInt(ctx.match[1]);
+    const account = db.getSteamAccount(accountId);
+
+    if (!account || account.user_id !== ctx.from.id) {
+      await ctx.answerCbQuery('❌ Аккаунт не найден');
+      return;
+    }
+
+    await ctx.answerCbQuery();
+
+    const stats = db.getFarmStats(accountId, 7);
+    const topGames = db.getTopFarmedGames(accountId);
+    
+    const weekHours = stats.reduce((sum, s) => sum + s.hours_farmed, 0);
+    const avgPerDay = weekHours / 7;
+    const totalHours = account.total_hours_farmed || 0;
+
+    // Прогноз на месяц
+    const forecastMonth = (avgPerDay * 30).toFixed(1);
+
+    let text = `📊 Статистика фарма\n`;
+    text += `━━━━━━━━━━━━━━━\n\n`;
+    text += `👤 Аккаунт: ${account.account_name}\n\n`;
+    
+    text += `📈 За последние 7 дней:\n`;
+    if (stats.length > 0) {
+      stats.slice(0, 5).forEach(s => {
+        text += `  ${s.date}: ${s.hours_farmed.toFixed(1)}ч\n`;
+      });
+    } else {
+      text += `  Нет данных\n`;
+    }
+    
+    text += `\n💯 Итого:\n`;
+    text += `  За неделю: ${weekHours.toFixed(1)}ч\n`;
+    text += `  В среднем/день: ${avgPerDay.toFixed(1)}ч\n`;
+    text += `  Всего нафармлено: ${totalHours.toFixed(1)}ч\n\n`;
+    
+    text += `🔮 Прогноз:\n`;
+    text += `  Через 30 дней: ~${forecastMonth}ч\n\n`;
+    
+    text += `🎮 Топ-5 игр:\n`;
+    if (topGames.length > 0) {
+      topGames.forEach((game, i) => {
+        text += `  ${i + 1}. ${game.game_name}\n`;
+      });
+    } else {
+      text += `  Нет игр\n`;
+    }
+
+    await ctx.editMessageText(text, {
+      reply_markup: {
+        inline_keyboard: [
+          [{ text: '🔄 Обновить', callback_data: `stats_${accountId}` }],
+          [{ text: '🔙 К аккаунту', callback_data: `account_${accountId}` }]
+        ]
+      }
+    });
+  });
+
+  // ===== GOALS =====
+
+  bot.action(/^goals_(\d+)$/, async (ctx) => {
+    const accountId = parseInt(ctx.match[1]);
+    const account = db.getSteamAccount(accountId);
+
+    if (!account || account.user_id !== ctx.from.id) {
+      await ctx.answerCbQuery('❌ Аккаунт не найден');
+      return;
+    }
+
+    await ctx.answerCbQuery();
+
+    const goals = db.getActiveGoals(accountId);
+    const totalHours = account.total_hours_farmed || 0;
+
+    let text = `🎯 Цели фарма\n`;
+    text += `━━━━━━━━━━━━━━━\n\n`;
+    text += `👤 Аккаунт: ${account.account_name}\n`;
+    text += `⏱ Всего нафармлено: ${totalHours.toFixed(1)}ч\n\n`;
+
+    if (goals.length > 0) {
+      text += `📋 Активные цели:\n\n`;
+      goals.forEach((goal, i) => {
+        const progress = (goal.current_hours / goal.target_hours * 100).toFixed(0);
+        const progressBar = '█'.repeat(Math.floor(progress / 10)) + '░'.repeat(10 - Math.floor(progress / 10));
+        const gameName = goal.game_id ? 
+          db.getGames(accountId).find(g => g.app_id === goal.game_id)?.game_name || 'Неизвестная игра' 
+          : 'Общая цель';
+        
+        text += `${i + 1}. ${gameName}\n`;
+        text += `   Цель: ${goal.target_hours}ч\n`;
+        text += `   Прогресс: ${goal.current_hours.toFixed(1)}ч (${progress}%)\n`;
+        text += `   [${progressBar}]\n`;
+        
+        if (goal.deadline) {
+          const daysLeft = Math.ceil((goal.deadline - Math.floor(Date.now() / 1000)) / 86400);
+          text += `   ⏰ Осталось дней: ${daysLeft}\n`;
+        }
+        text += `\n`;
+      });
+    } else {
+      text += `Нет активных целей\n\n`;
+      text += `💡 Создайте цель, чтобы отслеживать прогресс!`;
+    }
+
+    await ctx.editMessageText(text, {
+      reply_markup: {
+        inline_keyboard: [
+          [{ text: '➕ Создать цель', callback_data: `create_goal_${accountId}` }],
+          [{ text: '🔄 Обновить', callback_data: `goals_${accountId}` }],
+          [{ text: '🔙 К аккаунту', callback_data: `account_${accountId}` }]
+        ]
+      }
+    });
+  });
+
+  bot.action(/^create_goal_(\d+)$/, async (ctx) => {
+    const accountId = parseInt(ctx.match[1]);
+    await ctx.answerCbQuery();
+    
+    await ctx.editMessageText(
+      '🎯 Создание цели\n━━━━━━━━━━━━━━━\n\n' +
+      'Функция в разработке.\n\n' +
+      'Скоро вы сможете:\n' +
+      '• Устанавливать цели по часам\n' +
+      '• Выбирать конкретные игры\n' +
+      '• Устанавливать дедлайны\n' +
+      '• Получать уведомления о прогрессе',
+      {
+        reply_markup: {
+          inline_keyboard: [
+            [{ text: '🔙 Назад', callback_data: `goals_${accountId}` }]
+          ]
+        }
+      }
+    );
+  });
+
+  // ===== SCHEDULE =====
+
+  bot.action(/^schedule_(\d+)$/, async (ctx) => {
+    const accountId = parseInt(ctx.match[1]);
+    const account = db.getSteamAccount(accountId);
+
+    if (!account || account.user_id !== ctx.from.id) {
+      await ctx.answerCbQuery('❌ Аккаунт не найден');
+      return;
+    }
+
+    await ctx.answerCbQuery();
+
+    const schedules = db.getSchedules(accountId);
+
+    let text = `⏰ Расписание фарма\n`;
+    text += `━━━━━━━━━━━━━━━\n\n`;
+    text += `👤 Аккаунт: ${account.account_name}\n\n`;
+
+    if (schedules.length > 0) {
+      text += `📋 Активные расписания:\n\n`;
+      schedules.forEach((schedule, i) => {
+        const days = schedule.days_of_week.split(',').map(d => {
+          const dayNames = ['Вс', 'Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб'];
+          return dayNames[parseInt(d)];
+        }).join(', ');
+        
+        text += `${i + 1}. ${schedule.start_time} - ${schedule.end_time}\n`;
+        text += `   Дни: ${days}\n`;
+        text += `   Статус: ${schedule.enabled ? '✅ Активно' : '❌ Отключено'}\n\n`;
+      });
+    } else {
+      text += `Нет расписаний\n\n`;
+      text += `💡 Без расписания фарм работает 24/7\n\n`;
+      text += `Создайте расписание, чтобы:\n`;
+      text += `• Фармить только ночью\n`;
+      text += `• Экономить ресурсы\n`;
+      text += `• Избежать конфликтов с игрой`;
+    }
+
+    await ctx.editMessageText(text, {
+      reply_markup: {
+        inline_keyboard: [
+          [{ text: '➕ Создать расписание', callback_data: `create_schedule_${accountId}` }],
+          [{ text: '🔄 Обновить', callback_data: `schedule_${accountId}` }],
+          [{ text: '🔙 К аккаунту', callback_data: `account_${accountId}` }]
+        ]
+      }
+    });
+  });
+
+  bot.action(/^create_schedule_(\d+)$/, async (ctx) => {
+    const accountId = parseInt(ctx.match[1]);
+    await ctx.answerCbQuery();
+    
+    await ctx.editMessageText(
+      '⏰ Создание расписания\n━━━━━━━━━━━━━━━\n\n' +
+      'Функция в разработке.\n\n' +
+      'Скоро вы сможете:\n' +
+      '• Выбирать время начала/конца\n' +
+      '• Выбирать дни недели\n' +
+      '• Создавать несколько расписаний\n' +
+      '• Включать/отключать расписания',
+      {
+        reply_markup: {
+          inline_keyboard: [
+            [{ text: '🔙 Назад', callback_data: `schedule_${accountId}` }]
+          ]
+        }
+      }
+    );
+  });
+
   // ===== TEXT MESSAGE HANDLERS =====
   
   bot.on('text', async (ctx) => {
