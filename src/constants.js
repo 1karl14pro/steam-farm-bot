@@ -9,7 +9,7 @@ export const POPULAR_GAMES = [
 ];
 
 // Максимальное количество игр для фарма одновременно
-export const MAX_GAMES_PER_ACCOUNT = 32;
+export const MAX_GAMES_PER_ACCOUNT = 10;
 
 // Статусы
 export const STATUS = {
