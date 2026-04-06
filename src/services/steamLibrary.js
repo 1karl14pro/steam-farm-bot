@@ -1,86 +1,115 @@
 import SteamUser from 'steam-user';
 import { LoginSession, EAuthTokenPlatformType } from 'steam-session';
 import * as db from '../database.js';
+import { readGameCache, writeGameCache, getSteamId64FromAccount } from './gameCache.js';
+
+// Блокировка одновременных запросов к Steam для одного аккаунта
+const accountLocks = new Map();
 
 /**
  * Получает топ-10 игр по времени игры для аккаунта
  * @param {number} accountId - ID аккаунта из БД
  * @returns {Promise<Array>} - Список топ игр с часами игры
  */
-export async function getTopPlayedGames(accountId) {
+export async function getTopPlayedGames(accountId, forceRefresh = false) {
   const account = db.getSteamAccount(accountId);
   if (!account) {
     throw new Error('Аккаунт не найден');
   }
 
-  return new Promise((resolve, reject) => {
-    const client = new SteamUser();
+  const steamId64 = getSteamId64FromAccount(account);
+  
+  // Проверяем кеш если не форсируем обновление
+  if (!forceRefresh) {
+    const cache = readGameCache(steamId64);
+    if (cache && cache.topPlayed && cache.topPlayed.length > 0) {
+      console.log(`[CACHE] Использую кеш топ игр для ${account.account_name}`);
+      return cache.topPlayed;
+    }
+  }
 
-    // Таймаут 60 секунд
-    const timeout = setTimeout(() => {
-      client.logOff();
-      reject(new Error('Таймаут получения статистики игр (60 сек)'));
-    }, 60000);
+  let result = null;
 
-    client.on('loggedOn', async () => {
-      try {
-        console.log(`Получаю статистику игр для ${account.account_name}...`);
-        
-        // Получаем статистику игр через getUserStats
-        const stats = await client.getUserStatsForGames([]);
-        
-        if (!stats || !stats.length) {
-          clearTimeout(timeout);
-          client.logOff();
-          // Fallback к библиотеке если нет статистики
-          const libraryGames = await getOwnedGames(accountId);
-          resolve(libraryGames.slice(0, 10).map(game => ({
-            ...game,
-            playtime_forever: 0 // Нет данных о времени игры
-          })));
-          return;
-        }
+  // Сначала попробуем получить через новую систему парсинга HTML
+  try {
+    const { saveGamesPage, parseGamesFromHtml } = await import('./steamParser.js');
+    
+    // Сохраняем HTML страницу игр
+    const filePath = await saveGamesPage(accountId);
+    
+    // Парсим игры из HTML
+    const games = await parseGamesFromHtml(filePath);
+    
+    if (games.length > 0) {
+      result = games;
+      
+      // Сохраняем в кеш
+      const cache = readGameCache(steamId64) || { library: [] };
+      writeGameCache(steamId64, cache.library, games);
+    }
+  } catch (error) {
+    console.error('Ошибка получения топ игр через HTML парсинг:', error.message);
+  }
 
-        // Сортируем по времени игры и берем топ-10
-        const topGames = stats
-          .filter(game => game.playtime_forever > 0)
-          .sort((a, b) => b.playtime_forever - a.playtime_forever)
-          .slice(0, 10)
-          .map(game => ({
-            appId: game.appid,
-            name: game.name,
-            playtime_forever: game.playtime_forever
-          }));
-
-        clearTimeout(timeout);
-        client.logOff();
-        resolve(topGames.length > 0 ? topGames : []);
-      } catch (error) {
-        clearTimeout(timeout);
-        client.logOff();
-        // Fallback к обычной библиотеке при ошибке
-        try {
-          const libraryGames = await getOwnedGames(accountId);
-          resolve(libraryGames.slice(0, 10).map(game => ({
-            ...game,
-            playtime_forever: 0
-          })));
-        } catch (fallbackError) {
-          reject(fallbackError);
+  if (result) {
+    return result;
+  }
+  
+  // Если парсинг не удался, пробуем Web API
+  if (process.env.STEAM_WEB_API_KEY) {
+    try {
+      // Получаем cookies для данного аккаунта
+      const { getCookies } = await import('./sessionManager.js');
+      const cookies = getCookies(accountId);
+      
+      if (cookies && cookies.length > 0) {
+        // Ищем steamLoginSecure cookie для получения SteamID
+        const steamLoginCookie = cookies.find(c => c.includes('steamLoginSecure'));
+        if (steamLoginCookie) {
+          // Формат: steamLoginSecure=76561198000000000||hash
+          const cookieValue = steamLoginCookie.split('=')[1]?.split(';')[0];
+          const steamId = cookieValue?.split('||')[0];
+          
+          if (steamId && /^\d+$/.test(steamId)) { // Проверяем что это число
+            // Запрашиваем список игр с Web API
+            const response = await fetch(`https://api.steampowered.com/IPlayerService/GetOwnedGames/v1/?key=${process.env.STEAM_WEB_API_KEY}&steamid=${steamId}&include_appinfo=1&include_played_free_games=1`);
+            const data = await response.json();
+            
+            if (data.response && data.response.games) {
+              // Сортируем по времени в игре и берем топ-10
+              const topGames = data.response.games
+                .filter(game => game.playtime_forever > 0) // Только игры с временем
+                .sort((a, b) => b.playtime_forever - a.playtime_forever)
+                .slice(0, 10)
+                .map(game => ({
+                  appId: game.appid,
+                  name: game.name,
+                  playtime_forever: game.playtime_forever // В минутах
+                }));
+              
+              if (topGames.length > 0) {
+                result = topGames;
+              }
+            }
+          }
         }
       }
-    });
+    } catch (error) {
+      console.error('Ошибка получения топ игр через Web API:', error.message);
+    }
+  }
 
-    client.on('error', (err) => {
-      clearTimeout(timeout);
-      reject(err);
-    });
-
-    // Авторизуемся
-    client.logOn({
-      refreshToken: account.refresh_token
-    });
-  });
+  if (result) {
+    return result;
+  }
+  
+  // Fallback к библиотеке игр
+  const libraryGames = await getOwnedGames(accountId);
+  return libraryGames.slice(0, 10).map(game => ({
+    appId: game.appId,
+    name: game.name,
+    playtime_forever: 0 // Нет данных о времени игры
+  }));
 }
 
 /**
@@ -94,26 +123,98 @@ export async function checkParentalControl(accountId) {
 }
 
 /**
- * Получает список игр из библиотеки Steam аккаунта
+ * Получает список игр из библиотеки Steam аккаунта с информацией о часах
  * @param {number} accountId - ID аккаунта из БД
- * @returns {Promise<Array>} - Список игр с названиями
+ * @param {boolean} forceRefresh - Принудительное обновление кеша
+ * @returns {Promise<Array>} - Список игр с названиями и часами
  */
-export async function getOwnedGames(accountId, offset = 0, limit = 15) {
+export async function getOwnedGamesWithHours(accountId, forceRefresh = false) {
   const account = db.getSteamAccount(accountId);
   if (!account) {
     throw new Error('Аккаунт не найден');
   }
 
-  return new Promise((resolve, reject) => {
-    const client = new SteamUser();
+  const steamId64 = getSteamId64FromAccount(account);
+  
+  // Проверяем кеш
+  if (!forceRefresh) {
+    const cache = readGameCache(steamId64);
+    if (cache && cache.libraryWithHours) {
+      console.log(`[CACHE] Использую кеш библиотеки с часами для ${account.account_name}`);
+      return cache.libraryWithHours;
+    }
+  }
+
+  // Получаем обычную библиотеку
+  const library = await getOwnedGames(accountId, 0, 15, forceRefresh);
+  
+  // Пытаемся получить часы из топ игр
+  let gamesWithHours = library.map(game => ({
+    ...game,
+    playtime_forever: 0
+  }));
+  
+  try {
+    const topPlayed = await getTopPlayedGames(accountId, forceRefresh);
+    
+    // Объединяем данные
+    gamesWithHours = library.map(game => {
+      const topGame = topPlayed.find(t => t.appId === game.appId);
+      return {
+        ...game,
+        playtime_forever: topGame ? topGame.playtime_forever : 0
+      };
+    });
+    
+    // Сохраняем в кеш
+    const cache = readGameCache(steamId64) || {};
+    cache.libraryWithHours = gamesWithHours;
+    writeGameCache(steamId64, cache.library || library, cache.topPlayed || topPlayed);
+    
+  } catch (err) {
+    console.error('Ошибка получения часов для библиотеки:', err.message);
+  }
+  
+  return gamesWithHours;
+}
+export async function getOwnedGames(accountId, offset = 0, limit = 15, forceRefresh = false) {
+  const account = db.getSteamAccount(accountId);
+  if (!account) {
+    throw new Error('Аккаунт не найден');
+  }
+
+  // Проверяем блокировку - если уже идет запрос для этого аккаунта
+  if (accountLocks.has(accountId)) {
+    console.log(`[steamLibrary] Ожидание завершения текущего запроса для ${account.account_name}`);
+    return accountLocks.get(accountId);
+  }
+
+  const steamId64 = getSteamId64FromAccount(account);
+  
+  // Проверяем кеш если не форсируем обновление
+  if (!forceRefresh) {
+    const cache = readGameCache(steamId64);
+    if (cache && cache.library) {
+      console.log(`[steamLibrary] Использую кеш для ${account.account_name}`);
+      return cache.library;
+    }
+  }
+
+  // Создаем промис для блокировки одновременных запросов
+  const fetchPromise = new Promise((resolve, reject) => {
+    const client = new SteamUser({
+      autoRelogin: false,
+      promptSteamGuard: false
+    });
     let gamesData = [];
     let licensesReceived = false;
 
-    // Таймаут 180 секунд для больших библиотек
+    // Таймаут 600 секунд (10 минут) для больших библиотек
     const timeout = setTimeout(() => {
       client.logOff();
-      reject(new Error('Таймаут получения списка игр (180 сек). Попробуйте снова.'));
-    }, 180000);
+      accountLocks.delete(accountId);
+      reject(new Error('Таймаут получения списка игр (600 сек). Попробуйте снова.'));
+    }, 600000);
 
     // Событие получения лицензий
     client.on('licenses', async (licenses) => {
@@ -133,29 +234,38 @@ export async function getOwnedGames(accountId, offset = 0, limit = 15) {
         // Собираем AppID из всех лицензий (с ограничением для оптимизации)
         const appIds = new Set();
         const maxLicenses = Math.min(licenses.length, 100); // Ограничиваем до 100 лицензий
+        const BATCH_SIZE = 10; // Обрабатываем по 10 лицензий за раз
         
         console.log(`Обрабатываю ${maxLicenses} из ${licenses.length} лицензий...`);
         
-        for (let i = 0; i < maxLicenses; i++) {
-          const license = licenses[i];
-          if (license.package_id) {
-            try {
-              const packageInfo = await client.getProductInfo([], [license.package_id], true);
-              
-              if (packageInfo.packages && packageInfo.packages[license.package_id]) {
-                const pkg = packageInfo.packages[license.package_id].packageinfo;
+        for (let i = 0; i < maxLicenses; i += BATCH_SIZE) {
+          const batch = licenses.slice(i, Math.min(i + BATCH_SIZE, maxLicenses));
+          
+          await Promise.all(batch.map(async (license) => {
+            if (license.package_id) {
+              try {
+                const packageInfo = await client.getProductInfo([], [license.package_id], true);
                 
-                if (pkg && pkg.appids) {
-                  Object.values(pkg.appids).forEach(appId => {
-                    if (typeof appId === 'number') {
-                      appIds.add(appId);
-                    }
-                  });
+                if (packageInfo.packages && packageInfo.packages[license.package_id]) {
+                  const pkg = packageInfo.packages[license.package_id].packageinfo;
+                  
+                  if (pkg && pkg.appids) {
+                    Object.values(pkg.appids).forEach(appId => {
+                      if (typeof appId === 'number') {
+                        appIds.add(appId);
+                      }
+                    });
+                  }
                 }
+              } catch (err) {
+                // Игнорируем ошибки отдельных пакетов
               }
-            } catch (err) {
-              // Игнорируем ошибки отдельных пакетов
             }
+          }));
+          
+          // Небольшая пауза между батчами для снижения нагрузки
+          if (i + BATCH_SIZE < maxLicenses) {
+            await new Promise(resolve => setTimeout(resolve, 100));
           }
         }
 
@@ -201,8 +311,12 @@ export async function getOwnedGames(accountId, offset = 0, limit = 15) {
 
         console.log(`Загружено игр: ${gamesData.length}`);
 
+        // Сохраняем в кеш
+        writeGameCache(steamId64, gamesData, []);
+
         clearTimeout(timeout);
         client.logOff();
+        accountLocks.delete(accountId);
         
         if (gamesData.length === 0) {
           reject(new Error('Не найдено игр в библиотеке. Возможно, все приложения не являются играми.'));
@@ -212,6 +326,7 @@ export async function getOwnedGames(accountId, offset = 0, limit = 15) {
       } catch (error) {
         clearTimeout(timeout);
         client.logOff();
+        accountLocks.delete(accountId);
         reject(error);
       }
     });
@@ -222,7 +337,13 @@ export async function getOwnedGames(accountId, offset = 0, limit = 15) {
 
     client.on('error', (err) => {
       clearTimeout(timeout);
-      reject(new Error(`Ошибка Steam: ${err.message}`));
+      accountLocks.delete(accountId);
+      // If session is replaced, it's because another login is active
+      if (err.message === 'LogonSessionReplaced') {
+        reject(new Error('Другая сессия уже активна. Попробуйте позже или перезапустите фарм.'));
+      } else {
+        reject(new Error(`Ошибка Steam: ${err.message}`));
+      }
     });
 
     // Авторизуемся
@@ -230,4 +351,14 @@ export async function getOwnedGames(accountId, offset = 0, limit = 15) {
       refreshToken: account.refresh_token
     });
   });
+
+  // Сохраняем промис в блокировку
+  accountLocks.set(accountId, fetchPromise);
+
+  // Удаляем блокировку после завершения
+  fetchPromise.finally(() => {
+    accountLocks.delete(accountId);
+  });
+
+  return fetchPromise;
 }

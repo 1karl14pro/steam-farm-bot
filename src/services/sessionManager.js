@@ -24,10 +24,10 @@ export function startSessionManager() {
   // Восстанавливаем все активные сессии из БД
   restoreActiveSessions();
 
-  // Проверяем состояние сессий каждые 5 минут (меньше спама)
+  // Проверяем состояние сессий каждые 10 минут (оптимизация CPU)
   checkInterval = setInterval(() => {
     checkSessions();
-  }, 300000);
+  }, 600000);
 
   console.log('✅ Менеджер сессий запущен');
 }
@@ -154,8 +154,7 @@ export function getCookies(accountId) {
  * @param {Array} cookies - массив cookie
  */
 export function setCookies(accountId, cookies) {
-  // Cookies управляются через farmManager, этот метод для совместимости
-  console.warn('warn: setCookies не реализован для нового менеджера. Cookies устанавливаются автоматически.');
+  farmManager.setAccountCookies(accountId, cookies);
 }
 
 /**

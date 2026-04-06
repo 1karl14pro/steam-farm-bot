@@ -1,15 +1,24 @@
-FROM node:22-alpine
+FROM node:20-alpine
+
+# Установка зависимостей для сборки native модулей
+RUN apk add --no-cache python3 make g++
 
 WORKDIR /app
 
+# Копируем package файлы
 COPY package*.json ./
+
+# Устанавливаем зависимости
 RUN npm ci --only=production
 
+# Копируем исходный код
 COPY . .
 
-RUN apk add --no-cache chromium
+# Создаем директорию для логов
+RUN mkdir -p logs
 
-ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true
-ENV PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium-browser
+# Переменные окружения по умолчанию
+ENV NODE_ENV=production
 
-CMD ["node", "src/index.js"]
+# Запуск бота
+CMD ["npm", "start"]

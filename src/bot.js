@@ -21,23 +21,29 @@ if (agent && FORCE_PROXY) {
   bot = new Telegraf(process.env.BOT_TOKEN, {
     telegram: {
       agent,
-      testEnv: false
-    }
+      testEnv: false,
+      apiRoot: 'https://api.telegram.org'
+    },
+    handlerTimeout: 90000 // 90 секунд таймаут
   });
 } else if (agent) {
   console.log('📡 Режим: С прокси');
   bot = new Telegraf(process.env.BOT_TOKEN, {
     telegram: {
       agent,
-      testEnv: false
-    }
+      testEnv: false,
+      apiRoot: 'https://api.telegram.org'
+    },
+    handlerTimeout: 90000
   });
 } else {
   console.log('📡 Режим: Без прокси');
   bot = new Telegraf(process.env.BOT_TOKEN, {
     telegram: {
-      testEnv: false
-    }
+      testEnv: false,
+      apiRoot: 'https://api.telegram.org'
+    },
+    handlerTimeout: 90000
   });
 }
 

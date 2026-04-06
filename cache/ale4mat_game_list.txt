@@ -1,0 +1,440 @@
+{
+  "steamId64": "ale4mat",
+  "cachedAt": 1775481062315,
+  "library": [
+    {
+      "appId": 206610,
+      "name": "3SwitcheD"
+    },
+    {
+      "appId": 879440,
+      "name": "80's style"
+    },
+    {
+      "appId": 781600,
+      "name": "Abstractism"
+    },
+    {
+      "appId": 450860,
+      "name": "Andarilho"
+    },
+    {
+      "appId": 716110,
+      "name": "Bitcoin Clicker"
+    },
+    {
+      "appId": 550650,
+      "name": "Black Squad"
+    },
+    {
+      "appId": 420290,
+      "name": "Blackwake"
+    },
+    {
+      "appId": 706990,
+      "name": "BLOCKPOST LEGACY"
+    },
+    {
+      "appId": 291550,
+      "name": "Brawlhalla"
+    },
+    {
+      "appId": 796810,
+      "name": "Clergyman"
+    },
+    {
+      "appId": 363970,
+      "name": "Clicker Heroes"
+    },
+    {
+      "appId": 730,
+      "name": "Counter-Strike 2"
+    },
+    {
+      "appId": 801280,
+      "name": "Cowboy Escape"
+    },
+    {
+      "appId": 666220,
+      "name": "CS2D"
+    },
+    {
+      "appId": 222900,
+      "name": "Dead Island: Epidemic"
+    },
+    {
+      "appId": 466240,
+      "name": "Deceit"
+    },
+    {
+      "appId": 681780,
+      "name": "Distorted Reality"
+    },
+    {
+      "appId": 833390,
+      "name": "En Tactico"
+    },
+    {
+      "appId": 727300,
+      "name": "Epic PVP Castles"
+    },
+    {
+      "appId": 856790,
+      "name": "Export Simulator"
+    },
+    {
+      "appId": 588430,
+      "name": "Fallout Shelter"
+    },
+    {
+      "appId": 547680,
+      "name": "Guild Quest"
+    },
+    {
+      "appId": 253960,
+      "name": "Jack Orlando Director's Cut"
+    },
+    {
+      "appId": 1195460,
+      "name": "Last Year"
+    },
+    {
+      "appId": 489520,
+      "name": "Minion Masters"
+    },
+    {
+      "appId": 2707900,
+      "name": "NIGHT-RUNNERS PROLOGUE"
+    },
+    {
+      "appId": 252950,
+      "name": "Rocket League"
+    },
+    {
+      "appId": 252490,
+      "name": "Rust"
+    },
+    {
+      "appId": 868190,
+      "name": "Sapper boom!"
+    },
+    {
+      "appId": 253940,
+      "name": "Septerra Core"
+    },
+    {
+      "appId": 415860,
+      "name": "Tactical Craft Online"
+    },
+    {
+      "appId": 878820,
+      "name": "The Castle Disaster 2"
+    },
+    {
+      "appId": 809400,
+      "name": "The Forgotten Sprites"
+    },
+    {
+      "appId": 689360,
+      "name": "The Thirst of Hearts"
+    },
+    {
+      "appId": 385770,
+      "name": "Time Clickers"
+    },
+    {
+      "appId": 1029550,
+      "name": "Torque Drift"
+    },
+    {
+      "appId": 304050,
+      "name": "Trove"
+    },
+    {
+      "appId": 7530,
+      "name": "Two Worlds II Castle Defense"
+    },
+    {
+      "appId": 793720,
+      "name": "U L T R A _ H A R D C O R E"
+    },
+    {
+      "appId": 304930,
+      "name": "Unturned"
+    }
+  ],
+  "topPlayed": [
+    {
+      "name": "Rust",
+      "playtime_forever": 112956,
+      "appId": 252490
+    },
+    {
+      "name": "Counter-Strike 2",
+      "playtime_forever": 60666,
+      "appId": 730
+    },
+    {
+      "name": "Clicker Heroes",
+      "playtime_forever": 46314,
+      "appId": 363970
+    },
+    {
+      "name": "Unturned",
+      "playtime_forever": 6306,
+      "appId": 304930
+    },
+    {
+      "name": "Fallout Shelter",
+      "playtime_forever": 1710,
+      "appId": 588430
+    },
+    {
+      "name": "Wallpaper Engine",
+      "playtime_forever": 948,
+      "appId": 431960
+    },
+    {
+      "name": "Torque Drift",
+      "playtime_forever": 408,
+      "appId": 1029550
+    },
+    {
+      "name": "Two Worlds II Castle Defense",
+      "playtime_forever": 402,
+      "appId": 7530
+    },
+    {
+      "name": "Septerra Core",
+      "playtime_forever": 354,
+      "appId": 253940
+    },
+    {
+      "name": "3SwitcheD",
+      "playtime_forever": 300,
+      "appId": 206610
+    },
+    {
+      "name": "Minion Masters",
+      "playtime_forever": 270,
+      "appId": 489520
+    },
+    {
+      "name": "Andarilho",
+      "playtime_forever": 252,
+      "appId": 450860
+    },
+    {
+      "name": "Jack Orlando Director&#x27;s Cut",
+      "playtime_forever": 240,
+      "appId": 253960
+    },
+    {
+      "name": "CS2D",
+      "playtime_forever": 144,
+      "appId": 666220
+    }
+  ],
+  "libraryWithHours": [
+    {
+      "appId": 206610,
+      "name": "3SwitcheD",
+      "playtime_forever": 300
+    },
+    {
+      "appId": 879440,
+      "name": "80's style",
+      "playtime_forever": 0
+    },
+    {
+      "appId": 781600,
+      "name": "Abstractism",
+      "playtime_forever": 0
+    },
+    {
+      "appId": 450860,
+      "name": "Andarilho",
+      "playtime_forever": 252
+    },
+    {
+      "appId": 716110,
+      "name": "Bitcoin Clicker",
+      "playtime_forever": 0
+    },
+    {
+      "appId": 550650,
+      "name": "Black Squad",
+      "playtime_forever": 0
+    },
+    {
+      "appId": 420290,
+      "name": "Blackwake",
+      "playtime_forever": 0
+    },
+    {
+      "appId": 706990,
+      "name": "BLOCKPOST LEGACY",
+      "playtime_forever": 0
+    },
+    {
+      "appId": 291550,
+      "name": "Brawlhalla",
+      "playtime_forever": 0
+    },
+    {
+      "appId": 796810,
+      "name": "Clergyman",
+      "playtime_forever": 0
+    },
+    {
+      "appId": 363970,
+      "name": "Clicker Heroes",
+      "playtime_forever": 46314
+    },
+    {
+      "appId": 730,
+      "name": "Counter-Strike 2",
+      "playtime_forever": 60666
+    },
+    {
+      "appId": 801280,
+      "name": "Cowboy Escape",
+      "playtime_forever": 0
+    },
+    {
+      "appId": 666220,
+      "name": "CS2D",
+      "playtime_forever": 144
+    },
+    {
+      "appId": 222900,
+      "name": "Dead Island: Epidemic",
+      "playtime_forever": 0
+    },
+    {
+      "appId": 466240,
+      "name": "Deceit",
+      "playtime_forever": 0
+    },
+    {
+      "appId": 681780,
+      "name": "Distorted Reality",
+      "playtime_forever": 0
+    },
+    {
+      "appId": 833390,
+      "name": "En Tactico",
+      "playtime_forever": 0
+    },
+    {
+      "appId": 727300,
+      "name": "Epic PVP Castles",
+      "playtime_forever": 0
+    },
+    {
+      "appId": 856790,
+      "name": "Export Simulator",
+      "playtime_forever": 0
+    },
+    {
+      "appId": 588430,
+      "name": "Fallout Shelter",
+      "playtime_forever": 1710
+    },
+    {
+      "appId": 547680,
+      "name": "Guild Quest",
+      "playtime_forever": 0
+    },
+    {
+      "appId": 253960,
+      "name": "Jack Orlando Director's Cut",
+      "playtime_forever": 240
+    },
+    {
+      "appId": 1195460,
+      "name": "Last Year",
+      "playtime_forever": 0
+    },
+    {
+      "appId": 489520,
+      "name": "Minion Masters",
+      "playtime_forever": 270
+    },
+    {
+      "appId": 2707900,
+      "name": "NIGHT-RUNNERS PROLOGUE",
+      "playtime_forever": 0
+    },
+    {
+      "appId": 252950,
+      "name": "Rocket League",
+      "playtime_forever": 0
+    },
+    {
+      "appId": 252490,
+      "name": "Rust",
+      "playtime_forever": 112956
+    },
+    {
+      "appId": 868190,
+      "name": "Sapper boom!",
+      "playtime_forever": 0
+    },
+    {
+      "appId": 253940,
+      "name": "Septerra Core",
+      "playtime_forever": 354
+    },
+    {
+      "appId": 415860,
+      "name": "Tactical Craft Online",
+      "playtime_forever": 0
+    },
+    {
+      "appId": 878820,
+      "name": "The Castle Disaster 2",
+      "playtime_forever": 0
+    },
+    {
+      "appId": 809400,
+      "name": "The Forgotten Sprites",
+      "playtime_forever": 0
+    },
+    {
+      "appId": 689360,
+      "name": "The Thirst of Hearts",
+      "playtime_forever": 0
+    },
+    {
+      "appId": 385770,
+      "name": "Time Clickers",
+      "playtime_forever": 0
+    },
+    {
+      "appId": 1029550,
+      "name": "Torque Drift",
+      "playtime_forever": 408
+    },
+    {
+      "appId": 304050,
+      "name": "Trove",
+      "playtime_forever": 0
+    },
+    {
+      "appId": 7530,
+      "name": "Two Worlds II Castle Defense",
+      "playtime_forever": 402
+    },
+    {
+      "appId": 793720,
+      "name": "U L T R A _ H A R D C O R E",
+      "playtime_forever": 0
+    },
+    {
+      "appId": 304930,
+      "name": "Unturned",
+      "playtime_forever": 6306
+    }
+  ]
+}

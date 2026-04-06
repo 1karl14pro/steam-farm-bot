@@ -147,7 +147,7 @@ export const getUser = (telegramId) => {
 };
 
 export const createUser = (telegramId, username) => {
-  const trialEndsAt = Math.floor(Date.now() / 1000) + (15 * 24 * 60 * 60); // 15 дней
+  const trialEndsAt = Math.floor(Date.now() / 1000) + (7 * 24 * 60 * 60); // 7 дней
   return db.prepare(`
     INSERT INTO users (telegram_id, username, trial_ends_at)
     VALUES (?, ?, ?)
@@ -183,7 +183,7 @@ export const getAccountLimit = (telegramId) => {
     return 5;
   }
   
-  return 3;
+  return 5;
   
   return 0;
 };
@@ -264,6 +264,10 @@ export const getSteamAccounts = (userId) => {
   return db.prepare('SELECT * FROM steam_accounts WHERE user_id = ?').all(userId);
 };
 
+export const getAllSteamAccounts = () => {
+  return db.prepare('SELECT * FROM steam_accounts').all();
+};
+
 export const getSteamAccount = (accountId) => {
   return db.prepare('SELECT * FROM steam_accounts WHERE id = ?').get(accountId);
 };
@@ -318,7 +322,8 @@ export const removeGame = (accountId, appId) => {
 };
 
 export const clearGames = (accountId) => {
-  return db.prepare('DELETE FROM games WHERE account_id = ?').run(accountId);
+  const result = db.prepare('DELETE FROM games WHERE account_id = ?').run(accountId);
+  return result;
 };
 
 // ===== LIBRARY CACHE =====
@@ -451,6 +456,74 @@ export const getSteamPaused = (accountId) => {
 
 export const setSteamPaused = (accountId, paused) => {
   return db.prepare('UPDATE steam_accounts SET steam_paused = ? WHERE id = ?').run(paused ? 1 : 0, accountId);
+};
+
+// ===== DATABASE OPTIMIZATION =====
+
+/**
+ * Оптимизирует базу данных (VACUUM + ANALYZE)
+ */
+export const optimizeDatabase = () => {
+  console.log('🔧 Оптимизация базы данных...');
+  db.exec('VACUUM');
+  db.exec('ANALYZE');
+  console.log('✅ База данных оптимизирована');
+};
+
+/**
+ * Очищает старые данные (платежи старше 30 дней)
+ */
+export const cleanupOldData = () => {
+  const thirtyDaysAgo = Math.floor(Date.now() / 1000) - (30 * 24 * 60 * 60);
+  
+  const result = db.prepare(`
+    DELETE FROM pending_payments 
+    WHERE created_at < ? AND status != 'pending'
+  `).run(thirtyDaysAgo);
+  
+  if (result.changes > 0) {
+    console.log(`🗑 Удалено ${result.changes} старых платежей`);
+  }
+  
+  return result.changes;
+};
+
+/**
+ * Получает размер базы данных в байтах
+ */
+export const getDatabaseSize = () => {
+  const result = db.prepare('SELECT page_count * page_size as size FROM pragma_page_count(), pragma_page_size()').get();
+  return result.size;
+};
+
+/**
+ * Запускает автоматическую оптимизацию БД (раз в день)
+ */
+export const startDatabaseMaintenance = () => {
+  // Первая оптимизация при запуске
+  setTimeout(() => {
+    try {
+      cleanupOldData();
+      optimizeDatabase();
+    } catch (err) {
+      console.error('❌ Ошибка оптимизации БД:', err.message);
+    }
+  }, 60000); // Через минуту после запуска
+  
+  // Регулярная оптимизация каждые 24 часа
+  setInterval(() => {
+    try {
+      cleanupOldData();
+      optimizeDatabase();
+      
+      const size = getDatabaseSize();
+      console.log(`📊 Размер БД: ${(size / 1024 / 1024).toFixed(2)} МБ`);
+    } catch (err) {
+      console.error('❌ Ошибка оптимизации БД:', err.message);
+    }
+  }, 86400000); // 24 часа
+  
+  console.log('✅ Автоматическая оптимизация БД запущена');
 };
 
 export default db;

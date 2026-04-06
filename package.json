@@ -1,18 +1,19 @@
 {
   "name": "steam-farm-bot",
-  "version": "1.8.0",
-  "description": "Telegram bot for Steam hours farming",
+  "version": "1.8.1",
+  "description": "Telegram bot for Steam hours farming - Optimized for VDS",
   "main": "src/index.js",
   "type": "module",
   "scripts": {
-    "start": "node src/index.js",
-    "stop": "node stop.js",
-    "dev": "node --watch src/index.js"
+    "start": "node --expose-gc --max-old-space-size=384 src/index.js",
+    "stop": "node stop.js"
   },
   "keywords": [
     "telegram",
     "steam",
-    "farming"
+    "farming",
+    "optimized",
+    "vds"
   ],
   "author": "",
   "license": "MIT",
@@ -25,5 +26,11 @@
     "steam-session": "^1.7.2",
     "steam-user": "^5.0.8",
     "telegraf": "^4.16.3"
+  },
+  "devDependencies": {
+    "pm2": "^5.3.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
   }
 }

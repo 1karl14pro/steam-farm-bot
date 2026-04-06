@@ -1,16 +1,29 @@
 version: '3.8'
 
 services:
-  bot:
+  steam-farm-bot:
     build: .
+    container_name: steam-farm-bot
     restart: unless-stopped
+    
+    # Лимиты ресурсов
+    mem_limit: 512m
+    mem_reservation: 256m
+    cpus: 1.0
+    
+    # Переменные окружения из .env файла
     env_file:
       - .env
+    
+    # Монтируем БД и логи для сохранения данных
     volumes:
-      - ./data:/app/data
-    networks:
-      - bot-network
-
-networks:
-  bot-network:
-    driver: bridge
+      - ./database.db:/app/database.db
+      - ./logs:/app/logs
+    
+    # Автоматический перезапуск при падении
+    healthcheck:
+      test: ["CMD", "node", "-e", "process.exit(0)"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s

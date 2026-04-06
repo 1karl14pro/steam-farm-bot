@@ -34,7 +34,11 @@ export function formatAccountInfo(account, games) {
   text += `━━━━━━━━━━━━━━━\n`;
   text += `🎮 Игр: ${games.length}/${MAX_GAMES_PER_ACCOUNT}\n`;
   
-  text += `📊 Всего нафармлено: ${account.total_hours_farmed.toFixed(1)}ч\n`;
+  const currentFarmingTime = account.is_farming && account.farming_started_at
+    ? Math.max(0, (Date.now() / 1000 - account.farming_started_at) / 3600)
+    : 0;
+  const totalTime = account.total_hours_farmed + currentFarmingTime;
+  text += `📊 Всего нафармлено: ${totalTime.toFixed(1)}ч\n`;
   
   if (account.has_parental_control) {
     const cachedLibrary = db.getCachedLibrary(account.id);
@@ -92,7 +96,7 @@ export function formatUserProfileFull(user, accounts) {
     text += `🎁 Триал | ${accounts.length}/5 акк.\n`;
     text += `⏱ ${daysLeft}д ${hoursLeft}ч осталось\n`;
   } else {
-    text += `❌ Подписка неактивна | ${accounts.length}/3 акк.\n`;
+    text += `❌ Подписка неактивна | ${accounts.length}/5 акк.\n`;
   }
 
   text += `━━━━━━━━━━━━━━━\n`;

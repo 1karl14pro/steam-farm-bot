@@ -6,6 +6,11 @@ const activeClients = new Map();
 const accountCookies = new Map();
 const stoppingAccounts = new Set();
 
+// Лимиты для оптимизации ресурсов
+const MAX_CONCURRENT_SESSIONS = 100; // Максимум одновременных сессий
+const SESSION_RESTART_INTERVAL = 24 * 60 * 60 * 1000; // 24 часа - перезапуск для освобождения памяти
+const MEMORY_CHECK_INTERVAL = 3600000; // Проверка каждый час
+
 /**
  * Запускает фарм для аккаунта
  * @param {number} accountId - ID аккаунта из БД
@@ -20,6 +25,11 @@ export async function startFarming(accountId) {
   // Проверяем, не запущен ли уже
   if (activeClients.has(accountId)) {
     throw new Error('Фарм уже запущен для этого аккаунта');
+  }
+
+  // Проверяем лимит одновременных сессий
+  if (activeClients.size >= MAX_CONCURRENT_SESSIONS) {
+    throw new Error(`Достигнут лимит одновременных сессий (${MAX_CONCURRENT_SESSIONS})`);
   }
 
   const games = db.getGames(accountId);
@@ -337,6 +347,10 @@ export function getCookies(accountId) {
   return accountCookies.get(accountId) || null;
 }
 
+export function setAccountCookies(accountId, cookies) {
+  accountCookies.set(accountId, cookies);
+}
+
 /**
  * Returns a summary of all farming sessions (status view).
  * Useful for quick diagnostics from Telegram.
@@ -361,6 +375,35 @@ export function getAllFarmsStatus() {
   }
   return statuses;
 }
+
+/**
+ * Оптимизация памяти - перезапуск долгоживущих сессий
+ */
+function startMemoryOptimization() {
+  setInterval(() => {
+    const now = Date.now();
+    for (const [accountId, data] of activeClients.entries()) {
+      const uptime = now - data.startedAt;
+      
+      // Перезапускаем сессии старше 24 часов для освобождения памяти
+      if (uptime > SESSION_RESTART_INTERVAL) {
+        console.log(`🔄 Перезапуск сессии ${data.accountName} для оптимизации памяти (uptime: ${Math.floor(uptime / 3600000)}ч)`);
+        restartFarming(accountId).catch(err => {
+          console.error(`❌ Ошибка перезапуска ${data.accountName}:`, err.message);
+        });
+      }
+    }
+    
+    // Принудительная сборка мусора если доступна
+    if (global.gc) {
+      global.gc();
+      console.log('♻️ Сборка мусора выполнена');
+    }
+  }, MEMORY_CHECK_INTERVAL);
+}
+
+// Запускаем оптимизацию памяти
+startMemoryOptimization();
 
 // Graceful shutdown
 process.on('SIGINT', async () => {

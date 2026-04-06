@@ -16,7 +16,7 @@ async function cryptoRequest(method, params = {}) {
 }
 
 export async function createCryptoInvoice(tier, userId) {
-  const amount = tier === 2 ? '2.0' : '1.0';
+  const amount = tier === 2 ? '1.2' : '0.6';
   const description = tier === 2
     ? '⭐ Premium Полный — 30 дней'
     : '📦 Premium Базовый — 30 дней';

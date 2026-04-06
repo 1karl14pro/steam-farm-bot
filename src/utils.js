@@ -40,3 +40,34 @@ export const formatUserProfile = (user, accountsCount) => {
     `Аккаунтов: ${accountsCount}/${limit}\n` +
     `Telegram ID: ${user.telegram_id}`;
 };
+
+// Функция логирования с timestamp
+const log = (prefix, message) => {
+  const now = new Date();
+  const time = now.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+  console.log(`[${time}] ${prefix} ${message}`);
+};
+
+export const logger = {
+  info: (msg) => log('ℹ️', msg),
+  success: (msg) => log('✅', msg),
+  warning: (msg) => log('⚠️', msg),
+  error: (msg) => log('❌', msg),
+  start: (msg) => log('🚀', msg),
+  stop: (msg) => log('🛑', msg),
+  session: (msg) => log('📡', msg),
+};
+
+// Хранилище состояний пользователей
+export const userStates = {
+  states: new Map(),
+  set(key, value) {
+    this.states.set(key, value);
+  },
+  get(key) {
+    return this.states.get(key);
+  },
+  delete(key) {
+    this.states.delete(key);
+  }
+};
