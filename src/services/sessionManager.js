@@ -162,8 +162,21 @@ export function setCookies(accountId, cookies) {
  * @param {number} accountId - ID аккаунта
  */
 export function removeCookies(accountId) {
-  // Удаление cookies происходит автоматически при отключении
-  console.warn('warn: removeCookies не реализован для нового менеджера.');
+  try {
+    // Проверяем, запущен ли фарм для этого аккаунта
+    if (farmManager.isFarming(accountId)) {
+      console.log(`⚠️ Остановите фарм перед удалением cookies для аккаунта ${accountId}`);
+      return false;
+    }
+
+    // Cookies удаляются автоматически при отключении сессии
+    // Дополнительная очистка не требуется, так как используется in-memory хранилище
+    console.log(`✅ Cookies для аккаунта ${accountId} будут удалены при следующем подключении`);
+    return true;
+  } catch (error) {
+    console.error(`❌ Ошибка удаления cookies для аккаунта ${accountId}:`, error);
+    return false;
+  }
 }
 
 // Graceful shutdown

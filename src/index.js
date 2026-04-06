@@ -75,6 +75,10 @@ db.startDatabaseMaintenance();
 import { startCacheAutoUpdate } from './services/cacheManager.js';
 startCacheAutoUpdate();
 
+// Запускаем сервис уведомлений
+import { startNotificationService } from './services/notificationService.js';
+startNotificationService();
+
 // Запускаем менеджер сессий (работает независимо от бота)
 sessionManager.startSessionManager();
 

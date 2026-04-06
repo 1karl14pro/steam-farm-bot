@@ -167,7 +167,14 @@ export function setupHandlers() {
     }
 
     buttons.push([{ text: '🎮 Настроить игры', callback_data: `games_${accountId}` }]);
-    buttons.push([{ text: '💬 Изменить статус', callback_data: `change_status_${accountId}` }]);
+    buttons.push([
+      { text: '📊 Статистика', callback_data: `stats_${accountId}` },
+      { text: '🎯 Цели', callback_data: `goals_${accountId}` }
+    ]);
+    buttons.push([
+      { text: '⏰ Расписание', callback_data: `schedule_${accountId}` },
+      { text: '💬 Статус', callback_data: `change_status_${accountId}` }
+    ]);
     buttons.push([{ text: '👁 Видимость', callback_data: `visibility_${accountId}` }]);
     if (account.has_parental_control) {
       buttons.push([{ text: '🔐 PIN родительского контроля', callback_data: `set_pin_${accountId}` }]);
@@ -1353,13 +1360,52 @@ export function setupHandlers() {
   bot.action('admin_logs', async (ctx) => {
     if (!ADMIN_IDS.includes(ctx.from.id)) return;
     
-    await ctx.editMessageText('📋 Логи\n━━━━━━━━━━━━━━━\n\nФункция в разработке', {
-      reply_markup: {
-        inline_keyboard: [
-          [{ text: '🔙 Назад', callback_data: 'admin_back' }]
-        ]
+    try {
+      const fs = await import('fs');
+      const path = await import('path');
+      
+      const logPath = path.join(process.cwd(), 'bot.log');
+      
+      if (!fs.existsSync(logPath)) {
+        await ctx.editMessageText('📋 Логи\n━━━━━━━━━━━━━━━\n\n❌ Файл логов не найден', {
+          reply_markup: {
+            inline_keyboard: [
+              [{ text: '🔙 Назад', callback_data: 'admin_back' }]
+            ]
+          }
+        });
+        return;
       }
-    });
+      
+      const logContent = fs.readFileSync(logPath, 'utf-8');
+      const lines = logContent.split('\n').filter(line => line.trim());
+      const lastLines = lines.slice(-50).join('\n');
+      
+      const logText = lastLines || 'Логи пусты';
+      const truncatedLog = logText.length > 3500 ? logText.slice(-3500) : logText;
+      
+      await ctx.editMessageText(
+        `📋 Логи (последние 50 строк)\n━━━━━━━━━━━━━━━\n\n\`\`\`\n${truncatedLog}\n\`\`\``,
+        {
+          parse_mode: 'Markdown',
+          reply_markup: {
+            inline_keyboard: [
+              [{ text: '🔄 Обновить', callback_data: 'admin_logs' }],
+              [{ text: '🔙 Назад', callback_data: 'admin_back' }]
+            ]
+          }
+        }
+      );
+    } catch (err) {
+      console.error('Error reading logs:', err);
+      await ctx.editMessageText('📋 Логи\n━━━━━━━━━━━━━━━\n\n❌ Ошибка чтения логов', {
+        reply_markup: {
+          inline_keyboard: [
+            [{ text: '🔙 Назад', callback_data: 'admin_back' }]
+          ]
+        }
+      });
+    }
   });
 
   bot.action('admin_back', async (ctx) => {
@@ -1423,5 +1469,310 @@ export function setupHandlers() {
 
   bot.action('noop', async (ctx) => {
     await ctx.answerCbQuery();
+  });
+
+  // ===== TEXT MESSAGE HANDLERS =====
+  
+  bot.on('text', async (ctx) => {
+    const state = userStates.get(ctx.from.id);
+    if (!state) return;
+
+    try {
+      switch (state.action) {
+        case 'add_game': {
+          const appId = parseInt(ctx.message.text.trim());
+          
+          if (isNaN(appId) || appId <= 0) {
+            await ctx.reply('❌ Неверный формат. Отправьте числовой App ID игры.');
+            return;
+          }
+
+          const account = db.getSteamAccount(state.accountId);
+          if (!account || account.user_id !== ctx.from.id) {
+            await ctx.reply('❌ Аккаунт не найден');
+            userStates.delete(ctx.from.id);
+            return;
+          }
+
+          const games = db.getGames(state.accountId);
+          if (games.length >= MAX_GAMES_PER_ACCOUNT) {
+            await ctx.reply(`❌ Достигнут лимит игр (${MAX_GAMES_PER_ACCOUNT})`);
+            userStates.delete(ctx.from.id);
+            return;
+          }
+
+          const existingGame = games.find(g => g.app_id === appId);
+          if (existingGame) {
+            await ctx.reply('❌ Эта игра уже добавлена');
+            return;
+          }
+
+          try {
+            const gameInfo = await steamLibrary.getGameInfo(appId);
+            db.addGame(state.accountId, appId, gameInfo.name);
+            
+            await ctx.reply(
+              `✅ Игра добавлена!\n\n` +
+              `🎮 ${gameInfo.name}\n` +
+              `🆔 App ID: ${appId}`,
+              {
+                reply_markup: {
+                  inline_keyboard: [
+                    [{ text: '🎮 Мои игры', callback_data: `games_${state.accountId}` }],
+                    [{ text: '🔙 К аккаунту', callback_data: `account_${state.accountId}` }]
+                  ]
+                }
+              }
+            );
+
+            if (account.is_farming) {
+              await farmManager.restartFarming(state.accountId);
+              await ctx.reply('🔄 Фарм перезапущен с новой игрой');
+            }
+          } catch (err) {
+            console.error('Error adding game:', err);
+            await ctx.reply('❌ Не удалось получить информацию об игре. Проверьте App ID.');
+          }
+
+          userStates.delete(ctx.from.id);
+          break;
+        }
+
+        case 'change_status': {
+          const statusText = ctx.message.text.trim();
+          
+          if (statusText.length > 100) {
+            await ctx.reply('❌ Статус слишком длинный (максимум 100 символов)');
+            return;
+          }
+
+          const account = db.getSteamAccount(state.accountId);
+          if (!account || account.user_id !== ctx.from.id) {
+            await ctx.reply('❌ Аккаунт не найден');
+            userStates.delete(ctx.from.id);
+            return;
+          }
+
+          db.setCustomStatus(state.accountId, statusText);
+          
+          await ctx.reply(
+            `✅ Статус обновлен!\n\n` +
+            `💬 "${statusText}"`,
+            {
+              reply_markup: {
+                inline_keyboard: [
+                  [{ text: '🔙 К аккаунту', callback_data: `account_${state.accountId}` }]
+                ]
+              }
+            }
+          );
+
+          if (account.is_farming) {
+            await farmManager.restartFarming(state.accountId);
+            await ctx.reply('🔄 Фарм перезапущен с новым статусом');
+          }
+
+          userStates.delete(ctx.from.id);
+          break;
+        }
+
+        case 'set_pin': {
+          const pinText = ctx.message.text.trim();
+          
+          if (pinText === '0') {
+            db.setFamilyPin(state.accountId, null);
+            await ctx.reply(
+              '✅ PIN удален',
+              {
+                reply_markup: {
+                  inline_keyboard: [
+                    [{ text: '🔙 К аккаунту', callback_data: `account_${state.accountId}` }]
+                  ]
+                }
+              }
+            );
+            userStates.delete(ctx.from.id);
+            return;
+          }
+
+          if (!/^\d{4}$/.test(pinText)) {
+            await ctx.reply('❌ PIN должен состоять из 4 цифр');
+            return;
+          }
+
+          const account = db.getSteamAccount(state.accountId);
+          if (!account || account.user_id !== ctx.from.id) {
+            await ctx.reply('❌ Аккаунт не найден');
+            userStates.delete(ctx.from.id);
+            return;
+          }
+
+          db.setFamilyPin(state.accountId, pinText);
+          
+          await ctx.reply(
+            `✅ PIN установлен!\n\n` +
+            `🔐 ${pinText}`,
+            {
+              reply_markup: {
+                inline_keyboard: [
+                  [{ text: '🔙 К аккаунту', callback_data: `account_${state.accountId}` }]
+                ]
+              }
+            }
+          );
+
+          if (account.is_farming) {
+            await farmManager.restartFarming(state.accountId);
+            await ctx.reply('🔄 Фарм перезапущен с новым PIN');
+          }
+
+          userStates.delete(ctx.from.id);
+          break;
+        }
+
+        case 'add_account': {
+          const parts = ctx.message.text.trim().split(':');
+          
+          if (parts.length < 5) {
+            await ctx.reply(
+              '❌ Неверный формат!\n\n' +
+              'Ожидается: login:password:shared_secret:identity_secret:refresh_token'
+            );
+            return;
+          }
+
+          const [login, password, sharedSecret, identitySecret, refreshToken] = parts;
+
+          if (!login || !password || !sharedSecret || !identitySecret || !refreshToken) {
+            await ctx.reply('❌ Все поля обязательны для заполнения');
+            return;
+          }
+
+          const limit = db.getAccountLimit(ctx.from.id);
+          const currentAccounts = db.getSteamAccounts(ctx.from.id);
+          
+          if (currentAccounts.length >= limit) {
+            await ctx.reply(
+              `❌ Достигнут лимит аккаунтов (${limit})\n\n` +
+              'Оформите подписку для увеличения лимита',
+              {
+                reply_markup: {
+                  inline_keyboard: [
+                    [{ text: '💎 Подписка', callback_data: 'subscribe' }]
+                  ]
+                }
+              }
+            );
+            userStates.delete(ctx.from.id);
+            return;
+          }
+
+          const existingAccount = currentAccounts.find(acc => acc.account_name === login);
+          if (existingAccount) {
+            await ctx.reply('❌ Аккаунт с таким логином уже добавлен');
+            userStates.delete(ctx.from.id);
+            return;
+          }
+
+          try {
+            const accountId = db.addSteamAccount(
+              ctx.from.id,
+              login,
+              password,
+              sharedSecret,
+              identitySecret,
+              refreshToken
+            );
+
+            await ctx.reply(
+              `✅ Аккаунт добавлен!\n\n` +
+              `👤 ${login}\n\n` +
+              `Теперь вы можете добавить игры и запустить фарм.`,
+              {
+                reply_markup: {
+                  inline_keyboard: [
+                    [{ text: '🎮 Добавить игры', callback_data: `games_${accountId}` }],
+                    [{ text: '📋 Мои аккаунты', callback_data: 'accounts' }]
+                  ]
+                }
+              }
+            );
+          } catch (err) {
+            console.error('Error adding account:', err);
+            await ctx.reply('❌ Ошибка при добавлении аккаунта. Проверьте данные.');
+          }
+
+          userStates.delete(ctx.from.id);
+          break;
+        }
+
+        default:
+          break;
+      }
+    } catch (err) {
+      console.error('Text handler error:', err);
+      await ctx.reply('❌ Произошла ошибка. Попробуйте снова.');
+      userStates.delete(ctx.from.id);
+    }
+  });
+
+  // ===== PHOTO MESSAGE HANDLERS =====
+  
+  bot.on('photo', async (ctx) => {
+    const state = userStates.get(ctx.from.id);
+    if (!state) return;
+
+    try {
+      if (state.action === 'await_proof') {
+        const photo = ctx.message.photo[ctx.message.photo.length - 1];
+        const caption = ctx.message.caption || '';
+        
+        const tierName = state.tier === 2 ? '⭐ Полный' : '📦 Базовый';
+        
+        // Отправляем уведомление администраторам
+        for (const adminId of ADMIN_IDS) {
+          try {
+            await bot.telegram.sendPhoto(adminId, photo.file_id, {
+              caption: 
+                `💳 Новое подтверждение оплаты\n` +
+                `━━━━━━━━━━━━━━━\n` +
+                `👤 User ID: ${ctx.from.id}\n` +
+                `👤 Username: @${ctx.from.username || 'нет'}\n` +
+                `📦 Тариф: ${tierName}\n` +
+                `💬 Комментарий: ${caption}\n` +
+                `━━━━━━━━━━━━━━━\n` +
+                `Проверьте платеж и активируйте подписку вручную.`,
+              reply_markup: {
+                inline_keyboard: [
+                  [{ text: '✅ Активировать', callback_data: `approve_payment_${ctx.from.id}_${state.tier}` }],
+                  [{ text: '❌ Отклонить', callback_data: `reject_payment_${ctx.from.id}` }]
+                ]
+              }
+            });
+          } catch (err) {
+            console.error('Error sending proof to admin:', err);
+          }
+        }
+
+        await ctx.reply(
+          '✅ Подтверждение отправлено!\n\n' +
+          'Администратор проверит платеж и активирует подписку в течение 24 часов.\n\n' +
+          'Спасибо за ожидание! ❤️',
+          {
+            reply_markup: {
+              inline_keyboard: [
+                [{ text: '🔙 Главное меню', callback_data: 'profile' }]
+              ]
+            }
+          }
+        );
+
+        userStates.delete(ctx.from.id);
+      }
+    } catch (err) {
+      console.error('Photo handler error:', err);
+      await ctx.reply('❌ Произошла ошибка при обработке фото. Попробуйте снова.');
+      userStates.delete(ctx.from.id);
+    }
   });
 }
