@@ -135,11 +135,70 @@ export function setupHandlers() {
     buttons.push([{ text: '🔙 Главное меню', callback_data: 'main_menu' }]);
 
     const limitText = limit === -1 ? '∞' : `${accounts.length}/${limit}`;
-    const subLabel = info.isPremium ? '⭐ Premium' : limit === 3 ? '❌ Без подписки' : '🎁 Триал';
+    const subLabel = info.isPremium ? '⭐ Premium' : limit === 0 ? '❌ Без подписки' : '🎁 Триал';
     const header = `📋 Steam аккаунты\n━━━━━━━━━━━━━━━\n${subLabel} | Аккаунтов: ${limitText}\n`;
 
     await ctx.editMessageText(header, {
       reply_markup: { inline_keyboard: buttons }
+    });
+  });
+
+  bot.action('main_menu', async (ctx) => {
+    await ctx.answerCbQuery();
+    
+    await ctx.editMessageText(
+      '👋 Главное меню\n\n' +
+      'Выберите действие:',
+      {
+        reply_markup: {
+          inline_keyboard: [
+            [{ text: '📋 Мои аккаунты', callback_data: 'accounts' }],
+            [{ text: '👤 Профиль', callback_data: 'profile' }],
+            [{ text: '🎁 Реферальная система', callback_data: 'referral' }]
+          ]
+        }
+      }
+    );
+  });
+
+  bot.action('profile', async (ctx) => {
+    await ctx.answerCbQuery();
+    
+    const user = db.getUser(ctx.from.id);
+    const accounts = db.getSteamAccounts(ctx.from.id);
+    const text = formatter.formatProfile(user, accounts);
+    
+    await ctx.editMessageText(text, {
+      reply_markup: {
+        inline_keyboard: [
+          [{ text: '💎 Подписка', callback_data: 'subscribe' }],
+          [{ text: '🔙 Главное меню', callback_data: 'main_menu' }]
+        ]
+      }
+    });
+  });
+
+  bot.action('referral', async (ctx) => {
+    await ctx.answerCbQuery();
+    
+    const user = db.getUser(ctx.from.id);
+    const referrals = db.getReferrals(ctx.from.id);
+    
+    let text = `🎁 Реферальная система\n`;
+    text += `━━━━━━━━━━━━━━━\n\n`;
+    text += `Приглашайте друзей и получайте бонусы!\n\n`;
+    text += `🔗 Ваша реферальная ссылка:\n`;
+    text += `https://t.me/${BOT_USERNAME}?start=ref${ctx.from.id}\n\n`;
+    text += `👥 Приглашено: ${referrals.length}\n`;
+    text += `💰 Заработано: ${user.referral_earnings || 0}₽\n\n`;
+    text += `💡 За каждого приглашенного друга, который купит подписку, вы получите 10% от суммы!`;
+    
+    await ctx.editMessageText(text, {
+      reply_markup: {
+        inline_keyboard: [
+          [{ text: '🔙 Главное меню', callback_data: 'main_menu' }]
+        ]
+      }
     });
   });
 

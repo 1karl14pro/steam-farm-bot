@@ -308,6 +308,10 @@ export const getReferralCount = (telegramId) => {
   return db.prepare('SELECT COUNT(*) as count FROM users WHERE referred_by = ?').get(telegramId).count;
 };
 
+export const getReferrals = (telegramId) => {
+  return db.prepare('SELECT telegram_id, created_at FROM users WHERE referred_by = ?').all(telegramId);
+};
+
 export const setUserReferredBy = (telegramId, referrerId) => {
   return db.prepare('UPDATE users SET referred_by = ? WHERE telegram_id = ?').run(referrerId, telegramId);
 };
