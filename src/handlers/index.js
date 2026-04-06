@@ -166,7 +166,7 @@ export function setupHandlers() {
     
     const user = db.getUser(ctx.from.id);
     const accounts = db.getSteamAccounts(ctx.from.id);
-    const text = formatter.formatProfile(user, accounts);
+    const text = formatter.formatUserProfileFull(user, accounts);
     
     await ctx.editMessageText(text, {
       reply_markup: {
