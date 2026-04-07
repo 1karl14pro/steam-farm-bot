@@ -1,4 +1,4 @@
-import { Telegraf, Input } from 'telegraf';
+import { Telegraf } from 'telegraf';
 import { HttpsProxyAgent } from 'https-proxy-agent';
 import * as db from './database.js';
 

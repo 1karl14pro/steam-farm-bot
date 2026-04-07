@@ -341,11 +341,11 @@ export const getSteamAccount = (accountId) => {
   return db.prepare('SELECT * FROM steam_accounts WHERE id = ?').get(accountId);
 };
 
-export const createSteamAccount = (userId, accountName, refreshToken) => {
+export const addSteamAccount = (userId, accountName, password, sharedSecret, identitySecret, refreshToken) => {
   return db.prepare(`
     INSERT INTO steam_accounts (user_id, account_name, refresh_token)
     VALUES (?, ?, ?)
-  `).run(userId, accountName, refreshToken);
+  `).run(userId, accountName, refreshToken).lastInsertRowid;
 };
 
 export const updateAccountFarmingStatus = (accountId, isFarming) => {
@@ -445,7 +445,7 @@ export const finalizeFarming = (accountId, hoursToAdd) => {
 };
 
 // ===== CUSTOM STATUS =====
-export const updateCustomStatus = (accountId, customStatus) => {
+export const setCustomStatus = (accountId, customStatus) => {
   return db.prepare('UPDATE steam_accounts SET custom_status = ? WHERE id = ?')
     .run(customStatus, accountId);
 };

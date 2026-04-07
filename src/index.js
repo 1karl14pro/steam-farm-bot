@@ -23,7 +23,22 @@ function rotateLogIfNeeded() {
         
         // Удаляем старые логи (старше 7 дней)
         const sevenDaysAgo = Date.now() - (7 * 24 * 60 * 60 * 1000);
-        // Здесь можно добавить удаление старых файлов
+        const fs = await import('fs');
+        const files = fs.readdirSync('.');
+        
+        for (const file of files) {
+          if (file.startsWith('bot.') && file.endsWith('.log') && file !== 'bot.log') {
+            try {
+              const stats = fs.statSync(file);
+              if (stats.mtimeMs < sevenDaysAgo) {
+                fs.unlinkSync(file);
+                console.log(`🗑 Удален старый лог: ${file}`);
+              }
+            } catch (err) {
+              // Игнорируем ошибки удаления
+            }
+          }
+        }
       }
     }
   } catch (err) {

@@ -1,6 +1,6 @@
 {
   "steamId64": "ale4mat",
-  "cachedAt": 1775481062315,
+  "cachedAt": 1775544108461,
   "library": [
     {
       "appId": 206610,
@@ -166,7 +166,7 @@
   "topPlayed": [
     {
       "name": "Rust",
-      "playtime_forever": 112956,
+      "playtime_forever": 112968,
       "appId": 252490
     },
     {
@@ -374,7 +374,7 @@
     {
       "appId": 252490,
       "name": "Rust",
-      "playtime_forever": 112956
+      "playtime_forever": 112968
     },
     {
       "appId": 868190,

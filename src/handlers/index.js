@@ -550,7 +550,7 @@ export function setupHandlers() {
     
     // Если игра уже добавлена - удаляем её
     if (existingGame) {
-      db.deleteGame(existingGame.id);
+      db.removeGame(accountId, appId);
       await ctx.answerCbQuery('✅ Игра удалена');
       
       if (account.is_farming) {

@@ -362,3 +362,38 @@ export async function getOwnedGames(accountId, offset = 0, limit = 15, forceRefr
 
   return fetchPromise;
 }
+
+/**
+ * Получает информацию об игре по App ID
+ * @param {number} appId - App ID игры
+ * @returns {Promise<Object>} - Объект с информацией об игре
+ */
+export async function getGameInfo(appId) {
+  try {
+    // Пробуем получить информацию из Steam Store API
+    const response = await fetch(`https://store.steampowered.com/api/appdetails?appids=${appId}&l=russian`);
+    const data = await response.json();
+    
+    if (data[appId] && data[appId].success && data[appId].data) {
+      return {
+        appId: appId,
+        name: data[appId].data.name || `App ${appId}`,
+        type: data[appId].data.type || 'game'
+      };
+    }
+    
+    // Если не удалось получить из Store API, возвращаем базовую информацию
+    return {
+      appId: appId,
+      name: `App ${appId}`,
+      type: 'game'
+    };
+  } catch (error) {
+    console.error(`Ошибка получения информации об игре ${appId}:`, error.message);
+    return {
+      appId: appId,
+      name: `App ${appId}`,
+      type: 'game'
+    };
+  }
+}
