@@ -487,7 +487,7 @@ export function setupHandlers() {
           { name: 'PUBG: BATTLEGROUNDS', appId: 578080 },
           { name: 'Unturned', appId: 304930 },
           { name: 'Clicker Heroes', appId: 363970 },
-          { name: 'Wallpaper Engine', appId: 431960 }
+          { name: 'War Thunder', appId: 236390 }
         ];
         
         const selectedAppIds = new Set(selectedGames.map(g => g.app_id));
