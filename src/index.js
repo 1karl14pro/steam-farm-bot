@@ -97,6 +97,13 @@ startNotificationService();
 // Запускаем менеджер сессий (работает независимо от бота)
 sessionManager.startSessionManager();
 
+// Инициализируем настройки уведомлений для всех пользователей
+const allUsers = db.getAllUsers();
+for (const user of allUsers) {
+  db.initNotifications(user.telegram_id);
+}
+console.log(`✅ Инициализированы настройки уведомлений для ${allUsers.length} пользователей`);
+
 // Запускаем отслеживание уведомлений Steam
 steamNotifications.startAllNotificationTracking();
 
