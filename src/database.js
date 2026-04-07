@@ -53,6 +53,11 @@ try {
     db.exec("ALTER TABLE steam_accounts ADD COLUMN steam_paused INTEGER DEFAULT 0");
   }
 
+  const hasSteamId64 = tableInfo.find((col) => col.name === 'steam_id_64');
+  if (!hasSteamId64) {
+    db.exec("ALTER TABLE steam_accounts ADD COLUMN steam_id_64 TEXT DEFAULT NULL");
+  }
+
   const usersTableInfo = db.prepare("PRAGMA table_info(users)").all();
   const hasReferredBy = usersTableInfo.find((col) => col.name === 'referred_by');
   if (!hasReferredBy) {
