@@ -2520,11 +2520,11 @@ export function setupHandlers() {
               );
             }
           } catch (error) {
-            console.error('Steam Guard error:', error);
-            
             // Проверяем тип ошибки
             if (error.message.includes('TwoFactorCodeMismatch') || error.eresult === 88) {
-              // Неверный код - просим ввести снова
+              // Неверный код - просим ввести снова (не логируем как ошибку)
+              console.log(`[AUTH] Неверный Steam Guard код для пользователя ${ctx.from.id}`);
+              
               try {
                 await bot.telegram.editMessageText(
                   ctx.from.id,
