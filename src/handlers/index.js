@@ -464,6 +464,55 @@ export function setupHandlers() {
       
       // Парсим библиотеку + часы
       const library = await steamLibrary.getOwnedGamesWithHours(accountId, forceRefresh);
+      
+      // Если библиотека пустая - показываем популярные бесплатные игры
+      if (library.length === 0) {
+        const selectedGames = db.getGames(accountId);
+        const maxGames = db.getGamesLimit(account.user_id);
+        
+        let text = `📚 Библиотека игр для ${account.account_name}\n\n`;
+        text += `⚠️ Библиотека пуста!\n\n`;
+        text += `Выбрано: ${selectedGames.length}/${maxGames}\n\n`;
+        text += `💡 Популярные бесплатные игры для фарма:`;
+        
+        const freeGames = [
+          { name: 'Counter-Strike 2', appId: 730 },
+          { name: 'Dota 2', appId: 570 },
+          { name: 'Team Fortress 2', appId: 440 },
+          { name: 'Warframe', appId: 230410 },
+          { name: 'Path of Exile', appId: 238960 },
+          { name: 'Apex Legends', appId: 1172470 },
+          { name: 'Lost Ark', appId: 1599340 },
+          { name: 'Destiny 2', appId: 1085660 },
+          { name: 'PUBG: BATTLEGROUNDS', appId: 578080 },
+          { name: 'Unturned', appId: 304930 },
+          { name: 'Clicker Heroes', appId: 363970 },
+          { name: 'Wallpaper Engine', appId: 431960 }
+        ];
+        
+        const selectedAppIds = new Set(selectedGames.map(g => g.app_id));
+        
+        const gameButtons = freeGames.map(game => {
+          const isSelected = selectedAppIds.has(game.appId);
+          const displayText = isSelected ? `✅ ${game.name}` : game.name;
+          
+          return [{
+            text: displayText,
+            callback_data: `add_free_game_${accountId}_${game.appId}`
+          }];
+        });
+        
+        gameButtons.push([
+          { text: '➕ Добавить по App ID', callback_data: `add_game_manual_${accountId}` }
+        ]);
+        gameButtons.push([{ text: '🔙 Назад', callback_data: `games_${accountId}` }]);
+        
+        await ctx.editMessageText(text, {
+          reply_markup: { inline_keyboard: gameButtons }
+        });
+        return;
+      }
+      
       const pageGames = library.slice(page * 15, page * 15 + 15);
       const totalPages = Math.ceil(library.length / 15);
 
@@ -532,6 +581,71 @@ export function setupHandlers() {
           ]
         }
       });
+    }
+  });
+
+  bot.action(/^add_free_game_(\d+)_(\d+)$/, async (ctx) => {
+    const accountId = parseInt(ctx.match[1]);
+    const appId = parseInt(ctx.match[2]);
+    
+    const account = db.getSteamAccount(accountId);
+    if (!account || account.user_id !== ctx.from.id) {
+      await ctx.answerCbQuery('❌ Аккаунт не найден');
+      return;
+    }
+
+    const games = db.getGames(accountId);
+    const existingGame = games.find(g => g.app_id === appId);
+    
+    // Если игра уже добавлена - удаляем её
+    if (existingGame) {
+      db.removeGame(accountId, appId);
+      await ctx.answerCbQuery('✅ Игра удалена');
+      
+      if (account.is_farming) {
+        try {
+          await farmManager.restartFarming(accountId);
+        } catch (err) {
+          console.error('Ошибка перезапуска:', err);
+        }
+      }
+      
+      // Обновляем список
+      await bot.handleUpdate({ callback_query: { ...ctx.callbackQuery, data: `library_${accountId}_page_0` } });
+      return;
+    }
+    
+    // Проверяем лимит
+    const maxGames = db.getGamesLimit(account.user_id);
+    if (games.length >= maxGames) {
+      await ctx.answerCbQuery(`❌ Достигнут лимит игр (${maxGames})`, { show_alert: true });
+      return;
+    }
+
+    await ctx.answerCbQuery('⏳ Добавляю игру...');
+
+    // Получаем название игры
+    try {
+      const gameInfo = await steamLibrary.getGameInfo(appId);
+      const gameName = gameInfo.name;
+
+      db.addGame(accountId, appId, gameName);
+      
+      await ctx.answerCbQuery('✅ Игра добавлена');
+      
+      if (account.is_farming) {
+        try {
+          await farmManager.restartFarming(accountId);
+        } catch (err) {
+          console.error('Ошибка перезапуска:', err);
+        }
+      }
+      
+      // Обновляем список
+      await bot.handleUpdate({ callback_query: { ...ctx.callbackQuery, data: `library_${accountId}_page_0` } });
+    } catch (err) {
+      console.error('Ошибка добавления игры:', err);
+      await ctx.answerCbQuery('❌ Ошибка добавления игры');
     }
   });
 
