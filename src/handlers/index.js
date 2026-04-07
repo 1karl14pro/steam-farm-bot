@@ -714,19 +714,37 @@ export function setupHandlers() {
       await farmManager.startFarming(accountId);
       await ctx.answerCbQuery('✅ Фарм запущен', { show_alert: true });
       
+      // Ждем 2 секунды чтобы фарм успел запуститься и обновить статус в БД
+      await new Promise(resolve => setTimeout(resolve, 2000));
+      
       // Обновляем сообщение с деталями аккаунта
       const acc = db.getSteamAccount(accountId);
-      const games = db.getGames(accountId);
-      const text = formatter.formatAccountInfo(acc, games);
+      const updatedGames = db.getGames(accountId);
+      const text = formatter.formatAccountInfo(acc, updatedGames);
 
-      const buttons = [
-        [{ text: '⏸ Остановить фарм', callback_data: `stop_${accountId}` }],
-        [{ text: '🎮 Настроить игры', callback_data: `games_${accountId}` }],
-        [{ text: '💬 Изменить статус', callback_data: `change_status_${accountId}` }],
-        [{ text: '👁 Видимость', callback_data: `visibility_${accountId}` }],
-        [{ text: '🗑 Удалить аккаунт', callback_data: `delete_${accountId}` }],
-        [{ text: '🔙 К списку аккаунтов', callback_data: 'accounts' }]
-      ];
+      const buttons = [];
+      
+      if (acc.is_farming) {
+        buttons.push([{ text: '⏸ Остановить фарм', callback_data: `stop_${accountId}` }]);
+      } else {
+        buttons.push([{ text: '▶️ Запустить фарм', callback_data: `start_${accountId}` }]);
+      }
+      
+      buttons.push([{ text: '🎮 Настроить игры', callback_data: `games_${accountId}` }]);
+      buttons.push([
+        { text: '📊 Статистика', callback_data: `stats_${accountId}` },
+        { text: '🎯 Цели', callback_data: `goals_${accountId}` }
+      ]);
+      buttons.push([
+        { text: '⏰ Расписание', callback_data: `schedule_${accountId}` },
+        { text: '💬 Статус', callback_data: `change_status_${accountId}` }
+      ]);
+      buttons.push([{ text: '👁 Видимость', callback_data: `visibility_${accountId}` }]);
+      if (acc.has_parental_control) {
+        buttons.push([{ text: '🔐 PIN родительского контроля', callback_data: `set_pin_${accountId}` }]);
+      }
+      buttons.push([{ text: '🗑 Удалить аккаунт', callback_data: `delete_${accountId}` }]);
+      buttons.push([{ text: '🔙 К списку аккаунтов', callback_data: 'accounts' }]);
 
       await ctx.editMessageText(text, {
         reply_markup: { inline_keyboard: buttons }
@@ -756,19 +774,37 @@ export function setupHandlers() {
       await farmManager.stopFarming(accountId);
       await ctx.answerCbQuery('✅ Фарм остановлен', { show_alert: true });
       
+      // Ждем 1 секунду чтобы фарм успел остановиться и обновить статус в БД
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
       // Обновляем сообщение с деталями аккаунта
       const acc = db.getSteamAccount(accountId);
-      const games = db.getGames(accountId);
-      const text = formatter.formatAccountInfo(acc, games);
+      const updatedGames = db.getGames(accountId);
+      const text = formatter.formatAccountInfo(acc, updatedGames);
 
-      const buttons = [
-        [{ text: '▶️ Запустить фарм', callback_data: `start_${accountId}` }],
-        [{ text: '🎮 Настроить игры', callback_data: `games_${accountId}` }],
-        [{ text: '💬 Изменить статус', callback_data: `change_status_${accountId}` }],
-        [{ text: '👁 Видимость', callback_data: `visibility_${accountId}` }],
-        [{ text: '🗑 Удалить аккаунт', callback_data: `delete_${accountId}` }],
-        [{ text: '🔙 К списку аккаунтов', callback_data: 'accounts' }]
-      ];
+      const buttons = [];
+      
+      if (acc.is_farming) {
+        buttons.push([{ text: '⏸ Остановить фарм', callback_data: `stop_${accountId}` }]);
+      } else {
+        buttons.push([{ text: '▶️ Запустить фарм', callback_data: `start_${accountId}` }]);
+      }
+      
+      buttons.push([{ text: '🎮 Настроить игры', callback_data: `games_${accountId}` }]);
+      buttons.push([
+        { text: '📊 Статистика', callback_data: `stats_${accountId}` },
+        { text: '🎯 Цели', callback_data: `goals_${accountId}` }
+      ]);
+      buttons.push([
+        { text: '⏰ Расписание', callback_data: `schedule_${accountId}` },
+        { text: '💬 Статус', callback_data: `change_status_${accountId}` }
+      ]);
+      buttons.push([{ text: '👁 Видимость', callback_data: `visibility_${accountId}` }]);
+      if (acc.has_parental_control) {
+        buttons.push([{ text: '🔐 PIN родительского контроля', callback_data: `set_pin_${accountId}` }]);
+      }
+      buttons.push([{ text: '🗑 Удалить аккаунт', callback_data: `delete_${accountId}` }]);
+      buttons.push([{ text: '🔙 К списку аккаунтов', callback_data: 'accounts' }]);
 
       await ctx.editMessageText(text, {
         reply_markup: { inline_keyboard: buttons }
