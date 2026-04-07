@@ -2521,7 +2521,50 @@ export function setupHandlers() {
             }
           } catch (error) {
             console.error('Steam Guard error:', error);
-            await ctx.reply(`❌ Ошибка: ${error.message}\n\nПопробуйте ещё раз или отмените авторизацию.`);
+            
+            // Проверяем тип ошибки
+            if (error.message.includes('TwoFactorCodeMismatch') || error.eresult === 88) {
+              // Неверный код - просим ввести снова
+              try {
+                await bot.telegram.editMessageText(
+                  ctx.from.id,
+                  state.messageId,
+                  null,
+                  '❌ Неверный код!\n\n' +
+                  '🔐 Отправьте правильный Steam Guard код:\n\n' +
+                  '• Email (если Steam Guard через почту)\n' +
+                  '• Мобильного приложения Steam\n\n' +
+                  '⏱ Код действителен несколько минут',
+                  {
+                    reply_markup: {
+                      inline_keyboard: [
+                        [{ text: '❌ Отмена', callback_data: 'cancel_auth' }]
+                      ]
+                    }
+                  }
+                );
+              } catch (err) {
+                await ctx.reply(
+                  '❌ Неверный код!\n\n' +
+                  '🔐 Отправьте правильный Steam Guard код:\n\n' +
+                  '• Email (если Steam Guard через почту)\n' +
+                  '• Мобильного приложения Steam\n\n' +
+                  '⏱ Код действителен несколько минут',
+                  {
+                    reply_markup: {
+                      inline_keyboard: [
+                        [{ text: '❌ Отмена', callback_data: 'cancel_auth' }]
+                      ]
+                    }
+                  }
+                );
+              }
+              // НЕ удаляем userState - пользователь может попробовать снова
+            } else {
+              // Другая ошибка - показываем и удаляем состояние
+              await ctx.reply(`❌ Ошибка: ${error.message}`);
+              userStates.delete(ctx.from.id);
+            }
           }
           break;
         }
