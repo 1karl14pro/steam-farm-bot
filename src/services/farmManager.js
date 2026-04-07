@@ -49,7 +49,7 @@ export async function startFarming(accountId) {
       
       // Сохраняем Steam ID 64 в базу данных
       const steamId64 = client.steamID.getSteamID64();
-      db.prepare('UPDATE steam_accounts SET steam_id_64 = ? WHERE id = ?').run(steamId64, accountId);
+      await db.updateSteamId64(accountId, steamId64);
       console.log(`🆔 Сохранен Steam ID для ${account.account_name}: ${steamId64}`);
       
       const visibilityMode = db.getVisibilityMode(accountId);

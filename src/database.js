@@ -512,6 +512,16 @@ export const setFamilyPin = (accountId, pin) => {
   return db.prepare('UPDATE steam_accounts SET family_pin = ? WHERE id = ?').run(pin, accountId);
 };
 
+// ===== STEAM ID 64 =====
+export const updateSteamId64 = (accountId, steamId64) => {
+  return db.prepare('UPDATE steam_accounts SET steam_id_64 = ? WHERE id = ?').run(steamId64, accountId);
+};
+
+export const getSteamId64 = (accountId) => {
+  const account = db.prepare('SELECT steam_id_64 FROM steam_accounts WHERE id = ?').get(accountId);
+  return account?.steam_id_64 || null;
+};
+
 // ===== PAUSED BY USER =====
 export const getPausedByUser = (accountId) => {
   const account = db.prepare('SELECT paused_by_user FROM steam_accounts WHERE id = ?').get(accountId);
