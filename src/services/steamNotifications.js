@@ -145,8 +145,15 @@ export async function stopAllNotificationTracking() {
  */
 export async function startAllNotificationTracking() {
   const allAccounts = db.getAllSteamAccounts();
+  const farmManager = await import('./farmManager.js');
   
   for (const account of allAccounts) {
+    // Пропускаем аккаунты которые фармят (у них уже есть активная сессия)
+    if (farmManager.isFarming(account.id)) {
+      console.log(`[NOTIFICATIONS] Пропускаю ${account.account_name} - активно фармит`);
+      continue;
+    }
+    
     const settings = db.getNotificationSettings(account.user_id);
     
     // Проверяем есть ли хотя бы одно включенное уведомление
