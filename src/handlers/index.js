@@ -1729,40 +1729,17 @@ export function setupHandlers() {
       });
     } else {
       text += `Нет активных целей\n\n`;
-      text += `💡 Создайте цель, чтобы отслеживать прогресс!`;
+      text += `💡 Цели помогают отслеживать прогресс фарма!`;
     }
 
     await ctx.editMessageText(text, {
       reply_markup: {
         inline_keyboard: [
-          [{ text: '➕ Создать цель', callback_data: `create_goal_${accountId}` }],
           [{ text: '🔄 Обновить', callback_data: `goals_${accountId}` }],
           [{ text: '🔙 К аккаунту', callback_data: `account_${accountId}` }]
         ]
       }
     });
-  });
-
-  bot.action(/^create_goal_(\d+)$/, async (ctx) => {
-    const accountId = parseInt(ctx.match[1]);
-    await ctx.answerCbQuery();
-    
-    await ctx.editMessageText(
-      '🎯 Создание цели\n━━━━━━━━━━━━━━━\n\n' +
-      'Функция в разработке.\n\n' +
-      'Скоро вы сможете:\n' +
-      '• Устанавливать цели по часам\n' +
-      '• Выбирать конкретные игры\n' +
-      '• Устанавливать дедлайны\n' +
-      '• Получать уведомления о прогрессе',
-      {
-        reply_markup: {
-          inline_keyboard: [
-            [{ text: '🔙 Назад', callback_data: `goals_${accountId}` }]
-          ]
-        }
-      }
-    );
   });
 
   // ===== SCHEDULE =====
@@ -1798,44 +1775,17 @@ export function setupHandlers() {
       });
     } else {
       text += `Нет расписаний\n\n`;
-      text += `💡 Без расписания фарм работает 24/7\n\n`;
-      text += `Создайте расписание, чтобы:\n`;
-      text += `• Фармить только ночью\n`;
-      text += `• Экономить ресурсы\n`;
-      text += `• Избежать конфликтов с игрой`;
+      text += `💡 Без расписания фарм работает 24/7`;
     }
 
     await ctx.editMessageText(text, {
       reply_markup: {
         inline_keyboard: [
-          [{ text: '➕ Создать расписание', callback_data: `create_schedule_${accountId}` }],
           [{ text: '🔄 Обновить', callback_data: `schedule_${accountId}` }],
           [{ text: '🔙 К аккаунту', callback_data: `account_${accountId}` }]
         ]
       }
     });
-  });
-
-  bot.action(/^create_schedule_(\d+)$/, async (ctx) => {
-    const accountId = parseInt(ctx.match[1]);
-    await ctx.answerCbQuery();
-    
-    await ctx.editMessageText(
-      '⏰ Создание расписания\n━━━━━━━━━━━━━━━\n\n' +
-      'Функция в разработке.\n\n' +
-      'Скоро вы сможете:\n' +
-      '• Выбирать время начала/конца\n' +
-      '• Выбирать дни недели\n' +
-      '• Создавать несколько расписаний\n' +
-      '• Включать/отключать расписания',
-      {
-        reply_markup: {
-          inline_keyboard: [
-            [{ text: '🔙 Назад', callback_data: `schedule_${accountId}` }]
-          ]
-        }
-      }
-    );
   });
 
   // ===== TEXT MESSAGE HANDLERS =====
