@@ -272,9 +272,13 @@ export async function getOwnedGames(accountId, offset = 0, limit = 15, forceRefr
         console.log(`Найдено уникальных AppID: ${appIds.size}`);
         
         if (appIds.size === 0) {
+          console.log('⚠️ Не удалось извлечь игры из лицензий, возвращаю пустой список');
           clearTimeout(timeout);
           client.logOff();
-          reject(new Error('Не удалось извлечь игры из лицензий'));
+          accountLocks.delete(accountId);
+          
+          // Возвращаем пустой массив вместо ошибки
+          resolve([]);
           return;
         }
 
