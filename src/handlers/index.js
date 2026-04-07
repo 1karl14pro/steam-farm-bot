@@ -1027,10 +1027,92 @@ export function setupHandlers() {
 
   bot.action('add_account', async (ctx) => {
     await ctx.answerCbQuery();
-    userStates.set(ctx.from.id, { action: 'add_account' });
 
     await ctx.editMessageText(
       '🔗 Добавить Steam аккаунт\n\n' +
+      'Выберите способ добавления:',
+      {
+        reply_markup: {
+          inline_keyboard: [
+            [{ text: '📱 QR-код (рекомендуется)', callback_data: 'add_account_qr' }],
+            [{ text: '🔑 Логин и пароль', callback_data: 'add_account_credentials' }],
+            [{ text: '🎫 Refresh Token', callback_data: 'add_account_token' }],
+            [{ text: '❌ Отмена', callback_data: 'accounts' }]
+          ]
+        }
+      }
+    );
+  });
+
+  bot.action('add_account_qr', async (ctx) => {
+    await ctx.answerCbQuery();
+    
+    try {
+      const { createQRAuth, waitForQRConfirmation } = await import('../services/steamAuth.js');
+      
+      // Создаем QR-код
+      const qrBuffer = await createQRAuth(ctx.from.id);
+      
+      // Отправляем QR-код
+      await ctx.replyWithPhoto({ source: qrBuffer }, {
+        caption: '📱 Отсканируйте QR-код в приложении Steam\n\n' +
+          '1. Откройте приложение Steam на телефоне\n' +
+          '2. Нажмите на меню (☰)\n' +
+          '3. Выберите "Войти с помощью QR-кода"\n' +
+          '4. Отсканируйте этот QR-код\n\n' +
+          '⏱ Ожидание... (2 минуты)',
+        reply_markup: {
+          inline_keyboard: [
+            [{ text: '❌ Отмена', callback_data: 'cancel_auth' }]
+          ]
+        }
+      });
+      
+      // Ждем подтверждения
+      const result = await waitForQRConfirmation(ctx.from.id);
+      
+      await ctx.reply(
+        `✅ Аккаунт добавлен!\n\n` +
+        `👤 ${result.accountName}\n\n` +
+        `Теперь вы можете добавить игры и запустить фарм.`,
+        {
+          reply_markup: {
+            inline_keyboard: [
+              [{ text: '🎮 Добавить игры', callback_data: `games_${result.accountId}` }],
+              [{ text: '📋 Мои аккаунты', callback_data: 'accounts' }]
+            ]
+          }
+        }
+      );
+    } catch (error) {
+      console.error('QR Auth error:', error);
+      await ctx.reply(`❌ Ошибка: ${error.message}`);
+    }
+  });
+
+  bot.action('add_account_credentials', async (ctx) => {
+    await ctx.answerCbQuery();
+    userStates.set(ctx.from.id, { action: 'add_account_credentials_step1' });
+
+    await ctx.editMessageText(
+      '🔑 Вход через логин и пароль\n\n' +
+      'Отправьте логин от Steam аккаунта:',
+      {
+        reply_markup: {
+          inline_keyboard: [
+            [{ text: '❌ Отмена', callback_data: 'accounts' }]
+          ]
+        }
+      }
+    );
+  });
+
+  bot.action('add_account_token', async (ctx) => {
+    await ctx.answerCbQuery();
+    userStates.set(ctx.from.id, { action: 'add_account' });
+
+    await ctx.editMessageText(
+      '🎫 Добавить через Refresh Token\n\n' +
       'Отправьте данные от аккаунта в формате:\n\n' +
       'login:password:shared_secret:identity_secret:refresh_token\n\n' +
       'Как получить данные:\n\n' +
@@ -1047,6 +1129,21 @@ export function setupHandlers() {
         }
       }
     );
+  });
+
+  bot.action('cancel_auth', async (ctx) => {
+    await ctx.answerCbQuery();
+    
+    const { cancelAuth } = await import('../services/steamAuth.js');
+    cancelAuth(ctx.from.id);
+    
+    await ctx.reply('❌ Авторизация отменена', {
+      reply_markup: {
+        inline_keyboard: [
+          [{ text: '📋 Мои аккаунты', callback_data: 'accounts' }]
+        ]
+      }
+    });
   });
 
   bot.action(/^delete_(\d+)$/, async (ctx) => {
@@ -1981,6 +2078,116 @@ export function setupHandlers() {
           }
 
           userStates.delete(ctx.from.id);
+          break;
+        }
+
+        case 'add_account_credentials_step1': {
+          const login = ctx.message.text.trim();
+          
+          if (!login || login.length < 3) {
+            await ctx.reply('❌ Логин слишком короткий');
+            return;
+          }
+          
+          userStates.set(ctx.from.id, { action: 'add_account_credentials_step2', login });
+          
+          await ctx.reply(
+            '🔑 Теперь отправьте пароль от аккаунта:',
+            {
+              reply_markup: {
+                inline_keyboard: [
+                  [{ text: '❌ Отмена', callback_data: 'accounts' }]
+                ]
+              }
+            }
+          );
+          break;
+        }
+
+        case 'add_account_credentials_step2': {
+          const password = ctx.message.text.trim();
+          
+          if (!password || password.length < 6) {
+            await ctx.reply('❌ Пароль слишком короткий');
+            return;
+          }
+          
+          const { login } = state;
+          
+          await ctx.reply('⏳ Авторизация...');
+          
+          try {
+            const { createCredentialsAuth, getActiveSession } = await import('../services/steamAuth.js');
+            
+            const result = await createCredentialsAuth(ctx.from.id, login, password);
+            
+            // Проверяем что требуется
+            const session = getActiveSession(ctx.from.id);
+            
+            if (session && session.session.steamGuardMachineToken) {
+              // Требуется Steam Guard код
+              userStates.set(ctx.from.id, { action: 'add_account_steamguard', login });
+              
+              await ctx.reply(
+                '🔐 Требуется Steam Guard код\n\n' +
+                'Отправьте код из:\n' +
+                '• Email (если Steam Guard через почту)\n' +
+                '• Мобильного приложения Steam\n\n' +
+                '⏱ Код действителен несколько минут',
+                {
+                  reply_markup: {
+                    inline_keyboard: [
+                      [{ text: '❌ Отмена', callback_data: 'cancel_auth' }]
+                    ]
+                  }
+                }
+              );
+            } else {
+              // Авторизация успешна без Steam Guard
+              await ctx.reply('✅ Авторизация успешна! Получение данных...');
+            }
+          } catch (error) {
+            console.error('Credentials auth error:', error);
+            await ctx.reply(`❌ Ошибка авторизации: ${error.message}`);
+            userStates.delete(ctx.from.id);
+          }
+          break;
+        }
+
+        case 'add_account_steamguard': {
+          const code = ctx.message.text.trim();
+          
+          if (!/^[A-Z0-9]{5}$/.test(code)) {
+            await ctx.reply('❌ Неверный формат кода. Код должен содержать 5 символов (буквы и цифры)');
+            return;
+          }
+          
+          await ctx.reply('⏳ Проверка кода...');
+          
+          try {
+            const { submitSteamGuardCode } = await import('../services/steamAuth.js');
+            
+            const result = await submitSteamGuardCode(ctx.from.id, code);
+            
+            await ctx.reply(
+              `✅ Аккаунт добавлен!\n\n` +
+              `👤 ${result.accountName}\n\n` +
+              `Теперь вы можете добавить игры и запустить фарм.`,
+              {
+                reply_markup: {
+                  inline_keyboard: [
+                    [{ text: '🎮 Добавить игры', callback_data: `games_${result.accountId}` }],
+                    [{ text: '📋 Мои аккаунты', callback_data: 'accounts' }]
+                  ]
+                }
+              }
+            );
+            
+            userStates.delete(ctx.from.id);
+          } catch (error) {
+            console.error('Steam Guard error:', error);
+            await ctx.reply(`❌ Ошибка: ${error.message}\n\nПопробуйте ещё раз или отмените авторизацию.`);
+          }
           break;
         }
 
