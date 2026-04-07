@@ -610,8 +610,54 @@ export function setupHandlers() {
         }
       }
       
-      // Обновляем список
-      await bot.handleUpdate({ callback_query: { ...ctx.callbackQuery, data: `library_${accountId}_page_0` } });
+      // Обновляем список бесплатных игр
+      const updatedGames = db.getGames(accountId);
+      const maxGames = db.getGamesLimit(account.user_id);
+      
+      let text = `📚 Библиотека игр для ${account.account_name}\n\n`;
+      text += `⚠️ Библиотека пуста!\n\n`;
+      text += `Выбрано: ${updatedGames.length}/${maxGames}\n\n`;
+      text += `💡 Популярные бесплатные игры для фарма:`;
+      
+      const freeGames = [
+        { name: 'Counter-Strike 2', appId: 730 },
+        { name: 'Dota 2', appId: 570 },
+        { name: 'Team Fortress 2', appId: 440 },
+        { name: 'Warframe', appId: 230410 },
+        { name: 'Path of Exile', appId: 238960 },
+        { name: 'Apex Legends', appId: 1172470 },
+        { name: 'Lost Ark', appId: 1599340 },
+        { name: 'Destiny 2', appId: 1085660 },
+        { name: 'PUBG: BATTLEGROUNDS', appId: 578080 },
+        { name: 'Unturned', appId: 304930 },
+        { name: 'Clicker Heroes', appId: 363970 },
+        { name: 'War Thunder', appId: 236390 }
+      ];
+      
+      const selectedAppIds = new Set(updatedGames.map(g => g.app_id));
+      
+      const gameButtons = freeGames.map(game => {
+        const isSelected = selectedAppIds.has(game.appId);
+        const displayText = isSelected ? `✅ ${game.name}` : game.name;
+        
+        return [{
+          text: displayText,
+          callback_data: `add_free_game_${accountId}_${game.appId}`
+        }];
+      });
+      
+      gameButtons.push([
+        { text: '➕ Добавить по App ID', callback_data: `add_game_manual_${accountId}` }
+      ]);
+      gameButtons.push([{ text: '🔙 Назад', callback_data: `games_${accountId}` }]);
+      
+      try {
+        await ctx.editMessageText(text, {
+          reply_markup: { inline_keyboard: gameButtons }
+        });
+      } catch (err) {
+        // Игнорируем ошибку "message is not modified"
+      }
       return;
     }
     
@@ -641,8 +687,53 @@ export function setupHandlers() {
         }
       }
       
-      // Обновляем список
-      await bot.handleUpdate({ callback_query: { ...ctx.callbackQuery, data: `library_${accountId}_page_0` } });
+      // Обновляем список бесплатных игр
+      const updatedGames = db.getGames(accountId);
+      
+      let text = `📚 Библиотека игр для ${account.account_name}\n\n`;
+      text += `⚠️ Библиотека пуста!\n\n`;
+      text += `Выбрано: ${updatedGames.length}/${maxGames}\n\n`;
+      text += `💡 Популярные бесплатные игры для фарма:`;
+      
+      const freeGames = [
+        { name: 'Counter-Strike 2', appId: 730 },
+        { name: 'Dota 2', appId: 570 },
+        { name: 'Team Fortress 2', appId: 440 },
+        { name: 'Warframe', appId: 230410 },
+        { name: 'Path of Exile', appId: 238960 },
+        { name: 'Apex Legends', appId: 1172470 },
+        { name: 'Lost Ark', appId: 1599340 },
+        { name: 'Destiny 2', appId: 1085660 },
+        { name: 'PUBG: BATTLEGROUNDS', appId: 578080 },
+        { name: 'Unturned', appId: 304930 },
+        { name: 'Clicker Heroes', appId: 363970 },
+        { name: 'War Thunder', appId: 236390 }
+      ];
+      
+      const selectedAppIds = new Set(updatedGames.map(g => g.app_id));
+      
+      const gameButtons = freeGames.map(game => {
+        const isSelected = selectedAppIds.has(game.appId);
+        const displayText = isSelected ? `✅ ${game.name}` : game.name;
+        
+        return [{
+          text: displayText,
+          callback_data: `add_free_game_${accountId}_${game.appId}`
+        }];
+      });
+      
+      gameButtons.push([
+        { text: '➕ Добавить по App ID', callback_data: `add_game_manual_${accountId}` }
+      ]);
+      gameButtons.push([{ text: '🔙 Назад', callback_data: `games_${accountId}` }]);
+      
+      try {
+        await ctx.editMessageText(text, {
+          reply_markup: { inline_keyboard: gameButtons }
+        });
+      } catch (err) {
+        // Игнорируем ошибку "message is not modified"
+      }
     } catch (err) {
       console.error('Ошибка добавления игры:', err);
       await ctx.answerCbQuery('❌ Ошибка добавления игры');
