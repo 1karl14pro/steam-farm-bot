@@ -1091,9 +1091,8 @@ export function setupHandlers() {
 
   bot.action('add_account_credentials', async (ctx) => {
     await ctx.answerCbQuery();
-    userStates.set(ctx.from.id, { action: 'add_account_credentials_step1' });
-
-    await ctx.editMessageText(
+    
+    const sentMessage = await ctx.editMessageText(
       '🔑 Вход через логин и пароль\n\n' +
       '📝 Отправьте логин от Steam аккаунта:',
       {
@@ -1104,6 +1103,11 @@ export function setupHandlers() {
         }
       }
     );
+    
+    userStates.set(ctx.from.id, { 
+      action: 'add_account_credentials_step1',
+      messageId: sentMessage.message_id 
+    });
   });
 
   bot.action('cancel_auth', async (ctx) => {
@@ -2060,28 +2064,60 @@ export function setupHandlers() {
         case 'add_account_credentials_step1': {
           const login = ctx.message.text.trim();
           
+          // Удаляем сообщение пользователя с логином
+          try {
+            await ctx.deleteMessage();
+          } catch (err) {
+            // Игнорируем ошибку если не удалось удалить
+          }
+          
           if (!login || login.length < 3) {
             await ctx.reply('❌ Логин слишком короткий');
             return;
           }
           
-          userStates.set(ctx.from.id, { action: 'add_account_credentials_step2', login });
+          userStates.set(ctx.from.id, { action: 'add_account_credentials_step2', login, messageId: state.messageId });
           
-          await ctx.reply(
-            '🔑 Теперь отправьте пароль от аккаунта:',
-            {
-              reply_markup: {
-                inline_keyboard: [
-                  [{ text: '❌ Отмена', callback_data: 'accounts' }]
-                ]
+          // Редактируем предыдущее сообщение
+          try {
+            await bot.telegram.editMessageText(
+              ctx.from.id,
+              state.messageId,
+              null,
+              '🔑 Теперь отправьте пароль от аккаунта:',
+              {
+                reply_markup: {
+                  inline_keyboard: [
+                    [{ text: '❌ Отмена', callback_data: 'cancel_auth' }]
+                  ]
+                }
               }
-            }
-          );
+            );
+          } catch (err) {
+            // Если не удалось отредактировать - отправляем новое
+            await ctx.reply(
+              '🔑 Теперь отправьте пароль от аккаунта:',
+              {
+                reply_markup: {
+                  inline_keyboard: [
+                    [{ text: '❌ Отмена', callback_data: 'cancel_auth' }]
+                  ]
+                }
+              }
+            );
+          }
           break;
         }
 
         case 'add_account_credentials_step2': {
           const password = ctx.message.text.trim();
+          
+          // Удаляем сообщение пользователя с паролем
+          try {
+            await ctx.deleteMessage();
+          } catch (err) {
+            // Игнорируем ошибку если не удалось удалить
+          }
           
           if (!password || password.length < 6) {
             await ctx.reply('❌ Пароль слишком короткий');
@@ -2090,7 +2126,17 @@ export function setupHandlers() {
           
           const { login } = state;
           
-          await ctx.reply('⏳ Авторизация...');
+          // Редактируем предыдущее сообщение
+          try {
+            await bot.telegram.editMessageText(
+              ctx.from.id,
+              state.messageId,
+              null,
+              '⏳ Авторизация...'
+            );
+          } catch (err) {
+            await ctx.reply('⏳ Авторизация...');
+          }
           
           try {
             const { createCredentialsAuth, getActiveSession } = await import('../services/steamAuth.js');
@@ -2110,22 +2156,43 @@ export function setupHandlers() {
             // Если авторизация не завершена - значит нужен код
             if (!session.session.refreshToken) {
               // Требуется Steam Guard код
-              userStates.set(ctx.from.id, { action: 'add_account_steamguard', login });
+              userStates.set(ctx.from.id, { action: 'add_account_steamguard', login, messageId: state.messageId });
               
-              await ctx.reply(
-                '🔐 Требуется Steam Guard код\n\n' +
-                'Отправьте код из:\n' +
-                '• Email (если Steam Guard через почту)\n' +
-                '• Мобильного приложения Steam\n\n' +
-                '⏱ Код действителен несколько минут',
-                {
-                  reply_markup: {
-                    inline_keyboard: [
-                      [{ text: '❌ Отмена', callback_data: 'cancel_auth' }]
-                    ]
+              // Редактируем предыдущее сообщение
+              try {
+                await bot.telegram.editMessageText(
+                  ctx.from.id,
+                  state.messageId,
+                  null,
+                  '🔐 Требуется Steam Guard код\n\n' +
+                  'Отправьте код из:\n' +
+                  '• Email (если Steam Guard через почту)\n' +
+                  '• Мобильного приложения Steam\n\n' +
+                  '⏱ Код действителен несколько минут',
+                  {
+                    reply_markup: {
+                      inline_keyboard: [
+                        [{ text: '❌ Отмена', callback_data: 'cancel_auth' }]
+                      ]
+                    }
                   }
-                }
-              );
+                );
+              } catch (err) {
+                await ctx.reply(
+                  '🔐 Требуется Steam Guard код\n\n' +
+                  'Отправьте код из:\n' +
+                  '• Email (если Steam Guard через почту)\n' +
+                  '• Мобильного приложения Steam\n\n' +
+                  '⏱ Код действителен несколько минут',
+                  {
+                    reply_markup: {
+                      inline_keyboard: [
+                        [{ text: '❌ Отмена', callback_data: 'cancel_auth' }]
+                      ]
+                    }
+                  }
+                );
+              }
             } else {
               // Авторизация успешна без Steam Guard - сохраняем аккаунт
               const refreshToken = session.session.refreshToken;
@@ -2138,19 +2205,39 @@ export function setupHandlers() {
               cancelAuth(ctx.from.id);
               userStates.delete(ctx.from.id);
               
-              await ctx.reply(
-                `✅ Аккаунт добавлен!\n\n` +
-                `👤 ${accountName}\n\n` +
-                `Теперь вы можете добавить игры и запустить фарм.`,
-                {
-                  reply_markup: {
-                    inline_keyboard: [
-                      [{ text: '🎮 Добавить игры', callback_data: `games_${accountId}` }],
-                      [{ text: '📋 Мои аккаунты', callback_data: 'accounts' }]
-                    ]
+              // Редактируем предыдущее сообщение
+              try {
+                await bot.telegram.editMessageText(
+                  ctx.from.id,
+                  state.messageId,
+                  null,
+                  `✅ Аккаунт добавлен!\n\n` +
+                  `👤 ${accountName}\n\n` +
+                  `Теперь вы можете добавить игры и запустить фарм.`,
+                  {
+                    reply_markup: {
+                      inline_keyboard: [
+                        [{ text: '🎮 Добавить игры', callback_data: `games_${accountId}` }],
+                        [{ text: '📋 Мои аккаунты', callback_data: 'accounts' }]
+                      ]
+                    }
                   }
-                }
-              );
+                );
+              } catch (err) {
+                await ctx.reply(
+                  `✅ Аккаунт добавлен!\n\n` +
+                  `👤 ${accountName}\n\n` +
+                  `Теперь вы можете добавить игры и запустить фарм.`,
+                  {
+                    reply_markup: {
+                      inline_keyboard: [
+                        [{ text: '🎮 Добавить игры', callback_data: `games_${accountId}` }],
+                        [{ text: '📋 Мои аккаунты', callback_data: 'accounts' }]
+                      ]
+                    }
+                  }
+                );
+              }
             }
           } catch (error) {
             console.error('Credentials auth error:', error);
@@ -2163,33 +2250,70 @@ export function setupHandlers() {
         case 'add_account_steamguard': {
           const code = ctx.message.text.trim();
           
+          // Удаляем сообщение пользователя с кодом
+          try {
+            await ctx.deleteMessage();
+          } catch (err) {
+            // Игнорируем ошибку если не удалось удалить
+          }
+          
           if (!/^[A-Z0-9]{5}$/.test(code)) {
             await ctx.reply('❌ Неверный формат кода. Код должен содержать 5 символов (буквы и цифры)');
             return;
           }
           
-          await ctx.reply('⏳ Проверка кода...');
+          // Редактируем предыдущее сообщение
+          try {
+            await bot.telegram.editMessageText(
+              ctx.from.id,
+              state.messageId,
+              null,
+              '⏳ Проверка кода...'
+            );
+          } catch (err) {
+            await ctx.reply('⏳ Проверка кода...');
+          }
           
           try {
             const { submitSteamGuardCode } = await import('../services/steamAuth.js');
             
             const result = await submitSteamGuardCode(ctx.from.id, code);
             
-            await ctx.reply(
-              `✅ Аккаунт добавлен!\n\n` +
-              `👤 ${result.accountName}\n\n` +
-              `Теперь вы можете добавить игры и запустить фарм.`,
-              {
-                reply_markup: {
-                  inline_keyboard: [
-                    [{ text: '🎮 Добавить игры', callback_data: `games_${result.accountId}` }],
-                    [{ text: '📋 Мои аккаунты', callback_data: 'accounts' }]
-                  ]
-                }
-              }
-            );
-            
             userStates.delete(ctx.from.id);
+            
+            // Редактируем предыдущее сообщение
+            try {
+              await bot.telegram.editMessageText(
+                ctx.from.id,
+                state.messageId,
+                null,
+                `✅ Аккаунт добавлен!\n\n` +
+                `👤 ${result.accountName}\n\n` +
+                `Теперь вы можете добавить игры и запустить фарм.`,
+                {
+                  reply_markup: {
+                    inline_keyboard: [
+                      [{ text: '🎮 Добавить игры', callback_data: `games_${result.accountId}` }],
+                      [{ text: '📋 Мои аккаунты', callback_data: 'accounts' }]
+                    ]
+                  }
+                }
+              );
+            } catch (err) {
+              await ctx.reply(
+                `✅ Аккаунт добавлен!\n\n` +
+                `👤 ${result.accountName}\n\n` +
+                `Теперь вы можете добавить игры и запустить фарм.`,
+                {
+                  reply_markup: {
+                    inline_keyboard: [
+                      [{ text: '🎮 Добавить игры', callback_data: `games_${result.accountId}` }],
+                      [{ text: '📋 Мои аккаунты', callback_data: 'accounts' }]
+                    ]
+                  }
+                }
+              );
+            }
           } catch (error) {
             console.error('Steam Guard error:', error);
             await ctx.reply(`❌ Ошибка: ${error.message}\n\nПопробуйте ещё раз или отмените авторизацию.`);
