@@ -3,6 +3,7 @@ import { writeFileSync, createWriteStream, statSync, renameSync, existsSync, rea
 import bot from './bot.js';
 import { setupHandlers } from './handlers/index.js';
 import * as sessionManager from './services/sessionManager.js';
+import * as steamNotifications from './services/steamNotifications.js';
 import * as db from './database.js';
 
 console.log('🚀 Запуск бота...');
@@ -96,6 +97,9 @@ startNotificationService();
 // Запускаем менеджер сессий (работает независимо от бота)
 sessionManager.startSessionManager();
 
+// Запускаем отслеживание уведомлений Steam
+steamNotifications.startAllNotificationTracking();
+
 // Пытаемся остановить старую сессию перед запуском
 try {
   await bot.stop();
@@ -123,12 +127,14 @@ bot.launch({
 process.once('SIGINT', () => {
   console.log('🛑 Получен сигнал SIGINT, остановка...');
   sessionManager.stopSessionManager();
+  steamNotifications.stopAllNotificationTracking();
   bot.stop('SIGINT');
 });
 
 process.once('SIGTERM', () => {
   console.log('🛑 Получен сигнал SIGTERM, остановка...');
   sessionManager.stopSessionManager();
+  steamNotifications.stopAllNotificationTracking();
   bot.stop('SIGTERM');
 });
 

@@ -665,7 +665,7 @@ export const shouldFarmNow = (accountId) => {
  * Создает настройки уведомлений для пользователя
  */
 export const initNotifications = (userId) => {
-  const types = ['hours_milestone', 'farm_error', 'weekly_report', 'premium_expiring'];
+  const types = ['hours_milestone', 'farm_error', 'weekly_report', 'premium_expiring', 'friend_request', 'trade_offer'];
   
   const insert = db.prepare(`
     INSERT OR IGNORE INTO notifications (user_id, type, enabled)
