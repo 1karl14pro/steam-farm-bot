@@ -1034,9 +1034,8 @@ export function setupHandlers() {
       {
         reply_markup: {
           inline_keyboard: [
-            [{ text: '📱 QR-код (рекомендуется)', callback_data: 'add_account_qr' }],
             [{ text: '🔑 Логин и пароль', callback_data: 'add_account_credentials' }],
-            [{ text: '🎫 Refresh Token', callback_data: 'add_account_token' }],
+            [{ text: '📱 QR-код', callback_data: 'add_account_qr' }],
             [{ text: '❌ Отмена', callback_data: 'accounts' }]
           ]
         }
@@ -1096,35 +1095,11 @@ export function setupHandlers() {
 
     await ctx.editMessageText(
       '🔑 Вход через логин и пароль\n\n' +
-      'Отправьте логин от Steam аккаунта:',
+      '📝 Отправьте логин от Steam аккаунта:',
       {
         reply_markup: {
           inline_keyboard: [
-            [{ text: '❌ Отмена', callback_data: 'accounts' }]
-          ]
-        }
-      }
-    );
-  });
-
-  bot.action('add_account_token', async (ctx) => {
-    await ctx.answerCbQuery();
-    userStates.set(ctx.from.id, { action: 'add_account' });
-
-    await ctx.editMessageText(
-      '🎫 Добавить через Refresh Token\n\n' +
-      'Отправьте данные от аккаунта в формате:\n\n' +
-      'login:password:shared_secret:identity_secret:refresh_token\n\n' +
-      'Как получить данные:\n\n' +
-      '1. Установите Steam Desktop Authenticator (SDA)\n' +
-      '2. Добавьте аккаунт в SDA\n' +
-      '3. Найдите файл *.maFile в папке SDA\n' +
-      '4. Извлеките из него все необходимые данные\n\n' +
-      '🔒 Все данные хранятся локально и не передаются третьим лицам.',
-      {
-        reply_markup: {
-          inline_keyboard: [
-            [{ text: '❌ Отмена', callback_data: 'accounts' }]
+            [{ text: '❌ Отмена', callback_data: 'add_account' }]
           ]
         }
       }
@@ -1136,6 +1111,7 @@ export function setupHandlers() {
     
     const { cancelAuth } = await import('../services/steamAuth.js');
     cancelAuth(ctx.from.id);
+    userStates.delete(ctx.from.id);
     
     await ctx.reply('❌ Авторизация отменена', {
       reply_markup: {
