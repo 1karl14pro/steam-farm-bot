@@ -1,5 +1,5 @@
 import 'dotenv/config';
-import { writeFileSync, createWriteStream, statSync, renameSync, existsSync } from 'fs';
+import { writeFileSync, createWriteStream, statSync, renameSync, existsSync, readdirSync, unlinkSync } from 'fs';
 import bot from './bot.js';
 import { setupHandlers } from './handlers/index.js';
 import * as sessionManager from './services/sessionManager.js';
@@ -23,15 +23,14 @@ function rotateLogIfNeeded() {
         
         // Удаляем старые логи (старше 7 дней)
         const sevenDaysAgo = Date.now() - (7 * 24 * 60 * 60 * 1000);
-        const fs = await import('fs');
-        const files = fs.readdirSync('.');
+        const files = readdirSync('.');
         
         for (const file of files) {
           if (file.startsWith('bot.') && file.endsWith('.log') && file !== 'bot.log') {
             try {
-              const stats = fs.statSync(file);
-              if (stats.mtimeMs < sevenDaysAgo) {
-                fs.unlinkSync(file);
+              const fileStats = statSync(file);
+              if (fileStats.mtimeMs < sevenDaysAgo) {
+                unlinkSync(file);
                 console.log(`🗑 Удален старый лог: ${file}`);
               }
             } catch (err) {
