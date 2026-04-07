@@ -6,6 +6,15 @@ import * as sessionManager from './services/sessionManager.js';
 import * as steamNotifications from './services/steamNotifications.js';
 import * as db from './database.js';
 
+// Скрываем предупреждение о punycode
+process.removeAllListeners('warning');
+process.on('warning', (warning) => {
+  if (warning.name === 'DeprecationWarning' && warning.message.includes('punycode')) {
+    return; // Игнорируем предупреждение о punycode
+  }
+  console.warn(warning.name, warning.message);
+});
+
 console.log('🚀 Запуск бота...');
 setupHandlers();
 
