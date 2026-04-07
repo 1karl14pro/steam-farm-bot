@@ -102,15 +102,20 @@ export async function startFarming(accountId) {
       
       if (friendRequestSetting && friendRequestSetting.enabled) {
         try {
-          // Получаем информацию о пользователе
-          let userName = steamID.getSteamID64();
-          try {
-            const personas = await client.getPersonas([steamID]);
-            if (personas && personas[steamID.getSteamID64()]) {
-              userName = personas[steamID.getSteamID64()].player_name || userName;
-            }
-          } catch (err) {
-            // Если не удалось получить имя - используем Steam ID
+          // Запрашиваем информацию о пользователе
+          client.requestRichPresence(steamID.accountid, (err, response) => {
+            // Игнорируем ошибки rich presence
+          });
+          
+          // Ждем немного и пытаемся получить имя из кеша
+          await new Promise(resolve => setTimeout(resolve, 1000));
+          
+          let userName = 'Неизвестный пользователь';
+          const steamId64 = steamID.getSteamID64();
+          
+          // Пытаемся получить из кеша users
+          if (client.users && client.users[steamId64]) {
+            userName = client.users[steamId64].player_name || userName;
           }
           
           const bot = (await import('../bot.js')).default;
@@ -119,10 +124,10 @@ export async function startFarming(accountId) {
             `👥 Новый запрос в друзья!\n\n` +
             `Аккаунт: ${account.account_name}\n` +
             `От: ${userName}\n` +
-            `Steam ID: ${steamID.getSteamID64()}\n\n` +
+            `Steam ID: ${steamId64}\n\n` +
             `Откройте Steam для принятия/отклонения.`
           );
-          console.log(`[NOTIFICATIONS] Отправлено уведомление о запросе в друзья для ${account.account_name}`);
+          console.log(`[NOTIFICATIONS] Отправлено уведомление о запросе в друзья для ${account.account_name} от ${userName}`);
         } catch (err) {
           console.error(`[NOTIFICATIONS] Ошибка отправки уведомления:`, err.message);
         }
