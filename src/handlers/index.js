@@ -2100,7 +2100,15 @@ export function setupHandlers() {
             // Проверяем что требуется
             const session = getActiveSession(ctx.from.id);
             
-            if (session && session.session.steamGuardMachineToken) {
+            if (!session) {
+              await ctx.reply('❌ Ошибка: сессия не найдена');
+              userStates.delete(ctx.from.id);
+              return;
+            }
+            
+            // Проверяем нужен ли Steam Guard код
+            // Если авторизация не завершена - значит нужен код
+            if (!session.session.refreshToken) {
               // Требуется Steam Guard код
               userStates.set(ctx.from.id, { action: 'add_account_steamguard', login });
               
@@ -2119,8 +2127,30 @@ export function setupHandlers() {
                 }
               );
             } else {
-              // Авторизация успешна без Steam Guard
-              await ctx.reply('✅ Авторизация успешна! Получение данных...');
+              // Авторизация успешна без Steam Guard - сохраняем аккаунт
+              const refreshToken = session.session.refreshToken;
+              const accountName = session.session.accountName || login;
+              
+              const accountId = db.addSteamAccount(ctx.from.id, accountName, null, null, null, refreshToken);
+              
+              // Удаляем сессию
+              const { cancelAuth } = await import('../services/steamAuth.js');
+              cancelAuth(ctx.from.id);
+              userStates.delete(ctx.from.id);
+              
+              await ctx.reply(
+                `✅ Аккаунт добавлен!\n\n` +
+                `👤 ${accountName}\n\n` +
+                `Теперь вы можете добавить игры и запустить фарм.`,
+                {
+                  reply_markup: {
+                    inline_keyboard: [
+                      [{ text: '🎮 Добавить игры', callback_data: `games_${accountId}` }],
+                      [{ text: '📋 Мои аккаунты', callback_data: 'accounts' }]
+                    ]
+                  }
+                }
+              );
             }
           } catch (error) {
             console.error('Credentials auth error:', error);
