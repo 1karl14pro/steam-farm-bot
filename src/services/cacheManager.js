@@ -1,28 +1,29 @@
 import * as db from '../database.js';
 import { shouldUpdateCache, cleanupOldCaches } from './gameCache.js';
 import { getOwnedGames, getTopPlayedGames } from './steamLibrary.js';
+import * as farmManager from './farmManager.js';
 
 let cacheUpdateInterval = null;
 
 /**
- * Запускает автоматическое обновление кеша каждый час
+ * Запускает автоматическое обновление кеша каждые 6 часов
  */
 export function startCacheAutoUpdate() {
   console.log('🔄 Запуск автообновления кеша игр...');
   
-  // Первое обновление через 5 минут после запуска
+  // Первое обновление через 30 минут после запуска
   setTimeout(() => {
     updateAllCaches().catch(err => {
       console.error('❌ Ошибка первого обновления кеша:', err.message);
     });
-  }, 300000); // 5 минут
+  }, 1800000); // 30 минут
   
-  // Регулярное обновление каждый час
+  // Регулярное обновление каждые 6 часов
   cacheUpdateInterval = setInterval(() => {
     updateAllCaches().catch(err => {
       console.error('❌ Ошибка обновления кеша:', err.message);
     });
-  }, 3600000); // 1 час
+  }, 21600000); // 6 часов
   
   // Очистка старых кешей раз в день
   setInterval(() => {
@@ -31,7 +32,7 @@ export function startCacheAutoUpdate() {
     });
   }, 86400000); // 24 часа
   
-  console.log('✅ Автообновление кеша запущено (каждый час)');
+  console.log('✅ Автообновление кеша запущено (каждые 6 часов)');
 }
 
 /**
@@ -58,6 +59,13 @@ async function updateAllCaches() {
   
   for (const account of allAccounts) {
     try {
+      // Пропускаем аккаунты, которые активно фармят
+      if (farmManager.isFarming(account.id)) {
+        console.log(`[CACHE] Пропускаю ${account.account_name} - активно фармит`);
+        skipped++;
+        continue;
+      }
+      
       const steamId64 = account.steam_id_64 || account.account_name;
       
       // Проверяем нужно ли обновлять
@@ -68,18 +76,18 @@ async function updateAllCaches() {
       
       console.log(`[CACHE] Обновляю кеш для ${account.account_name}...`);
       
-      // Обновляем библиотеку с таймаутом 10 минут
+      // Обновляем библиотеку с таймаутом 15 минут (для больших библиотек)
       const updatePromise = Promise.race([
         getOwnedGames(account.id, 0, 15, true),
         new Promise((_, reject) => 
-          setTimeout(() => reject(new Error('Таймаут обновления кеша')), 600000)
+          setTimeout(() => reject(new Error('Таймаут обновления кеша (15 мин)')), 900000)
         )
       ]);
       
       await updatePromise;
       
       // Небольшая задержка между запросами
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      await new Promise(resolve => setTimeout(resolve, 3000));
       
       // Обновляем топ игр
       await getTopPlayedGames(account.id, true);
@@ -87,7 +95,7 @@ async function updateAllCaches() {
       updated++;
       
       // Задержка между аккаунтами
-      await new Promise(resolve => setTimeout(resolve, 5000));
+      await new Promise(resolve => setTimeout(resolve, 10000));
       
     } catch (err) {
       console.error(`[CACHE] Ошибка обновления кеша для ${account.account_name}:`, err.message);
