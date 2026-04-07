@@ -104,8 +104,8 @@ for (const user of allUsers) {
 }
 console.log(`✅ Инициализированы настройки уведомлений для ${allUsers.length} пользователей`);
 
-// Запускаем отслеживание уведомлений Steam
-steamNotifications.startAllNotificationTracking();
+// НЕ запускаем отдельное отслеживание - уведомления интегрированы в фарм-сессии
+console.log(`✅ Уведомления интегрированы в фарм-сессии`);
 
 // Пытаемся остановить старую сессию перед запуском
 try {
@@ -134,14 +134,12 @@ bot.launch({
 process.once('SIGINT', () => {
   console.log('🛑 Получен сигнал SIGINT, остановка...');
   sessionManager.stopSessionManager();
-  steamNotifications.stopAllNotificationTracking();
   bot.stop('SIGINT');
 });
 
 process.once('SIGTERM', () => {
   console.log('🛑 Получен сигнал SIGTERM, остановка...');
   sessionManager.stopSessionManager();
-  steamNotifications.stopAllNotificationTracking();
   bot.stop('SIGTERM');
 });
 

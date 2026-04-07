@@ -88,6 +88,55 @@ export async function startFarming(accountId) {
     }
   });
   
+  // Обработчик запросов в друзья
+  client.on('friendRelationship', async (steamID, relationship) => {
+    // relationship === 2 означает запрос в друзья
+    if (relationship === 2) {
+      const settings = db.getNotificationSettings(account.user_id);
+      const friendRequestSetting = settings.find(s => s.type === 'friend_request');
+      
+      if (friendRequestSetting && friendRequestSetting.enabled) {
+        try {
+          const bot = (await import('../bot.js')).default;
+          await bot.telegram.sendMessage(
+            account.user_id,
+            `👥 Новый запрос в друзья!\n\n` +
+            `Аккаунт: ${account.account_name}\n` +
+            `От: ${steamID.getSteamID64()}\n\n` +
+            `Откройте Steam для принятия/отклонения.`
+          );
+          console.log(`[NOTIFICATIONS] Отправлено уведомление о запросе в друзья для ${account.account_name}`);
+        } catch (err) {
+          console.error(`[NOTIFICATIONS] Ошибка отправки уведомления:`, err.message);
+        }
+      }
+    }
+  });
+  
+  // Обработчик предложений обмена
+  client.on('tradeOffers', async (count) => {
+    if (count > 0) {
+      const settings = db.getNotificationSettings(account.user_id);
+      const tradeSetting = settings.find(s => s.type === 'trade_offer');
+      
+      if (tradeSetting && tradeSetting.enabled) {
+        try {
+          const bot = (await import('../bot.js')).default;
+          await bot.telegram.sendMessage(
+            account.user_id,
+            `💼 Новое предложение обмена!\n\n` +
+            `Аккаунт: ${account.account_name}\n` +
+            `Количество: ${count}\n\n` +
+            `Откройте Steam для просмотра.`
+          );
+          console.log(`[NOTIFICATIONS] Отправлено уведомление о трейде для ${account.account_name}`);
+        } catch (err) {
+          console.error(`[NOTIFICATIONS] Ошибка отправки уведомления:`, err.message);
+        }
+      }
+    }
+  });
+  
   // Обработчик веб-сессии - вызывается при успешном создании веб-сессии
   client.on('webSession', (sessionID, cookies) => {
     try {
