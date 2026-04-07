@@ -172,10 +172,94 @@ export function setupHandlers() {
       reply_markup: {
         inline_keyboard: [
           [{ text: '💎 Подписка', callback_data: 'subscribe' }],
+          [{ text: '🔔 Уведомления', callback_data: 'notifications_settings' }],
           [{ text: '🔙 Главное меню', callback_data: 'main_menu' }]
         ]
       }
     });
+  });
+
+  bot.action('notifications_settings', async (ctx) => {
+    await ctx.answerCbQuery();
+    
+    const settings = db.getNotificationSettings(ctx.from.id);
+    
+    let text = `🔔 Настройки уведомлений\n`;
+    text += `━━━━━━━━━━━━━━━\n\n`;
+    
+    const notificationTypes = {
+      'friend_request': '👥 Запросы в друзья',
+      'trade_offer': '💼 Предложения обмена',
+      'hours_milestone': '⏱ Достижение целей',
+      'farm_error': '❌ Ошибки фарма',
+      'weekly_report': '📊 Еженедельный отчет',
+      'premium_expiring': '⚠️ Истечение Premium'
+    };
+    
+    for (const setting of settings) {
+      const label = notificationTypes[setting.type] || setting.type;
+      const status = setting.enabled ? '✅' : '❌';
+      text += `${status} ${label}\n`;
+    }
+    
+    text += `\n━━━━━━━━━━━━━━━\n`;
+    text += `Нажмите на уведомление чтобы включить/выключить`;
+    
+    const buttons = [];
+    
+    for (const setting of settings) {
+      const label = notificationTypes[setting.type] || setting.type;
+      const status = setting.enabled ? '✅' : '❌';
+      buttons.push([{
+        text: `${status} ${label}`,
+        callback_data: `toggle_notif_${setting.type}`
+      }]);
+    }
+    
+    buttons.push([{ text: '🔙 Профиль', callback_data: 'profile' }]);
+    
+    await ctx.editMessageText(text, {
+      reply_markup: { inline_keyboard: buttons }
+    });
+  });
+
+  bot.action(/^toggle_notif_(.+)$/, async (ctx) => {
+    const type = ctx.match[1];
+    
+    const settings = db.getNotificationSettings(ctx.from.id);
+    const setting = settings.find(s => s.type === type);
+    
+    if (!setting) {
+      await ctx.answerCbQuery('❌ Настройка не найдена');
+      return;
+    }
+    
+    const newState = !setting.enabled;
+    db.toggleNotification(ctx.from.id, type, newState);
+    
+    await ctx.answerCbQuery(newState ? '✅ Включено' : '❌ Выключено');
+    
+    // Если это уведомления Steam - запускаем/останавливаем отслеживание
+    if (type === 'friend_request' || type === 'trade_offer') {
+      const steamNotifications = await import('../services/steamNotifications.js');
+      const accounts = db.getSteamAccounts(ctx.from.id);
+      
+      for (const account of accounts) {
+        const allSettings = db.getNotificationSettings(ctx.from.id);
+        const hasEnabledSteamNotifications = allSettings.some(s => 
+          (s.type === 'friend_request' || s.type === 'trade_offer') && s.enabled
+        );
+        
+        if (hasEnabledSteamNotifications && !steamNotifications.isTrackingNotifications(account.id)) {
+          await steamNotifications.startNotificationTracking(account.id);
+        } else if (!hasEnabledSteamNotifications && steamNotifications.isTrackingNotifications(account.id)) {
+          steamNotifications.stopNotificationTracking(account.id);
+        }
+      }
+    }
+    
+    // Обновляем меню
+    await bot.handleUpdate({ callback_query: { ...ctx.callbackQuery, data: 'notifications_settings' } });
   });
 
   bot.action('referral', async (ctx) => {
