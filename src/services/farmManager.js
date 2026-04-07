@@ -102,12 +102,24 @@ export async function startFarming(accountId) {
       
       if (friendRequestSetting && friendRequestSetting.enabled) {
         try {
+          // Получаем информацию о пользователе
+          let userName = steamID.getSteamID64();
+          try {
+            const personas = await client.getPersonas([steamID]);
+            if (personas && personas[steamID.getSteamID64()]) {
+              userName = personas[steamID.getSteamID64()].player_name || userName;
+            }
+          } catch (err) {
+            // Если не удалось получить имя - используем Steam ID
+          }
+          
           const bot = (await import('../bot.js')).default;
           await bot.telegram.sendMessage(
             account.user_id,
             `👥 Новый запрос в друзья!\n\n` +
             `Аккаунт: ${account.account_name}\n` +
-            `От: ${steamID.getSteamID64()}\n\n` +
+            `От: ${userName}\n` +
+            `Steam ID: ${steamID.getSteamID64()}\n\n` +
             `Откройте Steam для принятия/отклонения.`
           );
           console.log(`[NOTIFICATIONS] Отправлено уведомление о запросе в друзья для ${account.account_name}`);
