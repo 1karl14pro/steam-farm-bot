@@ -237,6 +237,12 @@ export function setupHandlers() {
     if (account.has_parental_control) {
       buttons.push([{ text: '🔐 PIN родительского контроля', callback_data: `set_pin_${accountId}` }]);
     }
+    
+    // Добавляем ссылку на профиль Steam
+    const { getSteamId64FromAccount } = await import('../services/gameCache.js');
+    const steamId64 = getSteamId64FromAccount(account);
+    buttons.push([{ text: '🔗 Профиль Steam', url: `https://steamcommunity.com/profiles/${steamId64}` }]);
+    
     buttons.push([{ text: '🗑 Удалить аккаунт', callback_data: `delete_${accountId}` }]);
     buttons.push([{ text: '🔙 К списку аккаунтов', callback_data: 'accounts' }]);
 
