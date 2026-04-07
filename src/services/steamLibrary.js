@@ -209,12 +209,12 @@ export async function getOwnedGames(accountId, offset = 0, limit = 15, forceRefr
     let gamesData = [];
     let licensesReceived = false;
 
-    // Таймаут 600 секунд (10 минут) для больших библиотек
+    // Таймаут 20 минут для больших библиотек
     const timeout = setTimeout(() => {
       client.logOff();
       accountLocks.delete(accountId);
-      reject(new Error('Таймаут получения списка игр (600 сек). Попробуйте снова.'));
-    }, 600000);
+      reject(new Error('Таймаут получения списка игр (20 мин). Попробуйте снова.'));
+    }, 1200000);
 
     // Событие получения лицензий
     client.on('licenses', async (licenses) => {
