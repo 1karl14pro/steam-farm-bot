@@ -149,9 +149,48 @@ bot.launch({
   .then(async () => {
     console.log('✅ Бот успешно запущен');
     console.log('🤖 Бот готов к работе!');
+    
+    // Отправляем уведомление админу о запуске
+    try {
+      const { version } = await import('../package.json', { assert: { type: 'json' } });
+      const adminIds = process.env.ADMIN_IDS?.split(',').map(id => id.trim()) || [];
+      
+      const startupMessage = `🚀 <b>Бот запущен</b>\n\n` +
+        `📦 <b>Версия:</b> ${version}\n` +
+        `⏰ <b>Время запуска:</b> ${new Date().toLocaleString('ru-RU', { timeZone: 'Europe/Kiev' })}\n\n` +
+        `✅ Все функции успешно запущены:\n` +
+        `• База данных\n` +
+        `• Менеджер сессий\n` +
+        `• Система уведомлений\n` +
+        `• Обновление токенов\n` +
+        `• Управление логами\n` +
+        `• Автообновление кеша\n\n` +
+        `❌ Ошибок нет`;
+      
+      for (const adminId of adminIds) {
+        if (adminId) {
+          await bot.telegram.sendMessage(adminId, startupMessage, { parse_mode: 'HTML' }).catch(() => {});
+        }
+      }
+    } catch (err) {
+      console.error('⚠️ Не удалось отправить уведомление админу:', err.message);
+    }
   })
   .catch((err) => {
     console.error('❌ Ошибка запуска бота:', err.message);
+    
+    // Отправляем уведомление админу об ошибке
+    try {
+      const adminIds = process.env.ADMIN_IDS?.split(',').map(id => id.trim()) || [];
+      const errorMessage = `❌ <b>Ошибка запуска бота</b>\n\n` +
+        `<code>${err.message}</code>`;
+      
+      for (const adminId of adminIds) {
+        if (adminId) {
+          bot.telegram.sendMessage(adminId, errorMessage, { parse_mode: 'HTML' }).catch(() => {});
+        }
+      }
+    } catch {}
   });
 
 // Graceful shutdown
