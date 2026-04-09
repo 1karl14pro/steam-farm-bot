@@ -5,7 +5,9 @@ import { dirname, join } from 'path';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
-const db = new Database(join(__dirname, '..', 'database.db'));
+// Используем переменную окружения для пути к БД или дефолтный путь
+const DB_PATH = process.env.DB_PATH || join(__dirname, '..', 'database.db');
+const db = new Database(DB_PATH);
 
 // Включаем WAL режим для лучшей производительности
 db.pragma('journal_mode = WAL');
