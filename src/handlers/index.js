@@ -3440,15 +3440,20 @@ export function setupHandlers() {
               try {
                 const { createCredentialsAuth, getActiveSession } = await import('../services/steamAuth.js');
                 
+                console.log('[AUTH] Вызываем createCredentialsAuth...');
                 await createCredentialsAuth(ctx.from.id, login, password);
+                console.log('[AUTH] createCredentialsAuth завершен, запускаем проверку статуса...');
                 
                 const checkInterval = setInterval(async () => {
                   const session = getActiveSession(ctx.from.id);
                   
                   if (!session) {
                     clearInterval(checkInterval);
+                    console.log('[AUTH] Сессия не найдена, останавливаем проверку');
                     return;
                   }
+                  
+                  console.log(`[AUTH] Статус сессии: ${session.status}`);
                   
                   if (session.status === 'success') {
                     clearInterval(checkInterval);
@@ -3549,6 +3554,7 @@ export function setupHandlers() {
                   }
                 }, 1000);
               } catch (err) {
+                console.log(`[AUTH] Ошибка при авторизации: ${err.message}`);
                 userStates.delete(ctx.from.id);
                 
                 try {
