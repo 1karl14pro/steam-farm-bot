@@ -77,22 +77,27 @@ async function updateAllCaches() {
       console.log(`[CACHE] Обновляю кеш для ${account.account_name}...`);
       
       // Обновляем библиотеку с таймаутом 15 минут (для больших библиотек)
-      const updatePromise = Promise.race([
-        getOwnedGames(account.id, 0, 15, true),
-        new Promise((_, reject) => 
-          setTimeout(() => reject(new Error('Таймаут обновления кеша (15 мин)')), 900000)
-        )
-      ]);
-      
-      await updatePromise;
-      
-      // Небольшая задержка между запросами
-      await new Promise(resolve => setTimeout(resolve, 3000));
-      
-      // Обновляем топ игр
-      await getTopPlayedGames(account.id, true);
-      
-      updated++;
+      try {
+        const updatePromise = Promise.race([
+          getOwnedGames(account.id, 0, 15, true),
+          new Promise((_, reject) => 
+            setTimeout(() => reject(new Error('Таймаут обновления кеша (15 мин)')), 900000)
+          )
+        ]);
+        
+        await updatePromise;
+        
+        // Небольшая задержка между запросами
+        await new Promise(resolve => setTimeout(resolve, 3000));
+        
+        // Обновляем топ игр
+        await getTopPlayedGames(account.id, true);
+        
+        updated++;
+      } catch (updateError) {
+        console.error(`[CACHE] Ошибка обновления кеша для ${account.account_name}:`, updateError.message);
+        errors++;
+      }
       
       // Задержка между аккаунтами
       await new Promise(resolve => setTimeout(resolve, 10000));

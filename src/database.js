@@ -58,6 +58,11 @@ try {
     db.exec("ALTER TABLE steam_accounts ADD COLUMN steam_id_64 TEXT DEFAULT NULL");
   }
 
+  const hasCustomStatusMode = tableInfo.find((col) => col.name === 'custom_status_mode');
+  if (!hasCustomStatusMode) {
+    db.exec("ALTER TABLE steam_accounts ADD COLUMN custom_status_mode INTEGER DEFAULT 0");
+  }
+
   const usersTableInfo = db.prepare("PRAGMA table_info(users)").all();
   const hasReferredBy = usersTableInfo.find((col) => col.name === 'referred_by');
   if (!hasReferredBy) {
@@ -82,6 +87,27 @@ try {
   const hasTermsAccepted = usersTableInfo.find((col) => col.name === 'terms_accepted');
   if (!hasTermsAccepted) {
     db.exec("ALTER TABLE users ADD COLUMN terms_accepted INTEGER DEFAULT 0");
+  }
+
+  const hasLanguage = usersTableInfo.find((col) => col.name === 'language');
+  if (!hasLanguage) {
+    db.exec("ALTER TABLE users ADD COLUMN language TEXT DEFAULT 'ru'");
+  }
+
+  // Очистка дубликатов уведомлений
+  try {
+    // Удаляем дубликаты, оставляя только первую запись для каждой пары (user_id, type)
+    db.exec(`
+      DELETE FROM notifications 
+      WHERE id NOT IN (
+        SELECT MIN(id) 
+        FROM notifications 
+        GROUP BY user_id, type
+      )
+    `);
+    console.log('✅ Дубликаты уведомлений удалены');
+  } catch (err) {
+    console.log('⚠️ Ошибка очистки дубликатов уведомлений:', err.message);
   }
 
 } catch (err) {
@@ -186,7 +212,8 @@ db.exec(`
     user_id INTEGER NOT NULL,
     type TEXT NOT NULL,
     enabled INTEGER DEFAULT 1,
-    FOREIGN KEY (user_id) REFERENCES users(telegram_id) ON DELETE CASCADE
+    FOREIGN KEY (user_id) REFERENCES users(telegram_id) ON DELETE CASCADE,
+    UNIQUE(user_id, type)
   );
 `);
 
@@ -220,6 +247,17 @@ export const isUserActive = (telegramId) => {
   const hasPremium = user.premium_expires_at > now;
   const hasTrial = user.trial_ends_at && user.trial_ends_at > now;
   return hasPremium || hasTrial;
+};
+
+// ===== LANGUAGE =====
+export const getUserLanguage = (telegramId) => {
+  const user = db.prepare('SELECT language FROM users WHERE telegram_id = ?').get(telegramId);
+  return user?.language || 'ru';
+};
+
+export const setUserLanguage = (telegramId, language) => {
+  return db.prepare('UPDATE users SET language = ? WHERE telegram_id = ?')
+    .run(language, telegramId);
 };
 
 export const getAccountLimit = (telegramId) => {
@@ -458,6 +496,17 @@ export const setCustomStatus = (accountId, customStatus) => {
 export const getCustomStatus = (accountId) => {
   const account = db.prepare('SELECT custom_status FROM steam_accounts WHERE id = ?').get(accountId);
   return account?.custom_status || null;
+};
+
+// ===== CUSTOM STATUS MODE =====
+export const setCustomStatusMode = (accountId, mode) => {
+  return db.prepare('UPDATE steam_accounts SET custom_status_mode = ? WHERE id = ?')
+    .run(mode, accountId);
+};
+
+export const getCustomStatusMode = (accountId) => {
+  const account = db.prepare('SELECT custom_status_mode FROM steam_accounts WHERE id = ?').get(accountId);
+  return account?.custom_status_mode ?? 0; // 0 = одна игра, 1 = все игры
 };
 
 // ===== VISIBILITY MODE =====
@@ -777,5 +826,115 @@ export const startDatabaseMaintenance = () => {
   
   console.log('✅ Автоматическая оптимизация БД запущена');
 };
+
+// ===== LEADERBOARDS / РЕЙТИНГИ =====
+
+/**
+ * Получить топ пользователей по часам фарма
+ * @param {number} limit - Количество пользователей в топе
+ * @returns {Array}
+ */
+export const getTopUsersByHours = (limit = 10) => {
+  return db.prepare(`
+    SELECT 
+      u.telegram_id,
+      u.username,
+      SUM(sa.total_hours_farmed) as total_hours,
+      COUNT(sa.id) as accounts_count
+    FROM users u
+    LEFT JOIN steam_accounts sa ON u.telegram_id = sa.user_id
+    WHERE u.is_banned = 0
+    GROUP BY u.telegram_id
+    HAVING total_hours > 0
+    ORDER BY total_hours DESC
+    LIMIT ?
+  `).all(limit);
+};
+
+/**
+ * Получить топ игр по часам фарма
+ * @param {number} limit - Количество игр в топе
+ * @returns {Array}
+ */
+export const getTopGamesByHours = (limit = 10) => {
+  return db.prepare(`
+    SELECT 
+      g.app_id,
+      g.game_name,
+      COUNT(DISTINCT g.account_id) as accounts_count,
+      SUM(fs.hours_farmed) as total_hours
+    FROM games g
+    LEFT JOIN farm_stats fs ON g.account_id = fs.account_id
+    GROUP BY g.app_id, g.game_name
+    HAVING total_hours > 0
+    ORDER BY total_hours DESC
+    LIMIT ?
+  `).all(limit);
+};
+
+/**
+ * Получить топ аккаунтов по часам фарма (анонимно)
+ * @param {number} limit - Количество аккаунтов в топе
+ * @returns {Array}
+ */
+export const getTopAccountsByHours = (limit = 10) => {
+  return db.prepare(`
+    SELECT 
+      sa.id,
+      sa.total_hours_farmed as total_hours,
+      u.username
+    FROM steam_accounts sa
+    LEFT JOIN users u ON sa.user_id = u.telegram_id
+    WHERE u.is_banned = 0 AND sa.total_hours_farmed > 0
+    ORDER BY sa.total_hours_farmed DESC
+    LIMIT ?
+  `).all(limit);
+};
+
+/**
+ * Получить позицию пользователя в рейтинге
+ * @param {number} telegramId
+ * @returns {Object}
+ */
+export const getUserRank = (telegramId) => {
+  const result = db.prepare(`
+    WITH ranked_users AS (
+      SELECT 
+        u.telegram_id,
+        SUM(sa.total_hours_farmed) as total_hours,
+        ROW_NUMBER() OVER (ORDER BY SUM(sa.total_hours_farmed) DESC) as rank
+      FROM users u
+      LEFT JOIN steam_accounts sa ON u.telegram_id = sa.user_id
+      WHERE u.is_banned = 0
+      GROUP BY u.telegram_id
+      HAVING total_hours > 0
+    )
+    SELECT rank, total_hours
+    FROM ranked_users
+    WHERE telegram_id = ?
+  `).get(telegramId);
+  
+  return result || { rank: null, total_hours: 0 };
+};
+
+/**
+ * Получить общую статистику по всем пользователям
+ * @returns {Object}
+ */
+export const getGlobalStats = () => {
+  return db.prepare(`
+    SELECT 
+      COUNT(DISTINCT u.telegram_id) as total_users,
+      COUNT(DISTINCT sa.id) as total_accounts,
+      COUNT(DISTINCT g.app_id) as total_games,
+      COALESCE(SUM(sa.total_hours_farmed), 0) as total_hours_farmed,
+      COUNT(DISTINCT CASE WHEN sa.is_farming = 1 THEN sa.id END) as active_farms
+    FROM users u
+    LEFT JOIN steam_accounts sa ON u.telegram_id = sa.user_id
+    LEFT JOIN games g ON sa.id = g.account_id
+    WHERE u.is_banned = 0
+  `).get();
+};
+
 
 export default db;

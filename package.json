@@ -22,9 +22,12 @@
     "better-sqlite3": "^11.0.0",
     "dotenv": "^16.4.5",
     "https-proxy-agent": "^7.0.6",
+    "koffi": "^2.15.6",
     "qrcode": "^1.5.3",
+    "steam-gameserver": "^1.0.0",
     "steam-session": "^1.7.2",
     "steam-user": "^5.0.8",
+    "steamworks-ffi-node": "^0.10.2",
     "telegraf": "^4.16.3"
   },
   "devDependencies": {

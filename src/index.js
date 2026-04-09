@@ -103,15 +103,30 @@ startCacheAutoUpdate();
 import { startNotificationService } from './services/notificationService.js';
 startNotificationService();
 
+// Запускаем сервис обновления токенов
+import { startTokenRefreshService } from './services/tokenRefresh.js';
+startTokenRefreshService();
+
+// Запускаем систему управления логами
+import { startLogManagement } from './services/logManager.js';
+startLogManagement();
+
 // Запускаем менеджер сессий (работает независимо от бота)
 sessionManager.startSessionManager();
 
-// Инициализируем настройки уведомлений для всех пользователей
+// Инициализируем настройки уведомлений только для новых пользователей (без настроек)
 const allUsers = db.getAllUsers();
+let initializedCount = 0;
 for (const user of allUsers) {
-  db.initNotifications(user.telegram_id);
+  const existingSettings = db.getNotificationSettings(user.telegram_id);
+  if (existingSettings.length === 0) {
+    db.initNotifications(user.telegram_id);
+    initializedCount++;
+  }
 }
-console.log(`✅ Инициализированы настройки уведомлений для ${allUsers.length} пользователей`);
+if (initializedCount > 0) {
+  console.log(`✅ Инициализированы настройки уведомлений для ${initializedCount} новых пользователей`);
+}
 
 // НЕ запускаем отдельное отслеживание - уведомления интегрированы в фарм-сессии
 console.log(`✅ Уведомления интегрированы в фарм-сессии`);

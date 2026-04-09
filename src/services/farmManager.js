@@ -63,16 +63,31 @@ export async function startFarming(accountId) {
       
       // Запускаем фарм игр с кастомным названием, если задано
       const customStatus = db.getCustomStatus(accountId);
+      
       if (customStatus && appIds.length > 0) {
-        // Запускаем ТОЛЬКО первую игру с кастомным названием
-        // Steam показывает кастомное название только для одной игры
-        client.gamesPlayed([{
-          game_id: appIds[0],
-          game_extra_info: customStatus
-        }]);
-        console.log(`💬 Установлено название игры для ${account.account_name}: ${customStatus} (игра: ${appIds[0]})`);
+        // Используем метод ASF: сначала сбрасываем, потом добавляем shortcut с кастомным именем, затем все игры
+        // Это позволяет отображать кастомный статус в профиле при фарме всех игр
+        
+        // Шаг 1: Сбрасываем текущее состояние
+        client.gamesPlayed([]);
+        
+        // Шаг 2: Ждем немного
+        await new Promise(resolve => setTimeout(resolve, 500));
+        
+        // Шаг 3: Создаем массив игр: сначала shortcut с кастомным именем, потом все реальные игры
+        const gamesToPlay = [
+          {
+            game_id: 15190414816125648896, // Это uint.MaxValue как GameID для shortcut
+            game_extra_info: customStatus,
+            game_name: customStatus
+          },
+          ...appIds.map(appId => appId)
+        ];
+        
+        client.gamesPlayed(gamesToPlay);
+        console.log(`💬 Кастомный статус: ${account.account_name} - ${customStatus} (запущено игр: ${appIds.length})`);
       } else {
-        // Обычный запуск всех игр
+        // Обычный запуск всех игр без кастомного статуса
         client.gamesPlayed(appIds);
       }
       
@@ -343,6 +358,71 @@ export async function stopFarming(accountId) {
 }
 
 /**
+ * Останавливает только игры, но оставляет клиент подключенным
+ * Используется для разблокировки достижений
+ * @param {number} accountId - ID аккаунта из БД
+ */
+export function pauseGames(accountId) {
+  const clientData = activeClients.get(accountId);
+  
+  if (!clientData) {
+    return false;
+  }
+
+  const { client } = clientData;
+  client.gamesPlayed([]);
+  
+  return true;
+}
+
+/**
+ * Возобновляет фарм игр (после паузы)
+ * @param {number} accountId - ID аккаунта из БД
+ */
+export async function resumeGames(accountId) {
+  const clientData = activeClients.get(accountId);
+  
+  if (!clientData) {
+    return false;
+  }
+
+  const { client } = clientData;
+  const account = db.getSteamAccount(accountId);
+  
+  if (!account) {
+    return false;
+  }
+
+  const games = db.getGames(accountId);
+  if (games.length === 0) {
+    return false;
+  }
+
+  const appIds = games.map(g => g.app_id);
+  const customStatus = db.getCustomStatus(accountId);
+  
+  if (customStatus && appIds.length > 0) {
+    client.gamesPlayed([]);
+    await new Promise(resolve => setTimeout(resolve, 500));
+    
+    const gamesToPlay = [
+      {
+        game_id: 15190414816125648896,
+        game_extra_info: customStatus,
+        game_name: customStatus
+      },
+      ...appIds.map(appId => appId)
+    ];
+    
+    client.gamesPlayed(gamesToPlay);
+  } else {
+    client.gamesPlayed(appIds);
+  }
+  
+  return true;
+}
+
+/**
  * Перезапускает фарм с новым списком игр
  * @param {number} accountId - ID аккаунта из БД
  */
@@ -436,6 +516,10 @@ export function getCookies(accountId) {
 
 export function setAccountCookies(accountId, cookies) {
   accountCookies.set(accountId, cookies);
+}
+
+export function getAccountCookies(accountId) {
+  return accountCookies.get(accountId) || [];
 }
 
 /**

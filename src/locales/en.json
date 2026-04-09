@@ -1,0 +1,78 @@
+{
+  "menu": {
+    "main": "👋 Main Menu\n\nChoose an action:",
+    "accounts": "📋 My Accounts",
+    "profile": "👤 Profile",
+    "referral": "🎁 Referral System",
+    "back": "🔙 Back",
+    "back_to_main": "🔙 Main Menu",
+    "back_to_accounts": "🔙 Back to Accounts",
+    "cancel": "❌ Cancel"
+  },
+  "accounts": {
+    "header": "📋 Steam Accounts\n━━━━━━━━━━━━━━━",
+    "add": "➕ Add Account",
+    "start_all": "▶️ Start All",
+    "stop_all": "⏸ Stop All",
+    "restart_farm": "🔄 Restart Farm",
+    "no_accounts": "You don't have any accounts yet",
+    "limit": "Accounts",
+    "subscription": {
+      "premium": "⭐ Premium",
+      "trial": "🎁 Trial",
+      "none": "❌ No Subscription"
+    }
+  },
+  "farm": {
+    "start": "▶️ Start Farm",
+    "stop": "⏸ Stop Farm",
+    "started": "✅ Farm started",
+    "stopped": "✅ Farm stopped",
+    "already_running": "⚠️ Farm is already running",
+    "not_running": "⚠️ Farm is not running",
+    "no_games": "❌ Add at least one game to farm",
+    "restarting": "🔄 Restarting farm...",
+    "restarting_progress": "🔄 Restarting: {current}/{total} ({account})...",
+    "restarted": "✅ Restarted {count} accounts",
+    "started_count": "✅ Started {count} accounts",
+    "stopped_count": "✅ Stopped {count} accounts",
+    "no_accounts_to_start": "❌ No accounts to start",
+    "no_accounts_to_stop": "❌ No accounts to stop",
+    "no_accounts_to_restart": "❌ No running accounts to restart"
+  },
+  "account": {
+    "not_found": "❌ Account not found",
+    "games": "🎮 Configure Games",
+    "stats": "📊 Statistics",
+    "goals": "🎯 Goals",
+    "schedule": "⏰ Schedule",
+    "status": "💬 Status",
+    "visibility": "👁 Visibility",
+    "pin": "🔐 Parental Control PIN",
+    "delete": "🗑 Delete Account"
+  },
+  "status": {
+    "title": "💬 Status settings for {account}",
+    "current": "Current status: \"{status}\"",
+    "not_set": "Status not set",
+    "edit": "✏️ Edit Status Text",
+    "delete": "🗑 Delete Status",
+    "deleted": "🗑 Status deleted",
+    "enter": "💬 Enter new status for {account}\n\nUsed for display in Steam (e.g.: \"Grand Theft Auto VI\")\nMaximum 100 characters."
+  },
+  "visibility": {
+    "online": "🌐 Mode: Online",
+    "invisible": "👻 Mode: Invisible"
+  },
+  "errors": {
+    "generic": "❌ Error: {message}",
+    "start_farm": "❌ Error starting farm for account {id}: {message}",
+    "stop_farm": "❌ Error stopping farm for account {id}: {message}",
+    "restart_farm": "❌ Error restarting farm for account {id}: {message}"
+  },
+  "settings": {
+    "language": "🌐 Language",
+    "select_language": "Select language:",
+    "language_changed": "✅ Language changed"
+  }
+}

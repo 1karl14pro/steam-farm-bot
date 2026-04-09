@@ -130,6 +130,7 @@ export function setupHandlers() {
     const runningAccounts = accounts.filter(acc => acc.is_farming);
     if (runningAccounts.length > 0) {
       buttons.push([{ text: '⏸ Остановить все', callback_data: 'stop_all' }]);
+      buttons.push([{ text: '🔄 Перезагрузить фарм', callback_data: 'restart_all_farm' }]);
     }
 
     buttons.push([{ text: '🔙 Главное меню', callback_data: 'main_menu' }]);
@@ -154,6 +155,7 @@ export function setupHandlers() {
           inline_keyboard: [
             [{ text: '📋 Мои аккаунты', callback_data: 'accounts' }],
             [{ text: '👤 Профиль', callback_data: 'profile' }],
+            [{ text: '🏆 Рейтинги', callback_data: 'leaderboards' }],
             [{ text: '🎁 Реферальная система', callback_data: 'referral' }]
           ]
         }
@@ -173,6 +175,7 @@ export function setupHandlers() {
         inline_keyboard: [
           [{ text: '💎 Подписка', callback_data: 'subscribe' }],
           [{ text: '🔔 Уведомления', callback_data: 'notifications_settings' }],
+          [{ text: '🌐 Язык', callback_data: 'language_settings' }],
           [{ text: '🔙 Главное меню', callback_data: 'main_menu' }]
         ]
       }
@@ -262,6 +265,55 @@ export function setupHandlers() {
     await bot.handleUpdate({ callback_query: { ...ctx.callbackQuery, data: 'notifications_settings' } });
   });
 
+  bot.action('language_settings', async (ctx) => {
+    await ctx.answerCbQuery();
+    
+    const { getAvailableLanguages } = await import('../i18n.js');
+    const currentLang = db.getUserLanguage(ctx.from.id);
+    const languages = getAvailableLanguages();
+    
+    let text = `🌐 Выбор языка / Language Selection\n`;
+    text += `━━━━━━━━━━━━━━━\n\n`;
+    text += `Текущий язык: ${languages.find(l => l.code === currentLang)?.name || currentLang}\n`;
+    text += `Current language: ${languages.find(l => l.code === currentLang)?.name || currentLang}\n\n`;
+    text += `Выберите язык:\nSelect language:`;
+    
+    const buttons = languages.map(lang => [{
+      text: `${lang.code === currentLang ? '✅ ' : ''}${lang.name}`,
+      callback_data: `set_lang_${lang.code}`
+    }]);
+    
+    buttons.push([{ text: '🔙 Профиль / Back to Profile', callback_data: 'profile' }]);
+    
+    await ctx.editMessageText(text, {
+      reply_markup: { inline_keyboard: buttons }
+    });
+  });
+
+  bot.action(/^set_lang_(.+)$/, async (ctx) => {
+    const lang = ctx.match[1];
+    
+    const { isLocaleSupported } = await import('../i18n.js');
+    
+    if (!isLocaleSupported(lang)) {
+      await ctx.answerCbQuery('❌ Язык не поддерживается / Language not supported');
+      return;
+    }
+    
+    db.setUserLanguage(ctx.from.id, lang);
+    
+    const messages = {
+      ru: '✅ Язык изменен на русский',
+      en: '✅ Language changed to English',
+      uk: '✅ Мову змінено на українську'
+    };
+    
+    await ctx.answerCbQuery(messages[lang] || messages.ru);
+    
+    // Обновляем меню
+    await bot.handleUpdate({ callback_query: { ...ctx.callbackQuery, data: 'language_settings' } });
+  });
+
   bot.action('referral', async (ctx) => {
     await ctx.answerCbQuery();
     
@@ -281,6 +333,164 @@ export function setupHandlers() {
       reply_markup: {
         inline_keyboard: [
           [{ text: '🔙 Главное меню', callback_data: 'main_menu' }]
+        ]
+      }
+    });
+  });
+
+  bot.action('leaderboards', async (ctx) => {
+    await ctx.answerCbQuery();
+    
+    await ctx.editMessageText(
+      '🏆 Рейтинги\n' +
+      '━━━━━━━━━━━━━━━\n\n' +
+      'Выберите категорию:',
+      {
+        reply_markup: {
+          inline_keyboard: [
+            [{ text: '👥 Топ пользователей', callback_data: 'leaderboard_users' }],
+            [{ text: '🎮 Топ игр', callback_data: 'leaderboard_games' }],
+            [{ text: '💼 Топ аккаунтов', callback_data: 'leaderboard_accounts' }],
+            [{ text: '📊 Общая статистика', callback_data: 'global_stats' }],
+            [{ text: '🔙 Главное меню', callback_data: 'main_menu' }]
+          ]
+        }
+      }
+    );
+  });
+
+  bot.action('leaderboard_users', async (ctx) => {
+    await ctx.answerCbQuery();
+    
+    const topUsers = db.getTopUsersByHours(10);
+    const userRank = db.getUserRank(ctx.from.id);
+    
+    let text = `👥 Топ пользователей по часам фарма\n`;
+    text += `━━━━━━━━━━━━━━━\n\n`;
+    
+    if (topUsers.length === 0) {
+      text += `Пока нет данных\n`;
+    } else {
+      topUsers.forEach((user, index) => {
+        const medal = index === 0 ? '🥇' : index === 1 ? '🥈' : index === 2 ? '🥉' : `${index + 1}.`;
+        const username = user.username ? `@${user.username}` : `User${user.telegram_id}`;
+        const hours = user.total_hours.toFixed(1);
+        const accounts = user.accounts_count;
+        text += `${medal} ${username}\n`;
+        text += `   ⏱ ${hours}ч | 💼 ${accounts} акк.\n\n`;
+      });
+    }
+    
+    if (userRank.rank) {
+      text += `━━━━━━━━━━━━━━━\n`;
+      text += `📍 Ваша позиция: #${userRank.rank}\n`;
+      text += `⏱ Всего часов: ${userRank.total_hours.toFixed(1)}ч`;
+    } else {
+      text += `━━━━━━━━━━━━━━━\n`;
+      text += `📍 Вы пока не в рейтинге\n`;
+      text += `Начните фармить, чтобы попасть в топ!`;
+    }
+    
+    await ctx.editMessageText(text, {
+      reply_markup: {
+        inline_keyboard: [
+          [{ text: '🔄 Обновить', callback_data: 'leaderboard_users' }],
+          [{ text: '🔙 К рейтингам', callback_data: 'leaderboards' }]
+        ]
+      }
+    });
+  });
+
+  bot.action('leaderboard_games', async (ctx) => {
+    await ctx.answerCbQuery();
+    
+    const topGames = db.getTopGamesByHours(10);
+    
+    let text = `🎮 Топ игр по часам фарма\n`;
+    text += `━━━━━━━━━━━━━━━\n\n`;
+    
+    if (topGames.length === 0) {
+      text += `Пока нет данных\n`;
+    } else {
+      topGames.forEach((game, index) => {
+        const medal = index === 0 ? '🥇' : index === 1 ? '🥈' : index === 2 ? '🥉' : `${index + 1}.`;
+        const gameName = game.game_name || `Game ${game.app_id}`;
+        const hours = game.total_hours ? game.total_hours.toFixed(1) : '0.0';
+        const accounts = game.accounts_count;
+        text += `${medal} ${gameName}\n`;
+        text += `   ⏱ ${hours}ч | 💼 ${accounts} акк.\n\n`;
+      });
+    }
+    
+    await ctx.editMessageText(text, {
+      reply_markup: {
+        inline_keyboard: [
+          [{ text: '🔄 Обновить', callback_data: 'leaderboard_games' }],
+          [{ text: '🔙 К рейтингам', callback_data: 'leaderboards' }]
+        ]
+      }
+    });
+  });
+
+  bot.action('leaderboard_accounts', async (ctx) => {
+    await ctx.answerCbQuery();
+    
+    const topAccounts = db.getTopAccountsByHours(10);
+    
+    let text = `💼 Топ аккаунтов по часам фарма\n`;
+    text += `━━━━━━━━━━━━━━━\n\n`;
+    
+    if (topAccounts.length === 0) {
+      text += `Пока нет данных\n`;
+    } else {
+      topAccounts.forEach((account, index) => {
+        const medal = index === 0 ? '🥇' : index === 1 ? '🥈' : index === 2 ? '🥉' : `${index + 1}.`;
+        const hours = account.total_hours.toFixed(1);
+        const owner = account.username ? `@${account.username}` : 'Анонимный';
+        text += `${medal} Аккаунт #${account.id}\n`;
+        text += `   ⏱ ${hours}ч | 👤 ${owner}\n\n`;
+      });
+    }
+    
+    text += `━━━━━━━━━━━━━━━\n`;
+    text += `ℹ️ Логины аккаунтов скрыты для безопасности`;
+    
+    await ctx.editMessageText(text, {
+      reply_markup: {
+        inline_keyboard: [
+          [{ text: '🔄 Обновить', callback_data: 'leaderboard_accounts' }],
+          [{ text: '🔙 К рейтингам', callback_data: 'leaderboards' }]
+        ]
+      }
+    });
+  });
+
+  bot.action('global_stats', async (ctx) => {
+    await ctx.answerCbQuery();
+    
+    const stats = db.getGlobalStats();
+    
+    let text = `📊 Общая статистика\n`;
+    text += `━━━━━━━━━━━━━━━\n\n`;
+    text += `👥 Всего пользователей: ${stats.total_users}\n`;
+    text += `💼 Всего аккаунтов: ${stats.total_accounts}\n`;
+    text += `🎮 Уникальных игр: ${stats.total_games}\n`;
+    text += `⏱ Всего нафармлено: ${stats.total_hours_farmed.toFixed(1)}ч\n`;
+    text += `🟢 Активных фармов: ${stats.active_farms}\n\n`;
+    
+    const avgHoursPerUser = stats.total_users > 0 ? (stats.total_hours_farmed / stats.total_users).toFixed(1) : 0;
+    const avgAccountsPerUser = stats.total_users > 0 ? (stats.total_accounts / stats.total_users).toFixed(1) : 0;
+    
+    text += `━━━━━━━━━━━━━━━\n`;
+    text += `📈 Средние показатели:\n`;
+    text += `⏱ ${avgHoursPerUser}ч на пользователя\n`;
+    text += `💼 ${avgAccountsPerUser} акк. на пользователя`;
+    
+    await ctx.editMessageText(text, {
+      reply_markup: {
+        inline_keyboard: [
+          [{ text: '🔄 Обновить', callback_data: 'global_stats' }],
+          [{ text: '🔙 К рейтингам', callback_data: 'leaderboards' }]
         ]
       }
     });
@@ -318,6 +528,7 @@ export function setupHandlers() {
       { text: '💬 Статус', callback_data: `change_status_${accountId}` }
     ]);
     buttons.push([{ text: '👁 Видимость', callback_data: `visibility_${accountId}` }]);
+    buttons.push([{ text: '🏆 Достижения', callback_data: `achievements_${accountId}` }]);
     if (account.has_parental_control) {
       buttons.push([{ text: '🔐 PIN родительского контроля', callback_data: `set_pin_${accountId}` }]);
     }
@@ -1009,8 +1220,8 @@ export function setupHandlers() {
       await farmManager.startFarming(accountId);
       await ctx.answerCbQuery('✅ Фарм запущен', { show_alert: true });
       
-      // Ждем 2 секунды чтобы фарм успел запуститься и обновить статус в БД
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      // Ждем 3 секунды чтобы фарм успел запуститься и обновить статус в БД
+      await new Promise(resolve => setTimeout(resolve, 3000));
       
       // Обновляем сообщение с деталями аккаунта
       const acc = db.getSteamAccount(accountId);
@@ -1095,6 +1306,7 @@ export function setupHandlers() {
         { text: '💬 Статус', callback_data: `change_status_${accountId}` }
       ]);
       buttons.push([{ text: '👁 Видимость', callback_data: `visibility_${accountId}` }]);
+      buttons.push([{ text: '🏆 Достижения', callback_data: `achievements_${accountId}` }]);
       if (acc.has_parental_control) {
         buttons.push([{ text: '🔐 PIN родительского контроля', callback_data: `set_pin_${accountId}` }]);
       }
@@ -1119,6 +1331,34 @@ export function setupHandlers() {
       return;
     }
 
+    const currentStatus = db.getCustomStatus(accountId);
+    const statusText = currentStatus ? `Текущий статус: "${currentStatus}"` : 'Статус не установлен';
+
+    await ctx.editMessageText(
+      `💬 Настройка статуса для ${account.account_name}\n\n` +
+      `${statusText}\n\n` +
+      `Выберите действие:`,
+      {
+        reply_markup: {
+          inline_keyboard: [
+            [{ text: '✏️ Изменить текст статуса', callback_data: `edit_status_text_${accountId}` }],
+            [{ text: '🗑 Удалить статус', callback_data: `clear_status_${accountId}` }],
+            [{ text: '❌ Отмена', callback_data: `account_${accountId}` }]
+          ]
+        }
+      }
+    );
+  });
+
+  bot.action(/^edit_status_text_(\d+)$/, async (ctx) => {
+    const accountId = parseInt(ctx.match[1]);
+    const account = db.getSteamAccount(accountId);
+
+    if (!account || account.user_id !== ctx.from.id) {
+      await ctx.answerCbQuery('❌ Аккаунт не найден');
+      return;
+    }
+
     userStates.set(ctx.from.id, { action: 'change_status', accountId });
 
     const currentStatus = db.getCustomStatus(accountId);
@@ -1127,16 +1367,70 @@ export function setupHandlers() {
     await ctx.editMessageText(
       `💬 Введите новый статус для ${account.account_name}\n\n` +
       `${statusText}\n\n` +
-      `Используется для отображения первой игры в Steam (например: "Grand Theft Auto VI")\n` +
+      `Используется для отображения в Steam (например: "Grand Theft Auto VI")\n` +
       `Максимум 100 символов.`,
       {
         reply_markup: {
           inline_keyboard: [
-            [{ text: '❌ Отмена', callback_data: `account_${accountId}` }]
+            [{ text: '❌ Отмена', callback_data: `change_status_${accountId}` }]
           ]
         }
       }
     );
+  });
+
+  bot.action(/^clear_status_(\d+)$/, async (ctx) => {
+    const accountId = parseInt(ctx.match[1]);
+    const account = db.getSteamAccount(accountId);
+
+    if (!account || account.user_id !== ctx.from.id) {
+      await ctx.answerCbQuery('❌ Аккаунт не найден');
+      return;
+    }
+
+    db.setCustomStatus(accountId, null);
+
+    const isFarming = farmManager.isFarming(accountId);
+    if (isFarming) {
+      await farmManager.restartFarming(accountId);
+    }
+
+    await ctx.answerCbQuery('🗑 Статус удален');
+
+    await new Promise(resolve => setTimeout(resolve, 500));
+
+    const updatedAccount = db.getSteamAccount(accountId);
+    const games = db.getGames(accountId);
+    const text = formatter.formatAccountInfo(updatedAccount, games);
+
+    const buttons = [];
+    
+    if (updatedAccount.is_farming) {
+      buttons.push([{ text: '⏸ Остановить фарм', callback_data: `stop_${accountId}` }]);
+    } else {
+      buttons.push([{ text: '▶️ Запустить фарм', callback_data: `start_${accountId}` }]);
+    }
+    
+      buttons.push([{ text: '🎮 Настроить игры', callback_data: `games_${accountId}` }]);
+      buttons.push([
+        { text: '📊 Статистика', callback_data: `stats_${accountId}` },
+        { text: '🎯 Цели', callback_data: `goals_${accountId}` }
+      ]);
+      buttons.push([
+        { text: '⏰ Расписание', callback_data: `schedule_${accountId}` },
+        { text: '💬 Статус', callback_data: `change_status_${accountId}` }
+      ]);
+      buttons.push([{ text: '👁 Видимость', callback_data: `visibility_${accountId}` }]);
+      buttons.push([{ text: '🏆 Достижения', callback_data: `achievements_${accountId}` }]);
+      if (acc.has_parental_control) {
+        buttons.push([{ text: '🔐 PIN родительского контроля', callback_data: `set_pin_${accountId}` }]);
+      }
+    buttons.push([{ text: '🗑 Удалить аккаунт', callback_data: `delete_${accountId}` }]);
+    buttons.push([{ text: '🔙 К списку аккаунтов', callback_data: 'accounts' }]);
+
+    await ctx.editMessageText(text, {
+      reply_markup: { inline_keyboard: buttons }
+    });
   });
 
   bot.action(/^visibility_(\d+)$/, async (ctx) => {
@@ -1178,6 +1472,7 @@ export function setupHandlers() {
     buttons.push([{ text: '🎮 Настроить игры', callback_data: `games_${accountId}` }]);
     buttons.push([{ text: '💬 Изменить статус', callback_data: `change_status_${accountId}` }]);
     buttons.push([{ text: '👁 Видимость', callback_data: `visibility_${accountId}` }]);
+    buttons.push([{ text: '🏆 Достижения', callback_data: `achievements_${accountId}` }]);
     if (account.has_parental_control) {
       buttons.push([{ text: '🔐 PIN родительского контроля', callback_data: `set_pin_${accountId}` }]);
     }
@@ -1223,6 +1518,471 @@ export function setupHandlers() {
         }
       }
     );
+  });
+
+  // ===== ДОСТИЖЕНИЯ =====
+  
+  bot.action(/^achievements_(\d+)$/, async (ctx) => {
+    const accountId = parseInt(ctx.match[1]);
+    const account = db.getSteamAccount(accountId);
+
+    if (!account || account.user_id !== ctx.from.id) {
+      await ctx.answerCbQuery('❌ Аккаунт не найден');
+      return;
+    }
+
+    await ctx.answerCbQuery();
+
+    const games = db.getGames(accountId);
+    
+    let text = `🏆 Управление достижениями\n`;
+    text += `━━━━━━━━━━━━━━━\n\n`;
+    text += `⚠️ ВАЖНОЕ ПРЕДУПРЕЖДЕНИЕ ⚠️\n\n`;
+    text += `Разблокировка достижений:\n`;
+    text += `• Нарушает правила Steam\n`;
+    text += `• Может привести к VAC-бану\n`;
+    text += `• Может привести к Trade-бану\n`;
+    text += `• Может привести к блокировке аккаунта\n\n`;
+    text += `ℹ️ Фарм будет автоматически остановлен\n`;
+    text += `ℹ️ После разблокировки фарм возобновится\n\n`;
+    text += `━━━━━━━━━━━━━━━\n\n`;
+    
+    if (games.length === 0) {
+      text += `У вас нет добавленных игр.\n`;
+      text += `Добавьте игры через "🎮 Настроить игры"`;
+    } else {
+      text += `Выберите игру для управления достижениями:`;
+    }
+
+    const buttons = [];
+    
+    if (games.length > 0) {
+      // Показываем первые 5 игр
+      const displayGames = games.slice(0, 5);
+      for (const game of displayGames) {
+        buttons.push([{
+          text: game.game_name || `Game ${game.app_id}`,
+          callback_data: `ach_game_${accountId}_${game.app_id}`
+        }]);
+      }
+      
+      if (games.length > 5) {
+        buttons.push([{
+          text: `📋 Показать все игры (${games.length})`,
+          callback_data: `ach_all_games_${accountId}`
+        }]);
+      }
+    }
+    
+    buttons.push([{ text: '🔙 К аккаунту', callback_data: `account_${accountId}` }]);
+
+    await ctx.editMessageText(text, {
+      reply_markup: { inline_keyboard: buttons }
+    });
+  });
+
+  bot.action(/^ach_game_(\d+)_(\d+)$/, async (ctx) => {
+    const accountId = parseInt(ctx.match[1]);
+    const appId = parseInt(ctx.match[2]);
+    const account = db.getSteamAccount(accountId);
+
+    if (!account || account.user_id !== ctx.from.id) {
+      await ctx.answerCbQuery('❌ Аккаунт не найден');
+      return;
+    }
+
+    await ctx.answerCbQuery('⏳ Загрузка достижений...');
+
+    try {
+      const { getGameAchievements, checkSafety } = await import('../services/achievementManager.js');
+      
+      // Проверяем безопасность
+      const safety = checkSafety(accountId);
+      
+      if (!safety.hasClient) {
+        await ctx.editMessageText(
+          `❌ Ошибка\n\n` +
+          `Клиент Steam не найден.\n` +
+          `Запустите фарм для этого аккаунта, затем попробуйте снова.`,
+          {
+            reply_markup: {
+              inline_keyboard: [
+                [{ text: '🔙 Назад', callback_data: `achievements_${accountId}` }]
+              ]
+            }
+          }
+        );
+        return;
+      }
+
+      const achievements = await getGameAchievements(accountId, appId);
+      const game = db.getGames(accountId).find(g => g.app_id === appId);
+      const gameName = game?.game_name || `Game ${appId}`;
+      
+      const total = achievements.length;
+      const unlocked = achievements.filter(a => a.achieved).length;
+      const locked = total - unlocked;
+
+      let text = `🏆 Достижения: ${gameName}\n`;
+      text += `━━━━━━━━━━━━━━━\n\n`;
+      text += `📊 Прогресс: ${unlocked}/${total} (${((unlocked/total)*100).toFixed(1)}%)\n`;
+      text += `🔓 Открыто: ${unlocked}\n`;
+      text += `🔒 Закрыто: ${locked}\n\n`;
+      text += `━━━━━━━━━━━━━━━\n\n`;
+      text += `Выберите действие:`;
+
+      const buttons = [];
+      
+      if (locked > 0) {
+        buttons.push([{
+          text: '📋 Список достижений',
+          callback_data: `ach_list_${accountId}_${appId}_0`
+        }]);
+        
+        buttons.push([{
+          text: '⚠️ Открыть ВСЕ достижения',
+          callback_data: `ach_unlock_all_${accountId}_${appId}`
+        }]);
+      } else {
+        text += `\n✅ Все достижения уже открыты!`;
+      }
+      
+      buttons.push([{ text: '🔙 К списку игр', callback_data: `achievements_${accountId}` }]);
+
+      await ctx.editMessageText(text, {
+        reply_markup: { inline_keyboard: buttons }
+      });
+    } catch (error) {
+      await ctx.editMessageText(
+        `❌ Ошибка: ${error.message}`,
+        {
+          reply_markup: {
+            inline_keyboard: [
+              [{ text: '🔙 Назад', callback_data: `achievements_${accountId}` }]
+            ]
+          }
+        }
+      );
+    }
+  });
+
+  bot.action(/^ach_list_(\d+)_(\d+)_(\d+)$/, async (ctx) => {
+    const accountId = parseInt(ctx.match[1]);
+    const appId = parseInt(ctx.match[2]);
+    const page = parseInt(ctx.match[3]);
+    const account = db.getSteamAccount(accountId);
+
+    if (!account || account.user_id !== ctx.from.id) {
+      await ctx.answerCbQuery('❌ Аккаунт не найден');
+      return;
+    }
+
+    await ctx.answerCbQuery();
+
+    try {
+      const { getGameAchievements, checkSafety } = await import('../services/achievementManager.js');
+      const achievements = await getGameAchievements(accountId, appId);
+      const game = db.getGames(accountId).find(g => g.app_id === appId);
+      const gameName = game?.game_name || `Game ${appId}`;
+      
+      const lockedAchievements = achievements.filter(a => !a.achieved);
+      const PAGE_SIZE = 5;
+      const totalPages = Math.ceil(lockedAchievements.length / PAGE_SIZE);
+      const start = page * PAGE_SIZE;
+      const pageAchievements = lockedAchievements.slice(start, start + PAGE_SIZE);
+
+      let text = `🏆 Закрытые достижения\n`;
+      text += `${gameName}\n`;
+      text += `━━━━━━━━━━━━━━━\n\n`;
+      
+      pageAchievements.forEach((ach, index) => {
+        text += `${start + index + 1}. ${ach.displayName}\n`;
+        if (ach.description) {
+          text += `   ${ach.description}\n`;
+        }
+        text += `\n`;
+      });
+      
+      text += `━━━━━━━━━━━━━━━\n`;
+      text += `Страница ${page + 1}/${totalPages}`;
+
+      const buttons = [];
+      
+      // Кнопки для каждого достижения
+      pageAchievements.forEach((ach, index) => {
+        buttons.push([{
+          text: `🔓 ${start + index + 1}. ${ach.displayName}`,
+          callback_data: `ach_unlock_${accountId}_${appId}_${ach.name}`
+        }]);
+      });
+      
+      // Навигация
+      const navButtons = [];
+      if (page > 0) {
+        navButtons.push({ text: '◀️ Назад', callback_data: `ach_list_${accountId}_${appId}_${page - 1}` });
+      }
+      if (page < totalPages - 1) {
+        navButtons.push({ text: 'Вперед ▶️', callback_data: `ach_list_${accountId}_${appId}_${page + 1}` });
+      }
+      if (navButtons.length > 0) {
+        buttons.push(navButtons);
+      }
+      
+      buttons.push([{ text: '🔙 К игре', callback_data: `ach_game_${accountId}_${appId}` }]);
+
+      await ctx.editMessageText(text, {
+        reply_markup: { inline_keyboard: buttons }
+      });
+    } catch (error) {
+      await ctx.editMessageText(
+        `❌ Ошибка: ${error.message}`,
+        {
+          reply_markup: {
+            inline_keyboard: [
+              [{ text: '🔙 Назад', callback_data: `ach_game_${accountId}_${appId}` }]
+            ]
+          }
+        }
+      );
+    }
+  });
+
+  bot.action(/^ach_unlock_(\d+)_(\d+)_(.+)$/, async (ctx) => {
+    const accountId = parseInt(ctx.match[1]);
+    const appId = parseInt(ctx.match[2]);
+    const achievementName = ctx.match[3];
+    const account = db.getSteamAccount(accountId);
+
+    if (!account || account.user_id !== ctx.from.id) {
+      await ctx.answerCbQuery('❌ Аккаунт не найден');
+      return;
+    }
+
+    await ctx.answerCbQuery('⏳ Разблокировка...');
+
+    try {
+      const { unlockAchievement } = await import('../services/achievementManager.js');
+      const result = await unlockAchievement(accountId, appId, achievementName);
+      
+      await ctx.answerCbQuery('✅ Достижение разблокировано!', { show_alert: true });
+      
+      // Возвращаемся к списку
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      await bot.handleUpdate({ callback_query: { ...ctx.callbackQuery, data: `ach_game_${accountId}_${appId}` } });
+    } catch (error) {
+      await ctx.answerCbQuery(`❌ Ошибка: ${error.message}`, { show_alert: true });
+    }
+  });
+
+  bot.action(/^ach_unlock_all_(\d+)_(\d+)$/, async (ctx) => {
+    const accountId = parseInt(ctx.match[1]);
+    const appId = parseInt(ctx.match[2]);
+    const account = db.getSteamAccount(accountId);
+
+    if (!account || account.user_id !== ctx.from.id) {
+      await ctx.answerCbQuery('❌ Аккаунт не найден');
+      return;
+    }
+
+    const game = db.getGames(accountId).find(g => g.app_id === appId);
+    const gameName = game?.game_name || `Game ${appId}`;
+    
+    // Получаем количество закрытых достижений
+    try {
+      const { getGameAchievements } = await import('../services/achievementManager.js');
+      const achievements = await getGameAchievements(accountId, appId);
+      const lockedCount = achievements.filter(a => !a.achieved).length;
+
+      await ctx.editMessageText(
+        `⚠️ ВЫБОР РЕЖИМА РАЗБЛОКИРОВКИ ⚠️\n\n` +
+        `Игра: ${gameName}\n` +
+        `Закрытых достижений: ${lockedCount}\n\n` +
+        `━━━━━━━━━━━━━━━\n\n` +
+        `🛡 БЕЗОПАСНЫЙ РЕЖИМ (рекомендуется)\n` +
+        `• Разблокировка в фоне от фарма\n` +
+        `• Группы по 5-12 достижений\n` +
+        `• Рандомные задержки\n` +
+        `• Завершится через ~1 час\n` +
+        `• Минимальный риск бана\n\n` +
+        `⚡ МОМЕНТАЛЬНЫЙ РЕЖИМ (опасно!)\n` +
+        `• Все достижения сразу\n` +
+        `• Минимальные задержки\n` +
+        `• ВЫСОКИЙ риск VAC-бана!\n` +
+        `• ВЫСОКИЙ риск блокировки!\n\n` +
+        `━━━━━━━━━━━━━━━\n\n` +
+        `Выберите режим разблокировки:`,
+        {
+          reply_markup: {
+            inline_keyboard: [
+              [{ text: '🛡 Безопасный режим (1 час)', callback_data: `ach_unlock_safe_${accountId}_${appId}` }],
+              [{ text: '⚡ Моментальный (ОПАСНО!)', callback_data: `ach_unlock_instant_confirm_${accountId}_${appId}` }],
+              [{ text: '❌ Отмена', callback_data: `ach_game_${accountId}_${appId}` }]
+            ]
+          }
+        }
+      );
+    } catch (error) {
+      await ctx.editMessageText(
+        `❌ Ошибка: ${error.message}`,
+        {
+          reply_markup: {
+            inline_keyboard: [
+              [{ text: '🔙 Назад', callback_data: `ach_game_${accountId}_${appId}` }]
+            ]
+          }
+        }
+      );
+    }
+  });
+
+  bot.action(/^ach_unlock_instant_confirm_(\d+)_(\d+)$/, async (ctx) => {
+    const accountId = parseInt(ctx.match[1]);
+    const appId = parseInt(ctx.match[2]);
+    const account = db.getSteamAccount(accountId);
+
+    if (!account || account.user_id !== ctx.from.id) {
+      await ctx.answerCbQuery('❌ Аккаунт не найден');
+      return;
+    }
+
+    const game = db.getGames(accountId).find(g => g.app_id === appId);
+    const gameName = game?.game_name || `Game ${appId}`;
+
+    await ctx.editMessageText(
+      `⚠️⚠️⚠️ ФИНАЛЬНОЕ ПОДТВЕРЖДЕНИЕ ⚠️⚠️⚠️\n\n` +
+      `Игра: ${gameName}\n\n` +
+      `ВЫ ВЫБРАЛИ МОМЕНТАЛЬНЫЙ РЕЖИМ!\n\n` +
+      `Это КРАЙНЕ ОПАСНО:\n` +
+      `❌ ВЫСОКИЙ риск VAC-бана\n` +
+      `❌ ВЫСОКИЙ риск Trade-бана\n` +
+      `❌ ВЫСОКИЙ риск блокировки аккаунта\n` +
+      `❌ Нарушает правила Steam\n\n` +
+      `Все достижения будут разблокированы\n` +
+      `практически мгновенно!\n\n` +
+      `Вы ДЕЙСТВИТЕЛЬНО понимаете риски?`,
+      {
+        reply_markup: {
+          inline_keyboard: [
+            [{ text: '✅ ДА, я понимаю риски', callback_data: `ach_unlock_instant_final_${accountId}_${appId}` }],
+            [{ text: '🛡 Лучше безопасный режим', callback_data: `ach_unlock_safe_${accountId}_${appId}` }],
+            [{ text: '❌ Отмена', callback_data: `ach_game_${accountId}_${appId}` }]
+          ]
+        }
+      }
+    );
+  });
+
+  bot.action(/^ach_unlock_safe_(\d+)_(\d+)$/, async (ctx) => {
+    const accountId = parseInt(ctx.match[1]);
+    const appId = parseInt(ctx.match[2]);
+    const account = db.getSteamAccount(accountId);
+
+    if (!account || account.user_id !== ctx.from.id) {
+      await ctx.answerCbQuery('❌ Аккаунт не найден');
+      return;
+    }
+
+    await ctx.answerCbQuery('🛡 Запуск безопасного режима...');
+
+    try {
+      const { unlockAllAchievements } = await import('../services/achievementManager.js');
+      
+      await ctx.editMessageText(
+        `🛡 Безопасная разблокировка запущена!\n\n` +
+        `⏳ Процесс займет около 1 часа\n` +
+        `🔄 Фарм будет автоматически возобновлен\n` +
+        `📊 Разблокировка идет в фоновом режиме\n\n` +
+        `Вы можете продолжать пользоваться ботом.\n` +
+        `Уведомление придет по завершению.`
+      );
+      
+      // Запускаем разблокировку в фоне
+      unlockAllAchievements(accountId, appId, false).then(async (result) => {
+        // Уведомляем пользователя
+        const bot = (await import('../bot.js')).default;
+        const game = db.getGames(accountId).find(g => g.app_id === appId);
+        const gameName = game?.game_name || `Game ${appId}`;
+        
+        await bot.telegram.sendMessage(
+          ctx.from.id,
+          `✅ Разблокировка завершена!\n\n` +
+          `Игра: ${gameName}\n` +
+          `Всего: ${result.total}\n` +
+          `Разблокировано: ${result.unlocked}\n` +
+          `Ошибок: ${result.failed}\n\n` +
+          `${result.wasFarming ? '✅ Фарм автоматически возобновлен' : ''}`
+        );
+      }).catch(async (error) => {
+        const bot = (await import('../bot.js')).default;
+        await bot.telegram.sendMessage(
+          ctx.from.id,
+          `❌ Ошибка разблокировки: ${error.message}`
+        );
+      });
+      
+    } catch (error) {
+      await ctx.editMessageText(
+        `❌ Ошибка: ${error.message}`,
+        {
+          reply_markup: {
+            inline_keyboard: [
+              [{ text: '🔙 К игре', callback_data: `ach_game_${accountId}_${appId}` }]
+            ]
+          }
+        }
+      );
+    }
+  });
+
+  bot.action(/^ach_unlock_instant_final_(\d+)_(\d+)$/, async (ctx) => {
+    const accountId = parseInt(ctx.match[1]);
+    const appId = parseInt(ctx.match[2]);
+    const account = db.getSteamAccount(accountId);
+
+    if (!account || account.user_id !== ctx.from.id) {
+      await ctx.answerCbQuery('❌ Аккаунт не найден');
+      return;
+    }
+
+    await ctx.answerCbQuery('⚡ Начинаю моментальную разблокировку...');
+
+    try {
+      const { unlockAllAchievements } = await import('../services/achievementManager.js');
+      
+      await ctx.editMessageText(
+        `⚡ МОМЕНТАЛЬНАЯ разблокировка...\n\n` +
+        `⏳ Это займет несколько минут.\n` +
+        `Пожалуйста, подождите...`
+      );
+      
+      const result = await unlockAllAchievements(accountId, appId, true);
+      
+      await ctx.editMessageText(
+        `✅ Разблокировка завершена!\n\n` +
+        `Всего: ${result.total}\n` +
+        `Разблокировано: ${result.unlocked}\n` +
+        `Ошибок: ${result.failed}\n\n` +
+        `Режим: ⚡ Моментальный`,
+        {
+          reply_markup: {
+            inline_keyboard: [
+              [{ text: '🔙 К игре', callback_data: `ach_game_${accountId}_${appId}` }]
+            ]
+          }
+        }
+      );
+    } catch (error) {
+      await ctx.editMessageText(
+        `❌ Ошибка: ${error.message}`,
+        {
+          reply_markup: {
+            inline_keyboard: [
+              [{ text: '🔙 К игре', callback_data: `ach_game_${accountId}_${appId}` }]
+            ]
+          }
+        }
+      );
+    }
   });
 
   bot.action(/^clear_games_(\d+)$/, async (ctx) => {
@@ -1318,6 +2078,136 @@ export function setupHandlers() {
 
     await ctx.answerCbQuery(`✅ Остановлено ${successCount} аккаунтов`, { show_alert: true });
     await bot.handleUpdate({ callback_query: ctx.callbackQuery });
+  });
+
+  bot.action(/^restart_all_farm$/, async (ctx) => {
+    const accounts = db.getSteamAccounts(ctx.from.id);
+    const runningAccounts = accounts.filter(acc => acc.is_farming);
+
+    if (runningAccounts.length === 0) {
+      await ctx.answerCbQuery('❌ Нет запущенных аккаунтов для перезагрузки', { show_alert: true });
+      return;
+    }
+
+    await ctx.answerCbQuery('🔄 Перезагрузка фарма...');
+
+    let successCount = 0;
+    let currentAccount = 0;
+    const totalAccounts = runningAccounts.length;
+
+    for (const account of runningAccounts) {
+      currentAccount++;
+      
+      try {
+        // Обновляем сообщение с прогрессом
+        const allAccounts = db.getSteamAccounts(ctx.from.id);
+        const limit = db.getAccountLimit(ctx.from.id);
+        const info = db.getUserSubscriptionInfo(ctx.from.id);
+        const PAGE_SIZE = 5;
+        const page = 0;
+        
+        const totalPages = Math.ceil(allAccounts.length / PAGE_SIZE) || 1;
+        const start = page * PAGE_SIZE;
+        const pageAccounts = allAccounts.slice(start, start + PAGE_SIZE);
+        
+        const accountButtons = pageAccounts.map(acc => [{
+          text: `${acc.is_farming ? '🟢' : '⚫'} ${acc.account_name}`,
+          callback_data: `account_${acc.id}`
+        }]);
+        
+        const buttons = [...accountButtons];
+
+        if (totalPages > 1) {
+          buttons.push([{ text: `📄 ${start / PAGE_SIZE + 1}/${totalPages}`, callback_data: 'accounts_page' }]);
+        }
+
+        if (limit !== 0) {
+          buttons.push([{ text: '➕ Добавить аккаунт', callback_data: 'add_account' }]);
+        }
+
+        const stoppedAccounts = allAccounts.filter(acc => !acc.is_farming);
+        if (stoppedAccounts.length > 0) {
+          buttons.push([{ text: '▶️ Запустить все', callback_data: 'start_all' }]);
+        }
+
+        const stillRunning = allAccounts.filter(acc => acc.is_farming);
+        if (stillRunning.length > 0) {
+          buttons.push([{ text: '⏸ Остановить все', callback_data: 'stop_all' }]);
+          buttons.push([{ text: '🔄 Перезагрузить фарм', callback_data: 'restart_all_farm' }]);
+        }
+
+        buttons.push([{ text: '🔙 Главное меню', callback_data: 'main_menu' }]);
+
+        const limitText = limit === -1 ? '∞' : `${allAccounts.length}/${limit}`;
+        const subLabel = info.isPremium ? '⭐ Premium' : limit === 0 ? '❌ Без подписки' : '🎁 Триал';
+        const header = `📋 Steam аккаунты\n━━━━━━━━━━━━━━━\n${subLabel} | Аккаунтов: ${limitText}\n\n🔄 Перезагрузка: ${currentAccount}/${totalAccounts} (${account.account_name})...\n`;
+
+        await ctx.editMessageText(header, {
+          reply_markup: { inline_keyboard: buttons }
+        }).catch(() => {}); // Игнорируем ошибки редактирования
+
+        // Перезагружаем аккаунт
+        const games = db.getGames(account.id);
+        if (games.length > 0) {
+          await farmManager.stopFarming(account.id);
+          await new Promise(resolve => setTimeout(resolve, 2000)); // Ждем 2 секунды
+          await farmManager.startFarming(account.id);
+          successCount++;
+        }
+
+        // Ждем перед следующим аккаунтом
+        await new Promise(resolve => setTimeout(resolve, 1000));
+      } catch (error) {
+        console.error(`❌ Ошибка перезагрузки фарма для аккаунта ${account.id}:`, error.message);
+      }
+    }
+
+    // Финальное обновление
+    const allAccounts = db.getSteamAccounts(ctx.from.id);
+    const limit = db.getAccountLimit(ctx.from.id);
+    const info = db.getUserSubscriptionInfo(ctx.from.id);
+    const PAGE_SIZE = 5;
+    const page = 0;
+    
+    const totalPages = Math.ceil(allAccounts.length / PAGE_SIZE) || 1;
+    const start = page * PAGE_SIZE;
+    const pageAccounts = allAccounts.slice(start, start + PAGE_SIZE);
+    
+    const accountButtons = pageAccounts.map(acc => [{
+      text: `${acc.is_farming ? '🟢' : '⚫'} ${acc.account_name}`,
+      callback_data: `account_${acc.id}`
+    }]);
+    
+    const buttons = [...accountButtons];
+
+    if (totalPages > 1) {
+      buttons.push([{ text: `📄 ${start / PAGE_SIZE + 1}/${totalPages}`, callback_data: 'accounts_page' }]);
+    }
+
+    if (limit !== 0) {
+      buttons.push([{ text: '➕ Добавить аккаунт', callback_data: 'add_account' }]);
+    }
+
+    const stoppedAccounts = allAccounts.filter(acc => !acc.is_farming);
+    if (stoppedAccounts.length > 0) {
+      buttons.push([{ text: '▶️ Запустить все', callback_data: 'start_all' }]);
+    }
+
+    const stillRunning = allAccounts.filter(acc => acc.is_farming);
+    if (stillRunning.length > 0) {
+      buttons.push([{ text: '⏸ Остановить все', callback_data: 'stop_all' }]);
+      buttons.push([{ text: '🔄 Перезагрузить фарм', callback_data: 'restart_all_farm' }]);
+    }
+
+    buttons.push([{ text: '🔙 Главное меню', callback_data: 'main_menu' }]);
+
+    const limitText = limit === -1 ? '∞' : `${allAccounts.length}/${limit}`;
+    const subLabel = info.isPremium ? '⭐ Premium' : limit === 0 ? '❌ Без подписки' : '🎁 Триал';
+    const header = `📋 Steam аккаунты\n━━━━━━━━━━━━━━━\n${subLabel} | Аккаунтов: ${limitText}\n\n✅ Перезагружено ${successCount} аккаунтов\n`;
+
+    await ctx.editMessageText(header, {
+      reply_markup: { inline_keyboard: buttons }
+    });
   });
 
   bot.action('add_account', async (ctx) => {
