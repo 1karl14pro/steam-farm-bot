@@ -2420,7 +2420,11 @@ export function setupHandlers() {
     
     const sentMessage = await ctx.editMessageText(
       '🔑 Вход через логин и пароль\n\n' +
-      '📝 Отправьте логин от Steam аккаунта:',
+      '📝 Отправьте логин от Steam аккаунта\n' +
+      'или логин:пароль одной строкой\n\n' +
+      'Примеры:\n' +
+      '• mylogin\n' +
+      '• mylogin:mypassword',
       {
         reply_markup: {
           inline_keyboard: [
@@ -3388,7 +3392,7 @@ export function setupHandlers() {
         }
 
         case 'add_account_credentials_step1': {
-          const login = ctx.message.text.trim();
+          const input = ctx.message.text.trim();
           
           // Удаляем сообщение пользователя с логином
           try {
@@ -3396,6 +3400,186 @@ export function setupHandlers() {
           } catch (err) {
             // Игнорируем ошибку если не удалось удалить
           }
+          
+          // Проверяем формат логин:пароль
+          if (input.includes(':')) {
+            const parts = input.split(':');
+            if (parts.length >= 2) {
+              const login = parts[0].trim();
+              const password = parts.slice(1).join(':').trim(); // На случай если в пароле есть :
+              
+              if (!login || login.length < 3) {
+                await ctx.reply('❌ Логин слишком короткий');
+                return;
+              }
+              
+              if (!password || password.length < 6) {
+                await ctx.reply('❌ Пароль слишком короткий');
+                return;
+              }
+              
+              // Сразу переходим к авторизации
+              try {
+                await bot.telegram.editMessageText(
+                  ctx.from.id,
+                  state.messageId,
+                  null,
+                  '⏳ Авторизация...'
+                );
+              } catch (err) {
+                await ctx.reply('⏳ Авторизация...');
+              }
+              
+              try {
+                const { createCredentialsAuth, getActiveSession } = await import('../services/steamAuth.js');
+                
+                await createCredentialsAuth(ctx.from.id, login, password);
+                
+                const checkInterval = setInterval(async () => {
+                  const session = getActiveSession(ctx.from.id);
+                  
+                  if (!session) {
+                    clearInterval(checkInterval);
+                    return;
+                  }
+                  
+                  if (session.status === 'success') {
+                    clearInterval(checkInterval);
+                    userStates.delete(ctx.from.id);
+                    
+                    try {
+                      await bot.telegram.editMessageText(
+                        ctx.from.id,
+                        state.messageId,
+                        null,
+                        `✅ Аккаунт ${session.accountName} успешно добавлен!`,
+                        {
+                          reply_markup: {
+                            inline_keyboard: [
+                              [{ text: '📋 Мои аккаунты', callback_data: 'accounts' }]
+                            ]
+                          }
+                        }
+                      );
+                    } catch (err) {
+                      await ctx.reply(
+                        `✅ Аккаунт ${session.accountName} успешно добавлен!`,
+                        {
+                          reply_markup: {
+                            inline_keyboard: [
+                              [{ text: '📋 Мои аккаунты', callback_data: 'accounts' }]
+                            ]
+                          }
+                        }
+                      );
+                    }
+                  } else if (session.status === 'error') {
+                    clearInterval(checkInterval);
+                    userStates.delete(ctx.from.id);
+                    
+                    try {
+                      await bot.telegram.editMessageText(
+                        ctx.from.id,
+                        state.messageId,
+                        null,
+                        `❌ Ошибка авторизации: ${session.error}`,
+                        {
+                          reply_markup: {
+                            inline_keyboard: [
+                              [{ text: '🔄 Попробовать снова', callback_data: 'add_account_credentials' }],
+                              [{ text: '📋 Мои аккаунты', callback_data: 'accounts' }]
+                            ]
+                          }
+                        }
+                      );
+                    } catch (err) {
+                      await ctx.reply(
+                        `❌ Ошибка авторизации: ${session.error}`,
+                        {
+                          reply_markup: {
+                            inline_keyboard: [
+                              [{ text: '🔄 Попробовать снова', callback_data: 'add_account_credentials' }],
+                              [{ text: '📋 Мои аккаунты', callback_data: 'accounts' }]
+                            ]
+                          }
+                        }
+                      );
+                    }
+                  } else if (session.status === 'steamguard') {
+                    clearInterval(checkInterval);
+                    
+                    userStates.set(ctx.from.id, { 
+                      action: 'add_account_credentials_steamguard',
+                      messageId: state.messageId 
+                    });
+                    
+                    try {
+                      await bot.telegram.editMessageText(
+                        ctx.from.id,
+                        state.messageId,
+                        null,
+                        '🔐 Введите код Steam Guard из приложения или email:',
+                        {
+                          reply_markup: {
+                            inline_keyboard: [
+                              [{ text: '❌ Отмена', callback_data: 'cancel_auth' }]
+                            ]
+                          }
+                        }
+                      );
+                    } catch (err) {
+                      await ctx.reply(
+                        '🔐 Введите код Steam Guard из приложения или email:',
+                        {
+                          reply_markup: {
+                            inline_keyboard: [
+                              [{ text: '❌ Отмена', callback_data: 'cancel_auth' }]
+                            ]
+                          }
+                        }
+                      );
+                    }
+                  }
+                }, 1000);
+              } catch (err) {
+                userStates.delete(ctx.from.id);
+                
+                try {
+                  await bot.telegram.editMessageText(
+                    ctx.from.id,
+                    state.messageId,
+                    null,
+                    `❌ Ошибка: ${err.message}`,
+                    {
+                      reply_markup: {
+                        inline_keyboard: [
+                          [{ text: '🔄 Попробовать снова', callback_data: 'add_account_credentials' }],
+                          [{ text: '📋 Мои аккаунты', callback_data: 'accounts' }]
+                        ]
+                      }
+                    }
+                  );
+                } catch (editErr) {
+                  await ctx.reply(
+                    `❌ Ошибка: ${err.message}`,
+                    {
+                      reply_markup: {
+                        inline_keyboard: [
+                          [{ text: '🔄 Попробовать снова', callback_data: 'add_account_credentials' }],
+                          [{ text: '📋 Мои аккаунты', callback_data: 'accounts' }]
+                        ]
+                      }
+                    }
+                  );
+                }
+              }
+              
+              return;
+            }
+          }
+          
+          // Обычный формат - только логин
+          const login = input;
           
           if (!login || login.length < 3) {
             await ctx.reply('❌ Логин слишком короткий');
