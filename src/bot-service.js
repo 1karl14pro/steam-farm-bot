@@ -26,7 +26,14 @@ console.error = (...args) => origError(`[${getTime()}]`, ...args);
 console.log('🤖 Запуск Bot Service...');
 
 // Инициализируем обработчики
-setupHandlers();
+console.log('📋 Инициализация обработчиков...');
+try {
+  setupHandlers();
+  console.log('✅ Обработчики инициализированы');
+} catch (err) {
+  console.error('❌ Ошибка инициализации обработчиков:', err);
+  process.exit(1);
+}
 
 // Сохраняем PID процесса
 writeFileSync('./bot.pid', process.pid.toString());
@@ -47,6 +54,7 @@ if (initializedCount > 0) {
 }
 
 // Запускаем бота
+console.log('🚀 Запуск Telegram бота...');
 bot.launch({
   dropPendingUpdates: true,
   allowedUpdates: ['message', 'callback_query'],
