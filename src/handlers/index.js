@@ -115,7 +115,15 @@ export function setupHandlers() {
     const buttons = [...accountButtons];
 
     if (totalPages > 1) {
-      buttons.push([{ text: `📄 ${start / PAGE_SIZE + 1}/${totalPages}`, callback_data: 'accounts_page' }]);
+      const navButtons = [];
+      if (page > 0) {
+        navButtons.push({ text: '◀️', callback_data: `accounts_page_${page - 1}` });
+      }
+      navButtons.push({ text: `${page + 1}/${totalPages}`, callback_data: 'noop' });
+      if (page < totalPages - 1) {
+        navButtons.push({ text: '▶️', callback_data: `accounts_page_${page + 1}` });
+      }
+      buttons.push(navButtons);
     }
 
     if (limit !== 0) {
@@ -142,6 +150,68 @@ export function setupHandlers() {
     await ctx.editMessageText(header, {
       reply_markup: { inline_keyboard: buttons }
     });
+  });
+
+  bot.action(/^accounts_page_(\d+)$/, async (ctx) => {
+    await ctx.answerCbQuery();
+    
+    const page = parseInt(ctx.match[1]);
+    const accounts = db.getSteamAccounts(ctx.from.id);
+    const limit = db.getAccountLimit(ctx.from.id);
+    const info = db.getUserSubscriptionInfo(ctx.from.id);
+    const PAGE_SIZE = 5;
+    
+    const totalPages = Math.ceil(accounts.length / PAGE_SIZE) || 1;
+    const start = page * PAGE_SIZE;
+    const pageAccounts = accounts.slice(start, start + PAGE_SIZE);
+    
+    const accountButtons = pageAccounts.map(acc => [{
+      text: `${acc.is_farming ? '🟢' : '⚫'} ${acc.account_name}`,
+      callback_data: `account_${acc.id}`
+    }]);
+    
+    const buttons = [...accountButtons];
+
+    if (totalPages > 1) {
+      const navButtons = [];
+      if (page > 0) {
+        navButtons.push({ text: '◀️', callback_data: `accounts_page_${page - 1}` });
+      }
+      navButtons.push({ text: `${page + 1}/${totalPages}`, callback_data: 'noop' });
+      if (page < totalPages - 1) {
+        navButtons.push({ text: '▶️', callback_data: `accounts_page_${page + 1}` });
+      }
+      buttons.push(navButtons);
+    }
+
+    if (limit !== 0) {
+      buttons.push([{ text: '➕ Добавить аккаунт', callback_data: 'add_account' }]);
+    }
+
+    const stoppedAccounts = accounts.filter(acc => !acc.is_farming);
+    if (stoppedAccounts.length > 0) {
+      buttons.push([{ text: '▶️ Запустить все', callback_data: 'start_all' }]);
+    }
+
+    const runningAccounts = accounts.filter(acc => acc.is_farming);
+    if (runningAccounts.length > 0) {
+      buttons.push([{ text: '⏸ Остановить все', callback_data: 'stop_all' }]);
+      buttons.push([{ text: '🔄 Перезагрузить фарм', callback_data: 'restart_all_farm' }]);
+    }
+
+    buttons.push([{ text: '🔙 Главное меню', callback_data: 'main_menu' }]);
+
+    const limitText = limit === -1 ? '∞' : `${accounts.length}/${limit}`;
+    const subLabel = info.isPremium ? '⭐ Premium' : limit === 0 ? '❌ Без подписки' : '🎁 Триал';
+    const header = `📋 Steam аккаунты\n━━━━━━━━━━━━━━━\n${subLabel} | Аккаунтов: ${limitText}\n`;
+
+    await ctx.editMessageText(header, {
+      reply_markup: { inline_keyboard: buttons }
+    });
+  });
+
+  bot.action('noop', async (ctx) => {
+    await ctx.answerCbQuery();
   });
 
   bot.action('main_menu', async (ctx) => {
