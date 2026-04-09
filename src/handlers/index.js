@@ -3394,6 +3394,8 @@ export function setupHandlers() {
         case 'add_account_credentials_step1': {
           const input = ctx.message.text.trim();
           
+          console.log(`[AUTH] Получен ввод: ${input.substring(0, 20)}... (длина: ${input.length})`);
+          
           // Удаляем сообщение пользователя с логином
           try {
             await ctx.deleteMessage();
@@ -3403,10 +3405,13 @@ export function setupHandlers() {
           
           // Проверяем формат логин:пароль
           if (input.includes(':')) {
+            console.log('[AUTH] Обнаружен формат логин:пароль');
             const parts = input.split(':');
             if (parts.length >= 2) {
               const login = parts[0].trim();
               const password = parts.slice(1).join(':').trim(); // На случай если в пароле есть :
+              
+              console.log(`[AUTH] Логин: ${login}, Пароль: ${password.length} символов`);
               
               if (!login || login.length < 3) {
                 await ctx.reply('❌ Логин слишком короткий');
@@ -3417,6 +3422,8 @@ export function setupHandlers() {
                 await ctx.reply('❌ Пароль слишком короткий');
                 return;
               }
+              
+              console.log('[AUTH] Начинаем авторизацию...');
               
               // Сразу переходим к авторизации
               try {
