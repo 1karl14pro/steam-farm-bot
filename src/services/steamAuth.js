@@ -2,8 +2,11 @@ import { LoginSession, EAuthTokenPlatformType } from 'steam-session';
 import QRCode from 'qrcode';
 import * as db from '../database.js';
 
-// Хранилище активных сессий авторизации
-const activeSessions = new Map();
+// Хранилище активных сессий авторизации (глобальное для всех импортов)
+if (!global.activeSessions) {
+  global.activeSessions = new Map();
+}
+const activeSessions = global.activeSessions;
 
 /**
  * Создает QR-код для авторизации Steam
