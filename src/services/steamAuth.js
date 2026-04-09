@@ -59,6 +59,12 @@ export async function createCredentialsAuth(userId, accountName, password) {
   if (accounts.length >= limit) {
     throw new Error(`Достигнут лимит аккаунтов (${limit}). Купите Premium для увеличения лимита.`);
   }
+  
+  // Проверяем, не добавлен ли уже этот аккаунт
+  const existingAccount = accounts.find(acc => acc.account_name.toLowerCase() === accountName.toLowerCase());
+  if (existingAccount) {
+    throw new Error(`Аккаунт ${accountName} уже добавлен`);
+  }
 
   // Создаем сессию авторизации
   const session = new LoginSession(EAuthTokenPlatformType.SteamClient);
@@ -157,6 +163,13 @@ export async function submitSteamGuardCode(userId, code) {
     const refreshToken = session.refreshToken;
     const finalAccountName = session.accountName || accountName;
 
+    // Проверяем, не добавлен ли уже этот аккаунт
+    const accounts = db.getSteamAccounts(userId);
+    const existingAccount = accounts.find(acc => acc.account_name.toLowerCase() === finalAccountName.toLowerCase());
+    if (existingAccount) {
+      throw new Error(`Аккаунт ${finalAccountName} уже добавлен`);
+    }
+
     // Сохраняем в БД
     const accountId = db.addSteamAccount(userId, finalAccountName, null, null, null, refreshToken);
 
@@ -200,6 +213,13 @@ export async function waitForQRConfirmation(userId, onProgress) {
         // Получаем refresh token
         const refreshToken = session.refreshToken;
         const accountName = session.accountName;
+
+        // Проверяем, не добавлен ли уже этот аккаунт
+        const accounts = db.getSteamAccounts(userId);
+        const existingAccount = accounts.find(acc => acc.account_name.toLowerCase() === accountName.toLowerCase());
+        if (existingAccount) {
+          throw new Error(`Аккаунт ${accountName} уже добавлен`);
+        }
 
         // Сохраняем в БД
         const accountId = db.addSteamAccount(userId, accountName, null, null, null, refreshToken);

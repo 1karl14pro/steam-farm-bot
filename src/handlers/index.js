@@ -252,6 +252,42 @@ export function setupHandlers() {
     });
   });
 
+  bot.action('subscribe', async (ctx) => {
+    await ctx.answerCbQuery();
+    
+    const info = db.getUserSubscriptionInfo(ctx.from.id);
+    
+    let text = '💎 Подписка Premium\n';
+    text += '━━━━━━━━━━━━━━━\n\n';
+    
+    if (info.isPremium) {
+      const expiresDate = new Date(info.premiumUntil).toLocaleDateString('ru-RU');
+      text += `✅ У вас активна Premium подписка\n`;
+      text += `📅 Действует до: ${expiresDate}\n\n`;
+      text += `🎁 Ваши преимущества:\n`;
+      text += `• Неограниченное количество аккаунтов\n`;
+      text += `• Приоритетная поддержка\n`;
+      text += `• Все будущие функции\n`;
+    } else {
+      text += `📦 Текущий план: Бесплатный\n`;
+      text += `🎮 Лимит аккаунтов: ${db.getAccountLimit(ctx.from.id)}\n\n`;
+      text += `💎 Premium преимущества:\n`;
+      text += `• ♾️ Неограниченное количество аккаунтов\n`;
+      text += `• 🚀 Приоритетная поддержка\n`;
+      text += `• 🎁 Все будущие функции\n\n`;
+      text += `💰 Стоимость: 100₽/месяц\n\n`;
+      text += `Для оформления подписки свяжитесь с администратором.`;
+    }
+    
+    await ctx.editMessageText(text, {
+      reply_markup: {
+        inline_keyboard: [
+          [{ text: '🔙 Профиль', callback_data: 'profile' }]
+        ]
+      }
+    });
+  });
+
   bot.action('notifications_settings', async (ctx) => {
     await ctx.answerCbQuery();
     
