@@ -63,21 +63,58 @@ export async function createCredentialsAuth(userId, accountName, password) {
   // Создаем сессию авторизации
   const session = new LoginSession(EAuthTokenPlatformType.SteamClient);
   
-  // Запускаем процесс авторизации через логин/пароль
-  const startResult = await session.startWithCredentials({
-    accountName,
-    password
-  });
-
-  // Сохраняем сессию для отслеживания
-  activeSessions.set(userId, {
+  // Создаем объект для отслеживания статуса
+  const sessionData = {
     session,
     startedAt: Date.now(),
     type: 'credentials',
-    accountName
-  });
-
-  return startResult;
+    accountName,
+    status: 'pending'
+  };
+  
+  // Сохраняем сессию для отслеживания
+  activeSessions.set(userId, sessionData);
+  
+  // Запускаем процесс авторизации через логин/пароль
+  try {
+    const startResult = await session.startWithCredentials({
+      accountName,
+      password
+    });
+    
+    // Проверяем, требуется ли Steam Guard
+    if (startResult.actionRequired) {
+      sessionData.status = 'steamguard';
+    }
+    
+    // Слушаем события сессии
+    session.on('authenticated', async () => {
+      try {
+        const refreshToken = session.refreshToken;
+        const finalAccountName = session.accountName || accountName;
+        
+        const accountId = db.addSteamAccount(userId, finalAccountName, null, null, null, refreshToken);
+        
+        sessionData.status = 'success';
+        sessionData.accountName = finalAccountName;
+        sessionData.accountId = accountId;
+      } catch (err) {
+        sessionData.status = 'error';
+        sessionData.error = err.message;
+      }
+    });
+    
+    session.on('error', (err) => {
+      sessionData.status = 'error';
+      sessionData.error = err.message;
+    });
+    
+    return startResult;
+  } catch (error) {
+    sessionData.status = 'error';
+    sessionData.error = error.message;
+    throw error;
+  }
 }
 
 /**
