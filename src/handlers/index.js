@@ -243,46 +243,10 @@ export function setupHandlers() {
     await ctx.editMessageText(text, {
       reply_markup: {
         inline_keyboard: [
-          [{ text: '💎 Подписка', callback_data: 'subscribe' }],
+          [{ text: '💎 Подписка', callback_data: 'buy_premium' }],
           [{ text: '🔔 Уведомления', callback_data: 'notifications_settings' }],
           [{ text: '🌐 Язык', callback_data: 'language_settings' }],
           [{ text: '🔙 Главное меню', callback_data: 'main_menu' }]
-        ]
-      }
-    });
-  });
-
-  bot.action('subscribe', async (ctx) => {
-    await ctx.answerCbQuery();
-    
-    const info = db.getUserSubscriptionInfo(ctx.from.id);
-    
-    let text = '💎 Подписка Premium\n';
-    text += '━━━━━━━━━━━━━━━\n\n';
-    
-    if (info.isPremium) {
-      const expiresDate = new Date(info.premiumUntil).toLocaleDateString('ru-RU');
-      text += `✅ У вас активна Premium подписка\n`;
-      text += `📅 Действует до: ${expiresDate}\n\n`;
-      text += `🎁 Ваши преимущества:\n`;
-      text += `• Неограниченное количество аккаунтов\n`;
-      text += `• Приоритетная поддержка\n`;
-      text += `• Все будущие функции\n`;
-    } else {
-      text += `📦 Текущий план: Бесплатный\n`;
-      text += `🎮 Лимит аккаунтов: ${db.getAccountLimit(ctx.from.id)}\n\n`;
-      text += `💎 Premium преимущества:\n`;
-      text += `• ♾️ Неограниченное количество аккаунтов\n`;
-      text += `• 🚀 Приоритетная поддержка\n`;
-      text += `• 🎁 Все будущие функции\n\n`;
-      text += `💰 Стоимость: 100₽/месяц\n\n`;
-      text += `Для оформления подписки свяжитесь с администратором.`;
-    }
-    
-    await ctx.editMessageText(text, {
-      reply_markup: {
-        inline_keyboard: [
-          [{ text: '🔙 Профиль', callback_data: 'profile' }]
         ]
       }
     });
@@ -2557,6 +2521,63 @@ export function setupHandlers() {
   });
 
   // ===== PAYMENT SYSTEM =====
+
+  bot.action('buy_premium', async (ctx) => {
+    await ctx.answerCbQuery();
+    
+    const info = db.getUserSubscriptionInfo(ctx.from.id);
+    
+    let text = '💎 Premium подписка\n';
+    text += '━━━━━━━━━━━━━━━\n\n';
+    
+    if (info.isPremium) {
+      const expiresDate = new Date(info.premiumUntil).toLocaleDateString('ru-RU');
+      const tierLabel = info.tier === 2 ? '⭐ Полный' : '📦 Базовый';
+      text += `✅ Активна подписка: ${tierLabel}\n`;
+      text += `📅 Действует до: ${expiresDate}\n\n`;
+      text += `🎁 Ваши преимущества:\n`;
+      if (info.tier === 1) {
+        text += `• До 15 аккаунтов\n`;
+        text += `• До 10 игр одновременно\n`;
+      } else {
+        text += `• До 50 аккаунтов\n`;
+        text += `• До 15 игр одновременно\n`;
+      }
+      text += `• Приоритетная поддержка\n`;
+      text += `• Все будущие функции\n\n`;
+      text += `💡 Вы можете продлить или улучшить подписку`;
+    } else {
+      text += `📦 Текущий план: Бесплатный\n`;
+      text += `🎮 Лимит: 3 аккаунта\n\n`;
+      text += `💎 Выберите тариф Premium:\n\n`;
+      text += `📦 Базовый — 50₽/месяц\n`;
+      text += `• До 15 аккаунтов\n`;
+      text += `• До 10 игр одновременно\n\n`;
+      text += `⭐ Полный — 100₽/месяц\n`;
+      text += `• До 50 аккаунтов\n`;
+      text += `• До 15 игр одновременно\n`;
+    }
+    
+    const buttons = [];
+    
+    if (!info.isPremium || info.tier === 1) {
+      buttons.push([{ text: '📦 Базовый — 50₽', callback_data: 'pay_select_1' }]);
+    }
+    
+    if (!info.isPremium || info.tier === 1) {
+      buttons.push([{ text: '⭐ Полный — 100₽', callback_data: 'pay_select_2' }]);
+    }
+    
+    if (info.isPremium && info.tier === 2) {
+      buttons.push([{ text: '💳 Продлить — 100₽', callback_data: 'pay_select_2' }]);
+    }
+    
+    buttons.push([{ text: '🔙 Назад', callback_data: 'profile' }]);
+    
+    await ctx.editMessageText(text, {
+      reply_markup: { inline_keyboard: buttons }
+    });
+  });
 
   bot.action(/^pay_select_(\d)$/, async (ctx) => {
     const tier = parseInt(ctx.match[1]);
