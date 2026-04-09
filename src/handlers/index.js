@@ -3887,6 +3887,116 @@ export function setupHandlers() {
           break;
         }
 
+        case 'add_account_credentials_steamguard': {
+          const code = ctx.message.text.trim();
+          
+          // Удаляем сообщение пользователя с кодом
+          try {
+            await ctx.deleteMessage();
+          } catch (err) {
+            // Игнорируем ошибку если не удалось удалить
+          }
+          
+          if (!/^[A-Z0-9]{5}$/.test(code)) {
+            await ctx.reply('❌ Неверный формат кода. Код должен содержать 5 символов (буквы и цифры)');
+            return;
+          }
+          
+          // Редактируем предыдущее сообщение
+          try {
+            await bot.telegram.editMessageText(
+              ctx.from.id,
+              state.messageId,
+              null,
+              '⏳ Проверка кода...'
+            );
+          } catch (err) {
+            await ctx.reply('⏳ Проверка кода...');
+          }
+          
+          try {
+            const { submitSteamGuardCode } = await import('../services/steamAuth.js');
+            
+            const result = await submitSteamGuardCode(ctx.from.id, code);
+            
+            userStates.delete(ctx.from.id);
+            
+            // Редактируем предыдущее сообщение
+            try {
+              await bot.telegram.editMessageText(
+                ctx.from.id,
+                state.messageId,
+                null,
+                `✅ Аккаунт добавлен!\n\n` +
+                `👤 ${result.accountName}\n\n` +
+                `Теперь вы можете добавить игры и запустить фарм.`,
+                {
+                  reply_markup: {
+                    inline_keyboard: [
+                      [{ text: '🎮 Добавить игры', callback_data: `games_${result.accountId}` }],
+                      [{ text: '📋 Мои аккаунты', callback_data: 'accounts' }]
+                    ]
+                  }
+                }
+              );
+            } catch (err) {
+              await ctx.reply(
+                `✅ Аккаунт добавлен!\n\n` +
+                `👤 ${result.accountName}\n\n` +
+                `Теперь вы можете добавить игры и запустить фарм.`,
+                {
+                  reply_markup: {
+                    inline_keyboard: [
+                      [{ text: '🎮 Добавить игры', callback_data: `games_${result.accountId}` }],
+                      [{ text: '📋 Мои аккаунты', callback_data: 'accounts' }]
+                    ]
+                  }
+                }
+              );
+            }
+          } catch (error) {
+            // Проверяем тип ошибки
+            if (error.message.includes('TwoFactorCodeMismatch') || error.eresult === 88) {
+              // Неверный код - просим ввести снова
+              console.log(`[AUTH] Неверный Steam Guard код для пользователя ${ctx.from.id}`);
+              
+              try {
+                await bot.telegram.editMessageText(
+                  ctx.from.id,
+                  state.messageId,
+                  null,
+                  '❌ Неверный код!\n\n' +
+                  '🔐 Отправьте правильный Steam Guard код:',
+                  {
+                    reply_markup: {
+                      inline_keyboard: [
+                        [{ text: '❌ Отмена', callback_data: 'cancel_auth' }]
+                      ]
+                    }
+                  }
+                );
+              } catch (err) {
+                await ctx.reply(
+                  '❌ Неверный код!\n\n' +
+                  '🔐 Отправьте правильный Steam Guard код:',
+                  {
+                    reply_markup: {
+                      inline_keyboard: [
+                        [{ text: '❌ Отмена', callback_data: 'cancel_auth' }]
+                      ]
+                    }
+                  }
+                );
+              }
+            } else {
+              // Другая ошибка
+              await ctx.reply(`❌ Ошибка: ${error.message}`);
+              userStates.delete(ctx.from.id);
+            }
+          }
+          break;
+        }
+
         case 'add_account': {
           const parts = ctx.message.text.trim().split(':');
           
