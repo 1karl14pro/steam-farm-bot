@@ -529,6 +529,12 @@ export function setupHandlers() {
     ]);
     buttons.push([{ text: '👁 Видимость', callback_data: `visibility_${accountId}` }]);
     buttons.push([{ text: '🏆 Достижения', callback_data: `achievements_${accountId}` }]);
+    
+    // Кнопка автопринятия трейдов
+    const autoAcceptTrades = db.getAutoAcceptTrades(accountId);
+    const tradeButtonText = autoAcceptTrades ? '💼 Автотрейды: ✅' : '💼 Автотрейды: ❌';
+    buttons.push([{ text: tradeButtonText, callback_data: `toggle_trades_${accountId}` }]);
+    
     if (account.has_parental_control) {
       buttons.push([{ text: '🔐 PIN родительского контроля', callback_data: `set_pin_${accountId}` }]);
     }
@@ -1476,6 +1482,71 @@ export function setupHandlers() {
     if (account.has_parental_control) {
       buttons.push([{ text: '🔐 PIN родительского контроля', callback_data: `set_pin_${accountId}` }]);
     }
+    buttons.push([{ text: '🗑 Удалить аккаунт', callback_data: `delete_${accountId}` }]);
+    buttons.push([{ text: '🔙 К списку аккаунтов', callback_data: 'accounts' }]);
+
+    await ctx.editMessageText(text, {
+      reply_markup: { inline_keyboard: buttons }
+    });
+  });
+
+  bot.action(/^toggle_trades_(\d+)$/, async (ctx) => {
+    const accountId = parseInt(ctx.match[1]);
+    const account = db.getSteamAccount(accountId);
+
+    if (!account || account.user_id !== ctx.from.id) {
+      await ctx.answerCbQuery('❌ Аккаунт не найден');
+      return;
+    }
+
+    const currentStatus = db.getAutoAcceptTrades(accountId);
+    const newStatus = !currentStatus;
+    db.setAutoAcceptTrades(accountId, newStatus);
+
+    await ctx.answerCbQuery(
+      newStatus 
+        ? '✅ Автопринятие трейдов-подарков включено' 
+        : '❌ Автопринятие трейдов отключено'
+    );
+
+    await new Promise(resolve => setTimeout(resolve, 500));
+
+    const updatedAccount = db.getSteamAccount(accountId);
+    const games = db.getGames(accountId);
+    const text = formatter.formatAccountInfo(updatedAccount, games);
+
+    const buttons = [];
+
+    if (updatedAccount.is_farming) {
+      buttons.push([{ text: '⏸ Остановить фарм', callback_data: `stop_${accountId}` }]);
+    } else {
+      buttons.push([{ text: '▶️ Запустить фарм', callback_data: `start_${accountId}` }]);
+    }
+
+    buttons.push([{ text: '🎮 Настроить игры', callback_data: `games_${accountId}` }]);
+    buttons.push([
+      { text: '📊 Статистика', callback_data: `stats_${accountId}` },
+      { text: '🎯 Цели', callback_data: `goals_${accountId}` }
+    ]);
+    buttons.push([
+      { text: '⏰ Расписание', callback_data: `schedule_${accountId}` },
+      { text: '💬 Статус', callback_data: `change_status_${accountId}` }
+    ]);
+    buttons.push([{ text: '👁 Видимость', callback_data: `visibility_${accountId}` }]);
+    buttons.push([{ text: '🏆 Достижения', callback_data: `achievements_${accountId}` }]);
+    
+    const autoAcceptTrades = db.getAutoAcceptTrades(accountId);
+    const tradeButtonText = autoAcceptTrades ? '💼 Автотрейды: ✅' : '💼 Автотрейды: ❌';
+    buttons.push([{ text: tradeButtonText, callback_data: `toggle_trades_${accountId}` }]);
+    
+    if (account.has_parental_control) {
+      buttons.push([{ text: '🔐 PIN родительского контроля', callback_data: `set_pin_${accountId}` }]);
+    }
+    
+    const { getSteamId64FromAccount } = await import('../services/gameCache.js');
+    const steamId64 = getSteamId64FromAccount(account);
+    buttons.push([{ text: '🔗 Профиль Steam', url: `https://steamcommunity.com/profiles/${steamId64}` }]);
+    
     buttons.push([{ text: '🗑 Удалить аккаунт', callback_data: `delete_${accountId}` }]);
     buttons.push([{ text: '🔙 К списку аккаунтов', callback_data: 'accounts' }]);
 

@@ -94,6 +94,11 @@ try {
     db.exec("ALTER TABLE users ADD COLUMN language TEXT DEFAULT 'ru'");
   }
 
+  const hasAutoAcceptTrades = tableInfo.find((col) => col.name === 'auto_accept_trades');
+  if (!hasAutoAcceptTrades) {
+    db.exec("ALTER TABLE steam_accounts ADD COLUMN auto_accept_trades INTEGER DEFAULT 0");
+  }
+
   // Очистка дубликатов уведомлений
   try {
     // Удаляем дубликаты, оставляя только первую запись для каждой пары (user_id, type)
@@ -934,6 +939,27 @@ export const getGlobalStats = () => {
     LEFT JOIN games g ON sa.id = g.account_id
     WHERE u.is_banned = 0
   `).get();
+};
+
+/**
+ * Включить/выключить автопринятие трейдов для аккаунта
+ * @param {number} accountId - ID аккаунта
+ * @param {boolean} enabled - Включить (true) или выключить (false)
+ */
+export const setAutoAcceptTrades = (accountId, enabled) => {
+  db.prepare('UPDATE steam_accounts SET auto_accept_trades = ? WHERE id = ?')
+    .run(enabled ? 1 : 0, accountId);
+};
+
+/**
+ * Получить статус автопринятия трейдов для аккаунта
+ * @param {number} accountId - ID аккаунта
+ * @returns {boolean}
+ */
+export const getAutoAcceptTrades = (accountId) => {
+  const result = db.prepare('SELECT auto_accept_trades FROM steam_accounts WHERE id = ?')
+    .get(accountId);
+  return result ? result.auto_accept_trades === 1 : false;
 };
 
 

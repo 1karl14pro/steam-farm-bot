@@ -1,5 +1,6 @@
 import SteamUser from 'steam-user';
 import * as db from '../database.js';
+import * as tradeManager from './tradeManager.js';
 
 // Хранилище активных клиентов Steam
 const activeClients = new Map();
@@ -95,6 +96,9 @@ export async function startFarming(accountId) {
       try {
         await client.webLogOn();
         console.log(`🌐 Веб-сессия получена для ${account.account_name}`);
+        
+        // Инициализируем менеджер трейдов после получения веб-сессии
+        tradeManager.initTradeManager(client, accountId, account.account_name);
       } catch (webErr) {
         console.error(`❌ Ошибка получения веб-сессии для ${account.account_name}:`, webErr.message);
       }
@@ -330,6 +334,9 @@ export async function stopFarming(accountId) {
   
   const timeout = new Promise((resolve) => setTimeout(resolve, 3000));
   await Promise.race([disconnected, timeout]);
+  
+  // Останавливаем менеджер трейдов
+  tradeManager.stopTradeManager(accountId);
   
   stoppingAccounts.delete(accountId);
   activeClients.delete(accountId);

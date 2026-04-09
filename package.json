@@ -1,6 +1,6 @@
 {
   "name": "steam-farm-bot",
-  "version": "1.8.1",
+  "version": "1.8.2",
   "description": "Telegram bot for Steam hours farming - Optimized for VDS",
   "main": "src/index.js",
   "type": "module",
@@ -26,6 +26,7 @@
     "qrcode": "^1.5.3",
     "steam-gameserver": "^1.0.0",
     "steam-session": "^1.7.2",
+    "steam-tradeoffer-manager": "^2.13.0",
     "steam-user": "^5.0.8",
     "steamworks-ffi-node": "^0.10.2",
     "telegraf": "^4.16.3"
