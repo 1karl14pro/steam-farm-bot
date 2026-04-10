@@ -2399,17 +2399,40 @@ export function setupHandlers() {
     
     state.action = 'group_farm_select_games';
     state.selectedGames = [];
+    
+    // Проверяем, есть ли у всех выбранных аккаунтов одинаковые игры
+    let commonGames = null;
+    for (const accountId of state.selectedAccounts) {
+      const accountGames = db.getGames(accountId);
+      const accountAppIds = accountGames.map(g => g.app_id);
+      
+      if (commonGames === null) {
+        commonGames = accountAppIds;
+      } else {
+        // Находим пересечение
+        commonGames = commonGames.filter(appId => accountAppIds.includes(appId));
+      }
+    }
+    
+    // Если у всех аккаунтов есть общие игры, автоматически выбираем их
+    if (commonGames && commonGames.length > 0) {
+      state.selectedGames = commonGames.filter(appId => 
+        freeGames.some(game => game.appId === appId)
+      );
+    }
+    
     userStates.set(ctx.from.id, state);
     
     const gameButtons = freeGames.map(game => [{
-      text: `⚪ ${game.name}`,
+      text: `${state.selectedGames.includes(game.appId) ? '✅' : '⚪'} ${game.name}`,
       callback_data: `gf_toggle_game_${game.appId}`
     }]);
     
     await ctx.editMessageText(
       '🎯 Групповой фарм\n━━━━━━━━━━━━━━━\n\n' +
-      `Аккаунтов выбрано: ${state.selectedAccounts.length}\n\n` +
-      'Выберите бесплатные игры для фарма:',
+      `Аккаунтов выбрано: ${state.selectedAccounts.length}\n` +
+      (state.selectedGames.length > 0 ? `✅ Автоматически выбрано игр: ${state.selectedGames.length}\n` : '') +
+      '\nВыберите бесплатные игры для фарма:',
       {
         reply_markup: {
           inline_keyboard: [
@@ -2489,10 +2512,7 @@ export function setupHandlers() {
     for (const accountId of state.selectedAccounts) {
       try {
         // Удаляем старые игры
-        const existingGames = db.getGames(accountId);
-        for (const game of existingGames) {
-          db.deleteGame(game.id);
-        }
+        db.clearGames(accountId);
         
         // Добавляем выбранные игры
         for (const appId of state.selectedGames) {
