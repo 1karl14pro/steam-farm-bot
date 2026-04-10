@@ -100,7 +100,7 @@ export function setupHandlers() {
     const accounts = db.getSteamAccounts(ctx.from.id);
     const limit = db.getAccountLimit(ctx.from.id);
     const info = db.getUserSubscriptionInfo(ctx.from.id);
-    const PAGE_SIZE = 5;
+    const PAGE_SIZE = 10; // Увеличено с 5 до 10
     const page = 0;
     
     const totalPages = Math.ceil(accounts.length / PAGE_SIZE) || 1;
@@ -159,7 +159,7 @@ export function setupHandlers() {
     const accounts = db.getSteamAccounts(ctx.from.id);
     const limit = db.getAccountLimit(ctx.from.id);
     const info = db.getUserSubscriptionInfo(ctx.from.id);
-    const PAGE_SIZE = 5;
+    const PAGE_SIZE = 10; // Увеличено с 5 до 10
     
     const totalPages = Math.ceil(accounts.length / PAGE_SIZE) || 1;
     const start = page * PAGE_SIZE;
@@ -1827,7 +1827,7 @@ export function setupHandlers() {
       const gameName = game?.game_name || `Game ${appId}`;
       
       const lockedAchievements = achievements.filter(a => !a.achieved);
-      const PAGE_SIZE = 5;
+      const PAGE_SIZE = 10;
       const totalPages = Math.ceil(lockedAchievements.length / PAGE_SIZE);
       const start = page * PAGE_SIZE;
       const pageAchievements = lockedAchievements.slice(start, start + PAGE_SIZE);
@@ -2244,7 +2244,7 @@ export function setupHandlers() {
         const allAccounts = db.getSteamAccounts(ctx.from.id);
         const limit = db.getAccountLimit(ctx.from.id);
         const info = db.getUserSubscriptionInfo(ctx.from.id);
-        const PAGE_SIZE = 5;
+        const PAGE_SIZE = 10;
         const page = 0;
         
         const totalPages = Math.ceil(allAccounts.length / PAGE_SIZE) || 1;
