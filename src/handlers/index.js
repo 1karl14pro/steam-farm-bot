@@ -193,6 +193,10 @@ export function setupHandlers() {
     }
 
     const stoppedAccounts = accounts.filter(acc => !acc.is_farming);
+    if (stoppedAccounts.length > 1) {
+      buttons.push([{ text: '🎯 Групповой фарм', callback_data: 'group_farm' }]);
+    }
+    
     if (stoppedAccounts.length > 0) {
       buttons.push([{ text: '▶️ Запустить все', callback_data: 'start_all' }]);
     }
@@ -2756,6 +2760,10 @@ export function setupHandlers() {
     }
 
     const stoppedAccounts = accounts.filter(acc => !acc.is_farming);
+    if (stoppedAccounts.length > 1) {
+      buttons.push([{ text: '🎯 Групповой фарм', callback_data: 'group_farm' }]);
+    }
+    
     if (stoppedAccounts.length > 0) {
       buttons.push([{ text: '▶️ Запустить все', callback_data: 'start_all' }]);
     }
