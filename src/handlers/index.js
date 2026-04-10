@@ -131,6 +131,10 @@ export function setupHandlers() {
     }
 
     const stoppedAccounts = accounts.filter(acc => !acc.is_farming);
+    if (stoppedAccounts.length > 1) {
+      buttons.push([{ text: '🎯 Групповой фарм', callback_data: 'group_farm' }]);
+    }
+    
     if (stoppedAccounts.length > 0) {
       buttons.push([{ text: '▶️ Запустить все', callback_data: 'start_all' }]);
     }
@@ -2287,6 +2291,237 @@ export function setupHandlers() {
         ]
       }
     });
+  });
+
+  // ===== GROUP FARM =====
+
+  bot.action('group_farm', async (ctx) => {
+    await ctx.answerCbQuery();
+    
+    const accounts = db.getSteamAccounts(ctx.from.id);
+    const stoppedAccounts = accounts.filter(acc => !acc.is_farming);
+    
+    if (stoppedAccounts.length < 2) {
+      await ctx.answerCbQuery('❌ Нужно минимум 2 свободных аккаунта', { show_alert: true });
+      return;
+    }
+    
+    // Сохраняем состояние для выбора аккаунтов
+    userStates.set(ctx.from.id, { 
+      action: 'group_farm_select_accounts',
+      selectedAccounts: []
+    });
+    
+    const accountButtons = stoppedAccounts.map(acc => [{
+      text: `⚪ ${acc.account_name}`,
+      callback_data: `gf_toggle_acc_${acc.id}`
+    }]);
+    
+    await ctx.editMessageText(
+      '🎯 Групповой фарм\n━━━━━━━━━━━━━━━\n\n' +
+      'Выберите аккаунты для группового фарма:\n' +
+      '(нажмите на аккаунт чтобы выбрать)',
+      {
+        reply_markup: {
+          inline_keyboard: [
+            ...accountButtons,
+            [{ text: '✅ Далее', callback_data: 'gf_select_games' }],
+            [{ text: '🔙 Назад', callback_data: 'accounts' }]
+          ]
+        }
+      }
+    );
+  });
+
+  bot.action(/^gf_toggle_acc_(\d+)$/, async (ctx) => {
+    await ctx.answerCbQuery();
+    
+    const accountId = parseInt(ctx.match[1]);
+    const state = userStates.get(ctx.from.id);
+    
+    if (!state || state.action !== 'group_farm_select_accounts') {
+      return;
+    }
+    
+    const index = state.selectedAccounts.indexOf(accountId);
+    if (index > -1) {
+      state.selectedAccounts.splice(index, 1);
+    } else {
+      state.selectedAccounts.push(accountId);
+    }
+    
+    userStates.set(ctx.from.id, state);
+    
+    const accounts = db.getSteamAccounts(ctx.from.id);
+    const stoppedAccounts = accounts.filter(acc => !acc.is_farming);
+    
+    const accountButtons = stoppedAccounts.map(acc => [{
+      text: `${state.selectedAccounts.includes(acc.id) ? '✅' : '⚪'} ${acc.account_name}`,
+      callback_data: `gf_toggle_acc_${acc.id}`
+    }]);
+    
+    await ctx.editMessageText(
+      '🎯 Групповой фарм\n━━━━━━━━━━━━━━━\n\n' +
+      `Выбрано: ${state.selectedAccounts.length} аккаунтов\n\n` +
+      'Выберите аккаунты для группового фарма:',
+      {
+        reply_markup: {
+          inline_keyboard: [
+            ...accountButtons,
+            [{ text: '✅ Далее', callback_data: 'gf_select_games' }],
+            [{ text: '🔙 Назад', callback_data: 'accounts' }]
+          ]
+        }
+      }
+    );
+  });
+
+  bot.action('gf_select_games', async (ctx) => {
+    await ctx.answerCbQuery();
+    
+    const state = userStates.get(ctx.from.id);
+    
+    if (!state || state.selectedAccounts.length === 0) {
+      await ctx.answerCbQuery('❌ Выберите хотя бы один аккаунт', { show_alert: true });
+      return;
+    }
+    
+    const { getFreeGames } = await import('../services/groupFarm.js');
+    const info = db.getUserSubscriptionInfo(ctx.from.id);
+    
+    // Определяем лимит игр
+    let gameLimit = 5;
+    if (info.isPremium) {
+      gameLimit = info.tier === 2 ? 15 : 10;
+    }
+    
+    const freeGames = getFreeGames(gameLimit);
+    
+    state.action = 'group_farm_select_games';
+    state.selectedGames = [];
+    userStates.set(ctx.from.id, state);
+    
+    const gameButtons = freeGames.map(game => [{
+      text: `⚪ ${game.name}`,
+      callback_data: `gf_toggle_game_${game.appId}`
+    }]);
+    
+    await ctx.editMessageText(
+      '🎯 Групповой фарм\n━━━━━━━━━━━━━━━\n\n' +
+      `Аккаунтов выбрано: ${state.selectedAccounts.length}\n\n` +
+      'Выберите бесплатные игры для фарма:',
+      {
+        reply_markup: {
+          inline_keyboard: [
+            ...gameButtons,
+            [{ text: '🚀 Запустить фарм', callback_data: 'gf_start' }],
+            [{ text: '🔙 Назад', callback_data: 'group_farm' }]
+          ]
+        }
+      }
+    );
+  });
+
+  bot.action(/^gf_toggle_game_(\d+)$/, async (ctx) => {
+    await ctx.answerCbQuery();
+    
+    const appId = parseInt(ctx.match[1]);
+    const state = userStates.get(ctx.from.id);
+    
+    if (!state || state.action !== 'group_farm_select_games') {
+      return;
+    }
+    
+    const index = state.selectedGames.indexOf(appId);
+    if (index > -1) {
+      state.selectedGames.splice(index, 1);
+    } else {
+      state.selectedGames.push(appId);
+    }
+    
+    userStates.set(ctx.from.id, state);
+    
+    const { getFreeGames } = await import('../services/groupFarm.js');
+    const info = db.getUserSubscriptionInfo(ctx.from.id);
+    
+    let gameLimit = 5;
+    if (info.isPremium) {
+      gameLimit = info.tier === 2 ? 15 : 10;
+    }
+    
+    const freeGames = getFreeGames(gameLimit);
+    
+    const gameButtons = freeGames.map(game => [{
+      text: `${state.selectedGames.includes(game.appId) ? '✅' : '⚪'} ${game.name}`,
+      callback_data: `gf_toggle_game_${game.appId}`
+    }]);
+    
+    await ctx.editMessageText(
+      '🎯 Групповой фарм\n━━━━━━━━━━━━━━━\n\n' +
+      `Аккаунтов: ${state.selectedAccounts.length}\n` +
+      `Игр выбрано: ${state.selectedGames.length}\n\n` +
+      'Выберите бесплатные игры для фарма:',
+      {
+        reply_markup: {
+          inline_keyboard: [
+            ...gameButtons,
+            [{ text: '🚀 Запустить фарм', callback_data: 'gf_start' }],
+            [{ text: '🔙 Назад', callback_data: 'group_farm' }]
+          ]
+        }
+      }
+    );
+  });
+
+  bot.action('gf_start', async (ctx) => {
+    await ctx.answerCbQuery('🚀 Запуск группового фарма...');
+    
+    const state = userStates.get(ctx.from.id);
+    
+    if (!state || state.selectedAccounts.length === 0 || state.selectedGames.length === 0) {
+      await ctx.answerCbQuery('❌ Выберите аккаунты и игры', { show_alert: true });
+      return;
+    }
+    
+    let successCount = 0;
+    
+    // Добавляем игры для каждого аккаунта
+    for (const accountId of state.selectedAccounts) {
+      try {
+        // Удаляем старые игры
+        const existingGames = db.getGames(accountId);
+        for (const game of existingGames) {
+          db.deleteGame(game.id);
+        }
+        
+        // Добавляем выбранные игры
+        for (const appId of state.selectedGames) {
+          db.addGame(accountId, appId, `Game ${appId}`);
+        }
+        
+        // Запускаем фарм
+        await farmManager.startFarming(accountId);
+        successCount++;
+      } catch (error) {
+        console.error(`❌ Ошибка запуска группового фарма для аккаунта ${accountId}:`, error.message);
+      }
+    }
+    
+    userStates.delete(ctx.from.id);
+    
+    await ctx.editMessageText(
+      `✅ Групповой фарм запущен!\n\n` +
+      `Аккаунтов: ${successCount}/${state.selectedAccounts.length}\n` +
+      `Игр: ${state.selectedGames.length}\n\n` +
+      `Все выбранные аккаунты фармят одинаковые игры.`,
+      {
+        reply_markup: {
+          inline_keyboard: [
+            [{ text: '📋 Мои аккаунты', callback_data: 'accounts' }]
+          ]
+        }
+      }
+    );
   });
 
   bot.action('add_account', async (ctx) => {
