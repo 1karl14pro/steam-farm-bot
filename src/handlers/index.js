@@ -2655,11 +2655,12 @@ export function setupHandlers() {
     const tier = parseInt(ctx.match[1]);
     const price = tier === 2 ? '100₽' : '50₽';
     const tierLabel = tier === 2 ? '⭐ Полный' : '📦 Базовый';
+    const paymentPhone = process.env.PAYMENT_PHONE || '+79505343303';
     
     await ctx.editMessageText(
       `💳 Ручной перевод\n━━━━━━━━━━━━━━━\nТариф: ${tierLabel}\nЦена: ${price}\n━━━━━━━━━━━━━━━\n\n` +
       `💳 Переведите ${price} на:\n\n` +
-      `📱 Сбербанк: +79505343303\n\n` +
+      `📱 Сбербанк: ${paymentPhone}\n\n` +
       `📸 После перевода отправьте:\n` +
       `1. Скриншот или PDF чека\n` +
       `2. Ваш Telegram ID: ${ctx.from.id}\n\n` +
