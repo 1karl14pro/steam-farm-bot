@@ -168,24 +168,26 @@ export async function submitSteamGuardCode(userId, code) {
       });
     });
 
-    // Получаем refresh token
-    const refreshToken = session.refreshToken;
-    const finalAccountName = session.accountName || accountName;
-
-    // Проверяем, не добавлен ли уже этот аккаунт
-    const accounts = db.getSteamAccounts(userId);
-    const existingAccount = accounts.find(acc => acc.account_name.toLowerCase() === finalAccountName.toLowerCase());
-    if (existingAccount) {
-      throw new Error(`Аккаунт ${finalAccountName} уже добавлен`);
+    // Ждем пока событие authenticated добавит аккаунт
+    await new Promise(resolve => setTimeout(resolve, 1000));
+    
+    // Проверяем что аккаунт был добавлен
+    if (sessionData.status === 'success' && sessionData.accountId) {
+      const result = {
+        accountName: sessionData.accountName,
+        refreshToken: session.refreshToken,
+        accountId: sessionData.accountId
+      };
+      
+      // Удаляем сессию
+      activeSessions.delete(userId);
+      
+      return result;
+    } else if (sessionData.status === 'error') {
+      throw new Error(sessionData.error);
+    } else {
+      throw new Error('Не удалось добавить аккаунт');
     }
-
-    // Сохраняем в БД
-    const accountId = db.addSteamAccount(userId, finalAccountName, null, null, null, refreshToken);
-
-    // Удаляем сессию
-    activeSessions.delete(userId);
-
-    return { accountName: finalAccountName, refreshToken, accountId };
   } catch (error) {
     // Не удаляем сессию при ошибке - пользователь может попробовать снова
     throw error;
