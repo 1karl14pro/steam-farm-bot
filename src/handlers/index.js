@@ -2379,7 +2379,7 @@ export function setupHandlers() {
       const qrBuffer = await createQRAuth(ctx.from.id);
       
       // Отправляем QR-код
-      await ctx.replyWithPhoto({ source: qrBuffer }, {
+      const qrMessage = await ctx.replyWithPhoto({ source: qrBuffer }, {
         caption: '📱 Отсканируйте QR-код в приложении Steam\n\n' +
           '1. Откройте приложение Steam на телефоне\n' +
           '2. Нажмите на меню (☰)\n' +
@@ -2394,7 +2394,41 @@ export function setupHandlers() {
       });
       
       // Ждем подтверждения
-      const result = await waitForQRConfirmation(ctx.from.id);
+      const result = await waitForQRConfirmation(ctx.from.id, async (status) => {
+        // Обновляем статус если нужно
+        if (status === 'refreshing') {
+          try {
+            // Создаем новый QR-код
+            const newQrBuffer = await createQRAuth(ctx.from.id);
+            
+            // Обновляем сообщение с новым QR-кодом
+            await bot.telegram.editMessageMedia(
+              ctx.from.id,
+              qrMessage.message_id,
+              null,
+              {
+                type: 'photo',
+                media: { source: newQrBuffer }
+              },
+              {
+                caption: '📱 Отсканируйте QR-код в приложении Steam\n\n' +
+                  '1. Откройте приложение Steam на телефоне\n' +
+                  '2. Нажмите на меню (☰)\n' +
+                  '3. Выберите "Войти с помощью QR-кода"\n' +
+                  '4. Отсканируйте этот QR-код\n\n' +
+                  '⏱ Ожидание... (2 минуты)',
+                reply_markup: {
+                  inline_keyboard: [
+                    [{ text: '❌ Отмена', callback_data: 'cancel_auth' }]
+                  ]
+                }
+              }
+            );
+          } catch (err) {
+            console.error('Error refreshing QR code:', err);
+          }
+        }
+      });
       
       await ctx.reply(
         `✅ Аккаунт добавлен!\n\n` +
@@ -2411,7 +2445,20 @@ export function setupHandlers() {
       );
     } catch (error) {
       console.error('QR Auth error:', error);
-      await ctx.reply(`❌ Ошибка: ${error.message}`);
+      
+      // Проверяем тип ошибки
+      if (error.message && error.message.includes('FileNotFound')) {
+        await ctx.reply('❌ QR-код истек. Попробуйте снова.', {
+          reply_markup: {
+            inline_keyboard: [
+              [{ text: '🔄 Попробовать снова', callback_data: 'add_account_qr' }],
+              [{ text: '📋 Мои аккаунты', callback_data: 'accounts' }]
+            ]
+          }
+        });
+      } else {
+        await ctx.reply(`❌ Ошибка: ${error.message}`);
+      }
     }
   });
 

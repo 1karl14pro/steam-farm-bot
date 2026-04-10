@@ -380,7 +380,7 @@ export const addReferralDays = (telegramId, days) => {
 
 // ===== STEAM ACCOUNTS =====
 export const getSteamAccounts = (userId) => {
-  return db.prepare('SELECT * FROM steam_accounts WHERE user_id = ?').all(userId);
+  return db.prepare('SELECT * FROM steam_accounts WHERE user_id = ? ORDER BY account_name COLLATE NOCASE ASC').all(userId);
 };
 
 export const getAllSteamAccounts = () => {
