@@ -2508,15 +2508,31 @@ export function setupHandlers() {
     
     let successCount = 0;
     
+    // Получаем список игр с названиями
+    const { getFreeGames } = await import('../services/groupFarm.js');
+    const info = db.getUserSubscriptionInfo(ctx.from.id);
+    let gameLimit = 5;
+    if (info.isPremium) {
+      gameLimit = info.tier === 2 ? 15 : 10;
+    }
+    const freeGames = getFreeGames(gameLimit);
+    
+    // Создаем карту appId -> название
+    const gameNames = {};
+    for (const game of freeGames) {
+      gameNames[game.appId] = game.name;
+    }
+    
     // Добавляем игры для каждого аккаунта
     for (const accountId of state.selectedAccounts) {
       try {
         // Удаляем старые игры
         db.clearGames(accountId);
         
-        // Добавляем выбранные игры
+        // Добавляем выбранные игры с правильными названиями
         for (const appId of state.selectedGames) {
-          db.addGame(accountId, appId, `Game ${appId}`);
+          const gameName = gameNames[appId] || `Game ${appId}`;
+          db.addGame(accountId, appId, gameName);
         }
         
         // Запускаем фарм
