@@ -2549,6 +2549,9 @@ export function setupHandlers() {
     
     userStates.delete(ctx.from.id);
     
+    // Даем время аккаунтам войти в сеть и обновить статус
+    await new Promise(resolve => setTimeout(resolve, 3000));
+    
     await ctx.editMessageText(
       `✅ Групповой фарм запущен!\n\n` +
       `Аккаунтов: ${successCount}/${state.selectedAccounts.length}\n` +
