@@ -2173,6 +2173,8 @@ export function setupHandlers() {
   });
 
   bot.action(/^start_all$/, async (ctx) => {
+    await ctx.answerCbQuery();
+    
     const accounts = db.getSteamAccounts(ctx.from.id);
     const stoppedAccounts = accounts.filter(acc => !acc.is_farming);
 
@@ -2182,6 +2184,8 @@ export function setupHandlers() {
     }
 
     let successCount = 0;
+    let alreadyRunning = 0;
+    
     for (const account of stoppedAccounts) {
       try {
         const games = db.getGames(account.id);
@@ -2190,15 +2194,37 @@ export function setupHandlers() {
           successCount++;
         }
       } catch (error) {
-        console.error(`❌ Ошибка запуска фарма для аккаунта ${account.id}:`, error.message);
+        if (error.message.includes('Фарм уже запущен')) {
+          alreadyRunning++;
+        } else {
+          console.error(`❌ Ошибка запуска фарма для аккаунта ${account.id}:`, error.message);
+        }
       }
     }
 
-    await ctx.answerCbQuery(`✅ Запущено ${successCount} аккаунтов`, { show_alert: true });
-    await bot.handleUpdate({ callback_query: ctx.callbackQuery });
+    let message = '';
+    if (successCount > 0) {
+      message += `✅ Запущено: ${successCount} аккаунтов\n`;
+    }
+    if (alreadyRunning > 0) {
+      message += `⚠️ Уже работают: ${alreadyRunning} аккаунтов\n`;
+    }
+    if (successCount === 0 && alreadyRunning === 0) {
+      message = '❌ Не удалось запустить аккаунты';
+    }
+
+    await ctx.editMessageText(message.trim() + '\n\nСтатус обновлен. Вернитесь в меню аккаунтов.', {
+      reply_markup: {
+        inline_keyboard: [
+          [{ text: '📋 Мои аккаунты', callback_data: 'accounts' }]
+        ]
+      }
+    });
   });
 
   bot.action(/^stop_all$/, async (ctx) => {
+    await ctx.answerCbQuery();
+    
     const accounts = db.getSteamAccounts(ctx.from.id);
     const runningAccounts = accounts.filter(acc => acc.is_farming);
 
@@ -2217,11 +2243,18 @@ export function setupHandlers() {
       }
     }
 
-    await ctx.answerCbQuery(`✅ Остановлено ${successCount} аккаунтов`, { show_alert: true });
-    await bot.handleUpdate({ callback_query: ctx.callbackQuery });
+    await ctx.editMessageText(`✅ Остановлено: ${successCount} аккаунтов\n\nСтатус обновлен. Вернитесь в меню аккаунтов.`, {
+      reply_markup: {
+        inline_keyboard: [
+          [{ text: '📋 Мои аккаунты', callback_data: 'accounts' }]
+        ]
+      }
+    });
   });
 
   bot.action(/^restart_all_farm$/, async (ctx) => {
+    await ctx.answerCbQuery('🔄 Перезагрузка фарма...');
+    
     const accounts = db.getSteamAccounts(ctx.from.id);
     const runningAccounts = accounts.filter(acc => acc.is_farming);
 
@@ -2230,64 +2263,10 @@ export function setupHandlers() {
       return;
     }
 
-    await ctx.answerCbQuery('🔄 Перезагрузка фарма...');
-
     let successCount = 0;
-    let currentAccount = 0;
-    const totalAccounts = runningAccounts.length;
 
     for (const account of runningAccounts) {
-      currentAccount++;
-      
       try {
-        // Обновляем сообщение с прогрессом
-        const allAccounts = db.getSteamAccounts(ctx.from.id);
-        const limit = db.getAccountLimit(ctx.from.id);
-        const info = db.getUserSubscriptionInfo(ctx.from.id);
-        const PAGE_SIZE = 10;
-        const page = 0;
-        
-        const totalPages = Math.ceil(allAccounts.length / PAGE_SIZE) || 1;
-        const start = page * PAGE_SIZE;
-        const pageAccounts = allAccounts.slice(start, start + PAGE_SIZE);
-        
-        const accountButtons = pageAccounts.map(acc => [{
-          text: `${acc.is_farming ? '🟢' : '⚫'} ${acc.account_name}`,
-          callback_data: `account_${acc.id}`
-        }]);
-        
-        const buttons = [...accountButtons];
-
-        if (totalPages > 1) {
-          buttons.push([{ text: `📄 ${start / PAGE_SIZE + 1}/${totalPages}`, callback_data: 'accounts_page' }]);
-        }
-
-        if (limit !== 0) {
-          buttons.push([{ text: '➕ Добавить аккаунт', callback_data: 'add_account' }]);
-        }
-
-        const stoppedAccounts = allAccounts.filter(acc => !acc.is_farming);
-        if (stoppedAccounts.length > 0) {
-          buttons.push([{ text: '▶️ Запустить все', callback_data: 'start_all' }]);
-        }
-
-        const stillRunning = allAccounts.filter(acc => acc.is_farming);
-        if (stillRunning.length > 0) {
-          buttons.push([{ text: '⏸ Остановить все', callback_data: 'stop_all' }]);
-          buttons.push([{ text: '🔄 Перезагрузить фарм', callback_data: 'restart_all_farm' }]);
-        }
-
-        buttons.push([{ text: '🔙 Главное меню', callback_data: 'main_menu' }]);
-
-        const limitText = limit === -1 ? '∞' : `${allAccounts.length}/${limit}`;
-        const subLabel = info.isPremium ? '⭐ Premium' : limit === 0 ? '❌ Без подписки' : '🎁 Триал';
-        const header = `📋 Steam аккаунты\n━━━━━━━━━━━━━━━\n${subLabel} | Аккаунтов: ${limitText}\n\n🔄 Перезагрузка: ${currentAccount}/${totalAccounts} (${account.account_name})...\n`;
-
-        await ctx.editMessageText(header, {
-          reply_markup: { inline_keyboard: buttons }
-        }).catch(() => {}); // Игнорируем ошибки редактирования
-
-        // Перезагружаем аккаунт
         const games = db.getGames(account.id);
         if (games.length > 0) {
           await farmManager.stopFarming(account.id);
@@ -2295,59 +2274,18 @@ export function setupHandlers() {
           await farmManager.startFarming(account.id);
           successCount++;
         }
-
-        // Ждем перед следующим аккаунтом
-        await new Promise(resolve => setTimeout(resolve, 1000));
+        await new Promise(resolve => setTimeout(resolve, 1000)); // Ждем перед следующим
       } catch (error) {
         console.error(`❌ Ошибка перезагрузки фарма для аккаунта ${account.id}:`, error.message);
       }
     }
 
-    // Финальное обновление
-    const allAccounts = db.getSteamAccounts(ctx.from.id);
-    const limit = db.getAccountLimit(ctx.from.id);
-    const info = db.getUserSubscriptionInfo(ctx.from.id);
-    const PAGE_SIZE = 5;
-    const page = 0;
-    
-    const totalPages = Math.ceil(allAccounts.length / PAGE_SIZE) || 1;
-    const start = page * PAGE_SIZE;
-    const pageAccounts = allAccounts.slice(start, start + PAGE_SIZE);
-    
-    const accountButtons = pageAccounts.map(acc => [{
-      text: `${acc.is_farming ? '🟢' : '⚫'} ${acc.account_name}`,
-      callback_data: `account_${acc.id}`
-    }]);
-    
-    const buttons = [...accountButtons];
-
-    if (totalPages > 1) {
-      buttons.push([{ text: `📄 ${start / PAGE_SIZE + 1}/${totalPages}`, callback_data: 'accounts_page' }]);
-    }
-
-    if (limit !== 0) {
-      buttons.push([{ text: '➕ Добавить аккаунт', callback_data: 'add_account' }]);
-    }
-
-    const stoppedAccounts = allAccounts.filter(acc => !acc.is_farming);
-    if (stoppedAccounts.length > 0) {
-      buttons.push([{ text: '▶️ Запустить все', callback_data: 'start_all' }]);
-    }
-
-    const stillRunning = allAccounts.filter(acc => acc.is_farming);
-    if (stillRunning.length > 0) {
-      buttons.push([{ text: '⏸ Остановить все', callback_data: 'stop_all' }]);
-      buttons.push([{ text: '🔄 Перезагрузить фарм', callback_data: 'restart_all_farm' }]);
-    }
-
-    buttons.push([{ text: '🔙 Главное меню', callback_data: 'main_menu' }]);
-
-    const limitText = limit === -1 ? '∞' : `${allAccounts.length}/${limit}`;
-    const subLabel = info.isPremium ? '⭐ Premium' : limit === 0 ? '❌ Без подписки' : '🎁 Триал';
-    const header = `📋 Steam аккаунты\n━━━━━━━━━━━━━━━\n${subLabel} | Аккаунтов: ${limitText}\n\n✅ Перезагружено ${successCount} аккаунтов\n`;
-
-    await ctx.editMessageText(header, {
-      reply_markup: { inline_keyboard: buttons }
+    await ctx.editMessageText(`✅ Перезагружено: ${successCount} аккаунтов\n\nФарм перезапущен. Вернитесь в меню аккаунтов.`, {
+      reply_markup: {
+        inline_keyboard: [
+          [{ text: '📋 Мои аккаунты', callback_data: 'accounts' }]
+        ]
+      }
     });
   });
 
