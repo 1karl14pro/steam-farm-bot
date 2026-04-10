@@ -2303,6 +2303,33 @@ export function setupHandlers() {
     await ctx.answerCbQuery();
     
     const accounts = db.getSteamAccounts(ctx.from.id);
+    
+    if (accounts.length < 2) {
+      await ctx.answerCbQuery('❌ Нужно минимум 2 аккаунта', { show_alert: true });
+      return;
+    }
+    
+    await ctx.editMessageText(
+      '🎯 Групповой фарм\n━━━━━━━━━━━━━━━\n\n' +
+      'Выберите действие:',
+      {
+        reply_markup: {
+          inline_keyboard: [
+            [{ text: '🎮 Общие игры', callback_data: 'gf_common_games' }],
+            [{ text: '💬 Поменять статус', callback_data: 'gf_change_status' }],
+            [{ text: '👻 Поменять видимость', callback_data: 'gf_change_visibility' }],
+            [{ text: '🔙 Назад', callback_data: 'accounts' }]
+          ]
+        }
+      }
+    );
+  });
+
+  // Общие игры (старый функционал)
+  bot.action('gf_common_games', async (ctx) => {
+    await ctx.answerCbQuery();
+    
+    const accounts = db.getSteamAccounts(ctx.from.id);
     const stoppedAccounts = accounts.filter(acc => !acc.is_farming);
     
     if (stoppedAccounts.length < 2) {
@@ -2322,7 +2349,7 @@ export function setupHandlers() {
     }]);
     
     await ctx.editMessageText(
-      '🎯 Групповой фарм\n━━━━━━━━━━━━━━━\n\n' +
+      '🎯 Групповой фарм - Общие игры\n━━━━━━━━━━━━━━━\n\n' +
       'Выберите аккаунты для группового фарма:\n' +
       '(нажмите на аккаунт чтобы выбрать)',
       {
@@ -2330,7 +2357,7 @@ export function setupHandlers() {
           inline_keyboard: [
             ...accountButtons,
             [{ text: '✅ Далее', callback_data: 'gf_select_games' }],
-            [{ text: '🔙 Назад', callback_data: 'accounts' }]
+            [{ text: '🔙 Назад', callback_data: 'group_farm' }]
           ]
         }
       }
@@ -2365,7 +2392,7 @@ export function setupHandlers() {
     }]);
     
     await ctx.editMessageText(
-      '🎯 Групповой фарм\n━━━━━━━━━━━━━━━\n\n' +
+      '🎯 Групповой фарм - Общие игры\n━━━━━━━━━━━━━━━\n\n' +
       `Выбрано: ${state.selectedAccounts.length} аккаунтов\n\n` +
       'Выберите аккаунты для группового фарма:',
       {
@@ -2373,7 +2400,7 @@ export function setupHandlers() {
           inline_keyboard: [
             ...accountButtons,
             [{ text: '✅ Далее', callback_data: 'gf_select_games' }],
-            [{ text: '🔙 Назад', callback_data: 'accounts' }]
+            [{ text: '🔙 Назад', callback_data: 'group_farm' }]
           ]
         }
       }
@@ -2433,7 +2460,7 @@ export function setupHandlers() {
     }]);
     
     await ctx.editMessageText(
-      '🎯 Групповой фарм\n━━━━━━━━━━━━━━━\n\n' +
+      '🎯 Групповой фарм - Общие игры\n━━━━━━━━━━━━━━━\n\n' +
       `Аккаунтов выбрано: ${state.selectedAccounts.length}\n` +
       (state.selectedGames.length > 0 ? `✅ Автоматически выбрано игр: ${state.selectedGames.length}\n` : '') +
       '\nВыберите бесплатные игры для фарма:',
@@ -2442,7 +2469,7 @@ export function setupHandlers() {
           inline_keyboard: [
             ...gameButtons,
             [{ text: '🚀 Запустить фарм', callback_data: 'gf_start' }],
-            [{ text: '🔙 Назад', callback_data: 'group_farm' }]
+            [{ text: '🔙 Назад', callback_data: 'gf_common_games' }]
           ]
         }
       }
@@ -2484,7 +2511,7 @@ export function setupHandlers() {
     }]);
     
     await ctx.editMessageText(
-      '🎯 Групповой фарм\n━━━━━━━━━━━━━━━\n\n' +
+      '🎯 Групповой фарм - Общие игры\n━━━━━━━━━━━━━━━\n\n' +
       `Аккаунтов: ${state.selectedAccounts.length}\n` +
       `Игр выбрано: ${state.selectedGames.length}\n\n` +
       'Выберите бесплатные игры для фарма:',
@@ -2493,7 +2520,7 @@ export function setupHandlers() {
           inline_keyboard: [
             ...gameButtons,
             [{ text: '🚀 Запустить фарм', callback_data: 'gf_start' }],
-            [{ text: '🔙 Назад', callback_data: 'group_farm' }]
+            [{ text: '🔙 Назад', callback_data: 'gf_common_games' }]
           ]
         }
       }
@@ -2557,6 +2584,342 @@ export function setupHandlers() {
       `Аккаунтов: ${successCount}/${state.selectedAccounts.length}\n` +
       `Игр: ${state.selectedGames.length}\n\n` +
       `Все выбранные аккаунты фармят одинаковые игры.`,
+      {
+        reply_markup: {
+          inline_keyboard: [
+            [{ text: '📋 Мои аккаунты', callback_data: 'accounts' }]
+          ]
+        }
+      }
+    );
+  });
+
+  // Изменение статуса для группы аккаунтов
+  bot.action('gf_change_status', async (ctx) => {
+    await ctx.answerCbQuery();
+    
+    const accounts = db.getSteamAccounts(ctx.from.id);
+    
+    if (accounts.length < 2) {
+      await ctx.answerCbQuery('❌ Нужно минимум 2 аккаунта', { show_alert: true });
+      return;
+    }
+    
+    // Сохраняем состояние
+    userStates.set(ctx.from.id, { 
+      action: 'group_change_status',
+      selectedAccounts: []
+    });
+    
+    const accountButtons = accounts.map(acc => [{
+      text: `⚪ ${acc.account_name}`,
+      callback_data: `gf_status_toggle_${acc.id}`
+    }]);
+    
+    await ctx.editMessageText(
+      '💬 Групповое изменение статуса\n━━━━━━━━━━━━━━━\n\n' +
+      'Выберите аккаунты:',
+      {
+        reply_markup: {
+          inline_keyboard: [
+            ...accountButtons,
+            [{ text: '✅ Далее', callback_data: 'gf_status_input' }],
+            [{ text: '🔙 Назад', callback_data: 'group_farm' }]
+          ]
+        }
+      }
+    );
+  });
+
+  bot.action(/^gf_status_toggle_(\d+)$/, async (ctx) => {
+    await ctx.answerCbQuery();
+    
+    const accountId = parseInt(ctx.match[1]);
+    const state = userStates.get(ctx.from.id);
+    
+    if (!state || state.action !== 'group_change_status') {
+      return;
+    }
+    
+    const index = state.selectedAccounts.indexOf(accountId);
+    if (index > -1) {
+      state.selectedAccounts.splice(index, 1);
+    } else {
+      state.selectedAccounts.push(accountId);
+    }
+    
+    userStates.set(ctx.from.id, state);
+    
+    const accounts = db.getSteamAccounts(ctx.from.id);
+    const accountButtons = accounts.map(acc => [{
+      text: `${state.selectedAccounts.includes(acc.id) ? '✅' : '⚪'} ${acc.account_name}`,
+      callback_data: `gf_status_toggle_${acc.id}`
+    }]);
+    
+    await ctx.editMessageText(
+      '💬 Групповое изменение статуса\n━━━━━━━━━━━━━━━\n\n' +
+      `Выбрано: ${state.selectedAccounts.length} аккаунтов\n\n` +
+      'Выберите аккаунты:',
+      {
+        reply_markup: {
+          inline_keyboard: [
+            ...accountButtons,
+            [{ text: '✅ Далее', callback_data: 'gf_status_input' }],
+            [{ text: '🔙 Назад', callback_data: 'group_farm' }]
+          ]
+        }
+      }
+    );
+  });
+
+  bot.action('gf_status_input', async (ctx) => {
+    await ctx.answerCbQuery();
+    
+    const state = userStates.get(ctx.from.id);
+    
+    if (!state || state.selectedAccounts.length === 0) {
+      await ctx.answerCbQuery('❌ Выберите хотя бы один аккаунт', { show_alert: true });
+      return;
+    }
+    
+    state.action = 'group_status_waiting_input';
+    userStates.set(ctx.from.id, state);
+    
+    await ctx.editMessageText(
+      '💬 Групповое изменение статуса\n━━━━━━━━━━━━━━━\n\n' +
+      `Выбрано аккаунтов: ${state.selectedAccounts.length}\n\n` +
+      'Отправьте новый статус текстом или нажмите "Очистить" чтобы убрать статус:',
+      {
+        reply_markup: {
+          inline_keyboard: [
+            [{ text: '🗑 Очистить статус', callback_data: 'gf_status_clear' }],
+            [{ text: '🔙 Назад', callback_data: 'gf_change_status' }]
+          ]
+        }
+      }
+    );
+  });
+
+  bot.action('gf_status_clear', async (ctx) => {
+    await ctx.answerCbQuery();
+    
+    const state = userStates.get(ctx.from.id);
+    
+    if (!state || state.selectedAccounts.length === 0) {
+      return;
+    }
+    
+    let successCount = 0;
+    
+    for (const accountId of state.selectedAccounts) {
+      try {
+        db.setCustomStatus(accountId, null);
+        
+        // Если аккаунт фармит, перезапускаем
+        const account = db.getSteamAccount(accountId);
+        if (account && account.is_farming) {
+          await farmManager.restartFarming(accountId);
+        }
+        
+        successCount++;
+      } catch (error) {
+        console.error(`❌ Ошибка очистки статуса для аккаунта ${accountId}:`, error.message);
+      }
+    }
+    
+    userStates.delete(ctx.from.id);
+    
+    await ctx.editMessageText(
+      `✅ Статус очищен!\n\n` +
+      `Обновлено аккаунтов: ${successCount}/${state.selectedAccounts.length}`,
+      {
+        reply_markup: {
+          inline_keyboard: [
+            [{ text: '📋 Мои аккаунты', callback_data: 'accounts' }]
+          ]
+        }
+      }
+    );
+  });
+
+  // Изменение видимости для группы аккаунтов
+  bot.action('gf_change_visibility', async (ctx) => {
+    await ctx.answerCbQuery();
+    
+    const accounts = db.getSteamAccounts(ctx.from.id);
+    
+    if (accounts.length < 2) {
+      await ctx.answerCbQuery('❌ Нужно минимум 2 аккаунта', { show_alert: true });
+      return;
+    }
+    
+    // Сохраняем состояние
+    userStates.set(ctx.from.id, { 
+      action: 'group_change_visibility',
+      selectedAccounts: []
+    });
+    
+    const accountButtons = accounts.map(acc => [{
+      text: `⚪ ${acc.account_name}`,
+      callback_data: `gf_vis_toggle_${acc.id}`
+    }]);
+    
+    await ctx.editMessageText(
+      '👻 Групповое изменение видимости\n━━━━━━━━━━━━━━━\n\n' +
+      'Выберите аккаунты:',
+      {
+        reply_markup: {
+          inline_keyboard: [
+            ...accountButtons,
+            [{ text: '✅ Далее', callback_data: 'gf_vis_select' }],
+            [{ text: '🔙 Назад', callback_data: 'group_farm' }]
+          ]
+        }
+      }
+    );
+  });
+
+  bot.action(/^gf_vis_toggle_(\d+)$/, async (ctx) => {
+    await ctx.answerCbQuery();
+    
+    const accountId = parseInt(ctx.match[1]);
+    const state = userStates.get(ctx.from.id);
+    
+    if (!state || state.action !== 'group_change_visibility') {
+      return;
+    }
+    
+    const index = state.selectedAccounts.indexOf(accountId);
+    if (index > -1) {
+      state.selectedAccounts.splice(index, 1);
+    } else {
+      state.selectedAccounts.push(accountId);
+    }
+    
+    userStates.set(ctx.from.id, state);
+    
+    const accounts = db.getSteamAccounts(ctx.from.id);
+    const accountButtons = accounts.map(acc => [{
+      text: `${state.selectedAccounts.includes(acc.id) ? '✅' : '⚪'} ${acc.account_name}`,
+      callback_data: `gf_vis_toggle_${acc.id}`
+    }]);
+    
+    await ctx.editMessageText(
+      '👻 Групповое изменение видимости\n━━━━━━━━━━━━━━━\n\n' +
+      `Выбрано: ${state.selectedAccounts.length} аккаунтов\n\n` +
+      'Выберите аккаунты:',
+      {
+        reply_markup: {
+          inline_keyboard: [
+            ...accountButtons,
+            [{ text: '✅ Далее', callback_data: 'gf_vis_select' }],
+            [{ text: '🔙 Назад', callback_data: 'group_farm' }]
+          ]
+        }
+      }
+    );
+  });
+
+  bot.action('gf_vis_select', async (ctx) => {
+    await ctx.answerCbQuery();
+    
+    const state = userStates.get(ctx.from.id);
+    
+    if (!state || state.selectedAccounts.length === 0) {
+      await ctx.answerCbQuery('❌ Выберите хотя бы один аккаунт', { show_alert: true });
+      return;
+    }
+    
+    await ctx.editMessageText(
+      '👻 Групповое изменение видимости\n━━━━━━━━━━━━━━━\n\n' +
+      `Выбрано аккаунтов: ${state.selectedAccounts.length}\n\n` +
+      'Выберите режим видимости:',
+      {
+        reply_markup: {
+          inline_keyboard: [
+            [{ text: '🌐 В сети', callback_data: 'gf_vis_online' }],
+            [{ text: '👻 Невидимка', callback_data: 'gf_vis_invisible' }],
+            [{ text: '🔙 Назад', callback_data: 'gf_change_visibility' }]
+          ]
+        }
+      }
+    );
+  });
+
+  bot.action('gf_vis_online', async (ctx) => {
+    await ctx.answerCbQuery();
+    
+    const state = userStates.get(ctx.from.id);
+    
+    if (!state || state.selectedAccounts.length === 0) {
+      return;
+    }
+    
+    let successCount = 0;
+    
+    for (const accountId of state.selectedAccounts) {
+      try {
+        db.setVisibilityMode(accountId, 0);
+        
+        // Если аккаунт фармит, перезапускаем
+        const account = db.getSteamAccount(accountId);
+        if (account && account.is_farming) {
+          await farmManager.restartFarming(accountId);
+        }
+        
+        successCount++;
+      } catch (error) {
+        console.error(`❌ Ошибка изменения видимости для аккаунта ${accountId}:`, error.message);
+      }
+    }
+    
+    userStates.delete(ctx.from.id);
+    
+    await ctx.editMessageText(
+      `✅ Видимость изменена на "В сети"!\n\n` +
+      `Обновлено аккаунтов: ${successCount}/${state.selectedAccounts.length}`,
+      {
+        reply_markup: {
+          inline_keyboard: [
+            [{ text: '📋 Мои аккаунты', callback_data: 'accounts' }]
+          ]
+        }
+      }
+    );
+  });
+
+  bot.action('gf_vis_invisible', async (ctx) => {
+    await ctx.answerCbQuery();
+    
+    const state = userStates.get(ctx.from.id);
+    
+    if (!state || state.selectedAccounts.length === 0) {
+      return;
+    }
+    
+    let successCount = 0;
+    
+    for (const accountId of state.selectedAccounts) {
+      try {
+        db.setVisibilityMode(accountId, 1);
+        
+        // Если аккаунт фармит, перезапускаем
+        const account = db.getSteamAccount(accountId);
+        if (account && account.is_farming) {
+          await farmManager.restartFarming(accountId);
+        }
+        
+        successCount++;
+      } catch (error) {
+        console.error(`❌ Ошибка изменения видимости для аккаунта ${accountId}:`, error.message);
+      }
+    }
+    
+    userStates.delete(ctx.from.id);
+    
+    await ctx.editMessageText(
+      `✅ Видимость изменена на "Невидимка"!\n\n` +
+      `Обновлено аккаунтов: ${successCount}/${state.selectedAccounts.length}`,
       {
         reply_markup: {
           inline_keyboard: [
@@ -3653,6 +4016,55 @@ export function setupHandlers() {
             await farmManager.restartFarming(state.accountId);
             await ctx.reply('🔄 Фарм перезапущен с новым статусом');
           }
+
+          userStates.delete(ctx.from.id);
+          break;
+        }
+
+        case 'group_status_waiting_input': {
+          const statusText = ctx.message.text.trim();
+          
+          if (statusText.length > 100) {
+            await ctx.reply('❌ Статус слишком длинный (максимум 100 символов)');
+            return;
+          }
+
+          if (!state.selectedAccounts || state.selectedAccounts.length === 0) {
+            await ctx.reply('❌ Не выбраны аккаунты');
+            userStates.delete(ctx.from.id);
+            return;
+          }
+
+          let successCount = 0;
+          
+          for (const accountId of state.selectedAccounts) {
+            try {
+              db.setCustomStatus(accountId, statusText);
+              
+              // Если аккаунт фармит, перезапускаем
+              const account = db.getSteamAccount(accountId);
+              if (account && account.is_farming) {
+                await farmManager.restartFarming(accountId);
+              }
+              
+              successCount++;
+            } catch (error) {
+              console.error(`❌ Ошибка изменения статуса для аккаунта ${accountId}:`, error.message);
+            }
+          }
+          
+          await ctx.reply(
+            `✅ Статус обновлен!\n\n` +
+            `💬 "${statusText}"\n\n` +
+            `Обновлено аккаунтов: ${successCount}/${state.selectedAccounts.length}`,
+            {
+              reply_markup: {
+                inline_keyboard: [
+                  [{ text: '📋 Мои аккаунты', callback_data: 'accounts' }]
+                ]
+              }
+            }
+          );
 
           userStates.delete(ctx.from.id);
           break;
