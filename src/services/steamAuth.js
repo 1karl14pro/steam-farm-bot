@@ -99,11 +99,20 @@ export async function createCredentialsAuth(userId, accountName, password) {
         const refreshToken = session.refreshToken;
         const finalAccountName = session.accountName || accountName;
         
-        const accountId = db.addSteamAccount(userId, finalAccountName, null, null, null, refreshToken);
+        // Проверяем, не добавлен ли уже этот аккаунт
+        const accounts = db.getSteamAccounts(userId);
+        const existingAccount = accounts.find(acc => acc.account_name.toLowerCase() === finalAccountName.toLowerCase());
         
-        sessionData.status = 'success';
-        sessionData.accountName = finalAccountName;
-        sessionData.accountId = accountId;
+        if (!existingAccount) {
+          const accountId = db.addSteamAccount(userId, finalAccountName, null, null, null, refreshToken);
+          
+          sessionData.status = 'success';
+          sessionData.accountName = finalAccountName;
+          sessionData.accountId = accountId;
+        } else {
+          sessionData.status = 'error';
+          sessionData.error = `Аккаунт ${finalAccountName} уже добавлен`;
+        }
       } catch (err) {
         sessionData.status = 'error';
         sessionData.error = err.message;

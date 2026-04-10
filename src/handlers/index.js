@@ -3771,49 +3771,57 @@ export function setupHandlers() {
                 );
               }
             } else {
-              // Авторизация успешна без Steam Guard - сохраняем аккаунт
-              const refreshToken = session.session.refreshToken;
-              const accountName = session.session.accountName || login;
+              // Авторизация успешна без Steam Guard
+              // Ждем пока событие authenticated добавит аккаунт
+              await new Promise(resolve => setTimeout(resolve, 1000));
               
-              const accountId = db.addSteamAccount(ctx.from.id, accountName, null, null, null, refreshToken);
+              const session = getActiveSession(ctx.from.id);
               
-              // Удаляем сессию
-              const { cancelAuth } = await import('../services/steamAuth.js');
-              cancelAuth(ctx.from.id);
-              userStates.delete(ctx.from.id);
-              
-              // Редактируем предыдущее сообщение
-              try {
-                await bot.telegram.editMessageText(
-                  ctx.from.id,
-                  state.messageId,
-                  null,
-                  `✅ Аккаунт добавлен!\n\n` +
-                  `👤 ${accountName}\n\n` +
-                  `Теперь вы можете добавить игры и запустить фарм.`,
-                  {
-                    reply_markup: {
-                      inline_keyboard: [
-                        [{ text: '🎮 Добавить игры', callback_data: `games_${accountId}` }],
-                        [{ text: '📋 Мои аккаунты', callback_data: 'accounts' }]
-                      ]
+              if (session && session.status === 'success' && session.accountId) {
+                const accountId = session.accountId;
+                const accountName = session.accountName;
+                
+                // Удаляем сессию
+                const { cancelAuth } = await import('../services/steamAuth.js');
+                cancelAuth(ctx.from.id);
+                userStates.delete(ctx.from.id);
+                
+                // Редактируем предыдущее сообщение
+                try {
+                  await bot.telegram.editMessageText(
+                    ctx.from.id,
+                    state.messageId,
+                    null,
+                    `✅ Аккаунт добавлен!\n\n` +
+                    `👤 ${accountName}\n\n` +
+                    `Теперь вы можете добавить игры и запустить фарм.`,
+                    {
+                      reply_markup: {
+                        inline_keyboard: [
+                          [{ text: '🎮 Добавить игры', callback_data: `games_${accountId}` }],
+                          [{ text: '📋 Мои аккаунты', callback_data: 'accounts' }]
+                        ]
+                      }
                     }
-                  }
-                );
-              } catch (err) {
-                await ctx.reply(
-                  `✅ Аккаунт добавлен!\n\n` +
-                  `👤 ${accountName}\n\n` +
-                  `Теперь вы можете добавить игры и запустить фарм.`,
-                  {
-                    reply_markup: {
-                      inline_keyboard: [
-                        [{ text: '🎮 Добавить игры', callback_data: `games_${accountId}` }],
-                        [{ text: '📋 Мои аккаунты', callback_data: 'accounts' }]
-                      ]
+                  );
+                } catch (err) {
+                  await ctx.reply(
+                    `✅ Аккаунт добавлен!\n\n` +
+                    `👤 ${accountName}\n\n` +
+                    `Теперь вы можете добавить игры и запустить фарм.`,
+                    {
+                      reply_markup: {
+                        inline_keyboard: [
+                          [{ text: '🎮 Добавить игры', callback_data: `games_${accountId}` }],
+                          [{ text: '📋 Мои аккаунты', callback_data: 'accounts' }]
+                        ]
+                      }
                     }
-                  }
-                );
+                  );
+                }
+              } else {
+                await ctx.reply('❌ Ошибка при добавлении аккаунта');
+                userStates.delete(ctx.from.id);
               }
             }
           } catch (error) {
