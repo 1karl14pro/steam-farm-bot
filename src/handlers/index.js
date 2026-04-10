@@ -2604,7 +2604,7 @@ export function setupHandlers() {
     const tier = parseInt(ctx.match[1]);
     const payload = tier === 2 ? 'premium_full' : 'premium_basic';
     const title = tier === 2 ? '⭐ Premium Полный — 30 дней' : '📦 Premium Базовый — 30 дней';
-    const amount = tier === 2 ? 150 : 75;
+    const amount = tier === 2 ? 75 : 40;
     
     try {
       await ctx.replyWithInvoice({
@@ -2658,12 +2658,10 @@ export function setupHandlers() {
     
     await ctx.editMessageText(
       `💳 Ручной перевод\n━━━━━━━━━━━━━━━\nТариф: ${tierLabel}\nЦена: ${price}\n━━━━━━━━━━━━━━━\n\n` +
-      `💳 Переведите ${price} на любой способ оплаты:\n\n` +
-      `- Тинькофф: 5536 9141 8106 4206\n` +
-      `- Сбербанк: 2202 2060 7836 8020\n` +
-      `- USDT TRC20: TQowe...\n\n` +
+      `💳 Переведите ${price} на:\n\n` +
+      `📱 Сбербанк: +79505343303\n\n` +
       `📸 После перевода отправьте:\n` +
-      `1. Скрин чека\n` +
+      `1. Скриншот или PDF чека\n` +
       `2. Ваш Telegram ID: ${ctx.from.id}\n\n` +
       `После проверки администратор активирует Premium.`,
       {
@@ -4152,6 +4150,7 @@ export function setupHandlers() {
         const caption = ctx.message.caption || '';
         
         const tierName = state.tier === 2 ? '⭐ Полный' : '📦 Базовый';
+        const price = state.tier === 2 ? '100₽' : '50₽';
         
         // Отправляем уведомление администраторам
         for (const adminId of ADMIN_IDS) {
@@ -4162,7 +4161,7 @@ export function setupHandlers() {
                 `━━━━━━━━━━━━━━━\n` +
                 `👤 User ID: ${ctx.from.id}\n` +
                 `👤 Username: @${ctx.from.username || 'нет'}\n` +
-                `📦 Тариф: ${tierName}\n` +
+                `📦 Тариф: ${tierName} (${price})\n` +
                 `💬 Комментарий: ${caption}\n` +
                 `━━━━━━━━━━━━━━━\n` +
                 `Проверьте платеж и активируйте подписку вручную.`,
@@ -4185,7 +4184,7 @@ export function setupHandlers() {
           {
             reply_markup: {
               inline_keyboard: [
-                [{ text: '🔙 Главное меню', callback_data: 'profile' }]
+                [{ text: '🔙 Главное меню', callback_data: 'main_menu' }]
               ]
             }
           }
@@ -4197,6 +4196,149 @@ export function setupHandlers() {
       console.error('Photo handler error:', err);
       await ctx.reply('❌ Произошла ошибка при обработке фото. Попробуйте снова.');
       userStates.delete(ctx.from.id);
+    }
+  });
+
+  // ===== DOCUMENT (PDF) MESSAGE HANDLERS =====
+  
+  bot.on('document', async (ctx) => {
+    const state = userStates.get(ctx.from.id);
+    if (!state) return;
+
+    try {
+      if (state.action === 'await_proof') {
+        const document = ctx.message.document;
+        const caption = ctx.message.caption || '';
+        
+        const tierName = state.tier === 2 ? '⭐ Полный' : '📦 Базовый';
+        const price = state.tier === 2 ? '100₽' : '50₽';
+        
+        // Отправляем уведомление администраторам
+        for (const adminId of ADMIN_IDS) {
+          try {
+            await bot.telegram.sendDocument(adminId, document.file_id, {
+              caption: 
+                `💳 Новое подтверждение оплаты (PDF)\n` +
+                `━━━━━━━━━━━━━━━\n` +
+                `👤 User ID: ${ctx.from.id}\n` +
+                `👤 Username: @${ctx.from.username || 'нет'}\n` +
+                `📦 Тариф: ${tierName} (${price})\n` +
+                `💬 Комментарий: ${caption}\n` +
+                `━━━━━━━━━━━━━━━\n` +
+                `Проверьте платеж и активируйте подписку вручную.`,
+              reply_markup: {
+                inline_keyboard: [
+                  [{ text: '✅ Активировать', callback_data: `approve_payment_${ctx.from.id}_${state.tier}` }],
+                  [{ text: '❌ Отклонить', callback_data: `reject_payment_${ctx.from.id}` }]
+                ]
+              }
+            });
+          } catch (err) {
+            console.error('Error sending document to admin:', err);
+          }
+        }
+
+        await ctx.reply(
+          '✅ Подтверждение отправлено!\n\n' +
+          'Администратор проверит платеж и активирует подписку в течение 24 часов.\n\n' +
+          'Спасибо за ожидание! ❤️',
+          {
+            reply_markup: {
+              inline_keyboard: [
+                [{ text: '🔙 Главное меню', callback_data: 'main_menu' }]
+              ]
+            }
+          }
+        );
+
+        userStates.delete(ctx.from.id);
+      }
+    } catch (err) {
+      console.error('Document handler error:', err);
+      await ctx.reply('❌ Произошла ошибка при обработке документа. Попробуйте снова.');
+      userStates.delete(ctx.from.id);
+    }
+  });
+
+  // ===== ADMIN PAYMENT APPROVAL HANDLERS =====
+
+  bot.action(/^approve_payment_(\d+)_(\d)$/, async (ctx) => {
+    if (!ADMIN_IDS.includes(ctx.from.id)) {
+      await ctx.answerCbQuery('❌ Доступ запрещен');
+      return;
+    }
+
+    const userId = parseInt(ctx.match[1]);
+    const tier = parseInt(ctx.match[2]);
+    
+    try {
+      // Активируем Premium
+      db.setUserPremium(userId, tier, 30);
+      
+      const tierName = tier === 2 ? '⭐ Полный' : '📦 Базовый';
+      
+      // Уведомляем пользователя
+      try {
+        await bot.telegram.sendMessage(userId, 
+          `🎉 Ваша подписка активирована!\n\n` +
+          `📦 Тариф: ${tierName}\n` +
+          `⏰ Срок: 30 дней\n\n` +
+          `Спасибо за покупку! ❤️`,
+          {
+            reply_markup: {
+              inline_keyboard: [
+                [{ text: '🔙 Главное меню', callback_data: 'main_menu' }]
+              ]
+            }
+          }
+        );
+      } catch (err) {
+        console.error('Error notifying user:', err);
+      }
+      
+      // Удаляем сообщение с чеком
+      await ctx.deleteMessage();
+      
+      await ctx.answerCbQuery(`✅ Подписка ${tierName} активирована для пользователя ${userId}`, { show_alert: true });
+    } catch (err) {
+      console.error('Error approving payment:', err);
+      await ctx.answerCbQuery('❌ Ошибка активации', { show_alert: true });
+    }
+  });
+
+  bot.action(/^reject_payment_(\d+)$/, async (ctx) => {
+    if (!ADMIN_IDS.includes(ctx.from.id)) {
+      await ctx.answerCbQuery('❌ Доступ запрещен');
+      return;
+    }
+
+    const userId = parseInt(ctx.match[1]);
+    
+    try {
+      // Уведомляем пользователя
+      try {
+        await bot.telegram.sendMessage(userId, 
+          `❌ К сожалению, ваш платеж не был подтвержден.\n\n` +
+          `Пожалуйста, свяжитесь с администратором для уточнения деталей.`,
+          {
+            reply_markup: {
+              inline_keyboard: [
+                [{ text: '🔙 Главное меню', callback_data: 'main_menu' }]
+              ]
+            }
+          }
+        );
+      } catch (err) {
+        console.error('Error notifying user:', err);
+      }
+      
+      // Удаляем сообщение с чеком
+      await ctx.deleteMessage();
+      
+      await ctx.answerCbQuery(`❌ Платеж отклонен для пользователя ${userId}`, { show_alert: true });
+    } catch (err) {
+      console.error('Error rejecting payment:', err);
+      await ctx.answerCbQuery('❌ Ошибка отклонения', { show_alert: true });
     }
   });
 }
