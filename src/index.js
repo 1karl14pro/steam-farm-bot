@@ -114,6 +114,24 @@ startLogManagement();
 // Запускаем менеджер сессий (работает независимо от бота)
 sessionManager.startSessionManager();
 
+// Синхронизируем статусы в БД с реальным состоянием фарма
+import * as farmManager from './services/farmManager.js';
+const farmingAccounts = db.getFarmingAccounts();
+const activeFarms = farmManager.getActiveFarms();
+let syncedCount = 0;
+
+for (const account of farmingAccounts) {
+  if (!activeFarms.includes(account.id)) {
+    // Аккаунт в БД помечен как фармящий, но реально не фармит
+    db.updateAccountFarmingStatus(account.id, false);
+    syncedCount++;
+  }
+}
+
+if (syncedCount > 0) {
+  console.log(`🔄 Синхронизировано статусов: ${syncedCount} аккаунтов`);
+}
+
 // Инициализируем настройки уведомлений только для новых пользователей (без настроек)
 const allUsers = db.getAllUsers();
 let initializedCount = 0;
