@@ -95,24 +95,14 @@ async function restoreActiveSessions() {
  */
 function checkSessions() {
   try {
+    // ОТКЛЮЧЕНО: Автоматическое восстановление сессий отключено
+    // чтобы избежать конфликтов между steam-farm-bot и steam-farm-service
+    // Фарм управляется только через Telegram бота
+    
+    // Оставляем только очистку лишних сессий
     const farmingAccounts = db.getFarmingAccounts();
     const activeFarms = farmManager.getActiveFarms();
-
-    // Проверяем, что все сессии из БД действительно активны
-    for (const account of farmingAccounts) {
-      if (!activeFarms.includes(account.id)) {
-        console.log(`⚠️ Сессия ${account.account_name} потеряна, восстанавливаю...`);
-        
-        farmManager.startFarming(account.id)
-          .then(() => {
-            console.log(`✅ ${account.account_name} - сессия восстановлена`);
-          })
-          .catch((err) => {
-            console.error(`❌ Не удалось восстановить ${account.account_name}:`, err.message);
-          });
-      }
-    }
-
+    
     // Проверяем, что нет лишних активных сессий
     for (const accountId of activeFarms) {
       const account = db.getSteamAccount(accountId);
