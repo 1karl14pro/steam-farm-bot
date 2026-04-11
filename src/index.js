@@ -5,6 +5,7 @@ import { setupHandlers } from './handlers/index.js';
 import * as sessionManager from './services/sessionManager.js';
 import * as steamNotifications from './services/steamNotifications.js';
 import * as db from './database.js';
+import * as farmManager from './services/farmManager.js';
 
 // Скрываем предупреждение о punycode
 process.removeAllListeners('warning');
@@ -115,7 +116,6 @@ startLogManagement();
 sessionManager.startSessionManager();
 
 // Синхронизируем статусы в БД с реальным состоянием фарма
-import * as farmManager from './services/farmManager.js';
 const farmingAccounts = db.getFarmingAccounts();
 const activeFarms = farmManager.getActiveFarms();
 let syncedCount = 0;
