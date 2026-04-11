@@ -130,11 +130,12 @@ export function setupHandlers() {
       buttons.push([{ text: '➕ Добавить аккаунт', callback_data: 'add_account' }]);
     }
 
-    const stoppedAccounts = accounts.filter(acc => !acc.is_farming);
-    if (stoppedAccounts.length > 1) {
+    // Групповой фарм - всегда показываем если есть аккаунты
+    if (accounts.length > 1) {
       buttons.push([{ text: '🎯 Групповой фарм', callback_data: 'group_farm' }]);
     }
     
+    const stoppedAccounts = accounts.filter(acc => !acc.is_farming);
     if (stoppedAccounts.length > 0) {
       buttons.push([{ text: '▶️ Запустить все', callback_data: 'start_all' }]);
     }
@@ -192,11 +193,12 @@ export function setupHandlers() {
       buttons.push([{ text: '➕ Добавить аккаунт', callback_data: 'add_account' }]);
     }
 
-    const stoppedAccounts = accounts.filter(acc => !acc.is_farming);
-    if (stoppedAccounts.length > 1) {
+    // Групповой фарм - всегда показываем если есть аккаунты
+    if (accounts.length > 1) {
       buttons.push([{ text: '🎯 Групповой фарм', callback_data: 'group_farm' }]);
     }
     
+    const stoppedAccounts = accounts.filter(acc => !acc.is_farming);
     if (stoppedAccounts.length > 0) {
       buttons.push([{ text: '▶️ Запустить все', callback_data: 'start_all' }]);
     }
@@ -3125,11 +3127,12 @@ export function setupHandlers() {
       buttons.push([{ text: '➕ Добавить аккаунт', callback_data: 'add_account' }]);
     }
 
-    const stoppedAccounts = accounts.filter(acc => !acc.is_farming);
-    if (stoppedAccounts.length > 1) {
+    // Групповой фарм - всегда показываем если есть аккаунты
+    if (accounts.length > 1) {
       buttons.push([{ text: '🎯 Групповой фарм', callback_data: 'group_farm' }]);
     }
     
+    const stoppedAccounts = accounts.filter(acc => !acc.is_farming);
     if (stoppedAccounts.length > 0) {
       buttons.push([{ text: '▶️ Запустить все', callback_data: 'start_all' }]);
     }
