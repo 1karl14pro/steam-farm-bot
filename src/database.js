@@ -170,6 +170,12 @@ db.exec(`
   CREATE INDEX IF NOT EXISTS idx_steam_accounts_user ON steam_accounts(user_id);
   CREATE INDEX IF NOT EXISTS idx_games_account ON games(account_id);
   CREATE INDEX IF NOT EXISTS idx_library_cache_account ON library_cache(account_id);
+  
+  -- Новые индексы для оптимизации производительности
+  CREATE INDEX IF NOT EXISTS idx_accounts_farming ON steam_accounts(is_farming, user_id);
+  CREATE INDEX IF NOT EXISTS idx_notifications_user_type ON notifications(user_id, type);
+  CREATE INDEX IF NOT EXISTS idx_farm_stats_account_date ON farm_stats(account_id, date);
+  CREATE INDEX IF NOT EXISTS idx_pending_payments_status ON pending_payments(status, user_id);
 
   CREATE TABLE IF NOT EXISTS pending_payments (
     id INTEGER PRIMARY KEY AUTOINCREMENT,

@@ -48,6 +48,7 @@ export function stopCacheAutoUpdate() {
 
 /**
  * Обновляет кеш для всех аккаунтов
+ * ИСПРАВЛЕНО: Параллельное обновление с ограничением конкурентности
  */
 async function updateAllCaches() {
   console.log('🔄 Начинаю обновление кеша для всех аккаунтов...');
@@ -57,55 +58,77 @@ async function updateAllCaches() {
   let skipped = 0;
   let errors = 0;
   
+  // Фильтруем аккаунты, которые нужно обновить
+  const accountsToUpdate = [];
+  
   for (const account of allAccounts) {
-    try {
-      // Пропускаем аккаунты, которые активно фармят
-      if (farmManager.isFarming(account.id)) {
-        console.log(`[CACHE] Пропускаю ${account.account_name} - активно фармит`);
-        skipped++;
-        continue;
-      }
-      
-      const steamId64 = account.steam_id_64 || account.account_name;
-      
-      // Проверяем нужно ли обновлять
-      if (!shouldUpdateCache(steamId64)) {
-        skipped++;
-        continue;
-      }
-      
-      console.log(`[CACHE] Обновляю кеш для ${account.account_name}...`);
-      
-      // Обновляем библиотеку с таймаутом 15 минут (для больших библиотек)
-      try {
-        const updatePromise = Promise.race([
-          getOwnedGames(account.id, 0, 15, true),
-          new Promise((_, reject) => 
-            setTimeout(() => reject(new Error('Таймаут обновления кеша (15 мин)')), 900000)
-          )
-        ]);
-        
-        await updatePromise;
-        
-        // Небольшая задержка между запросами
-        await new Promise(resolve => setTimeout(resolve, 3000));
-        
-        // Обновляем топ игр
-        await getTopPlayedGames(account.id, true);
-        
+    // Пропускаем аккаунты, которые активно фармят
+    if (farmManager.isFarming(account.id)) {
+      console.log(`[CACHE] Пропускаю ${account.account_name} - активно фармит`);
+      skipped++;
+      continue;
+    }
+    
+    const steamId64 = account.steam_id_64 || account.account_name;
+    
+    // Проверяем нужно ли обновлять
+    if (!shouldUpdateCache(steamId64)) {
+      skipped++;
+      continue;
+    }
+    
+    accountsToUpdate.push(account);
+  }
+  
+  console.log(`[CACHE] Найдено ${accountsToUpdate.length} аккаунтов для обновления`);
+  
+  // Обновляем параллельно по 3 аккаунта одновременно
+  const CONCURRENCY = 3;
+  
+  for (let i = 0; i < accountsToUpdate.length; i += CONCURRENCY) {
+    const batch = accountsToUpdate.slice(i, i + CONCURRENCY);
+    
+    const results = await Promise.allSettled(
+      batch.map(async (account) => {
+        try {
+          console.log(`[CACHE] Обновляю кеш для ${account.account_name}...`);
+          
+          // Обновляем библиотеку с таймаутом 10 минут
+          const updatePromise = Promise.race([
+            getOwnedGames(account.id, 0, 15, true),
+            new Promise((_, reject) => 
+              setTimeout(() => reject(new Error('Таймаут обновления кеша (10 мин)')), 600000)
+            )
+          ]);
+          
+          await updatePromise;
+          
+          // Небольшая задержка между запросами
+          await new Promise(resolve => setTimeout(resolve, 2000));
+          
+          // Обновляем топ игр
+          await getTopPlayedGames(account.id, true);
+          
+          return { success: true, account: account.account_name };
+        } catch (error) {
+          console.error(`[CACHE] Ошибка обновления кеша для ${account.account_name}:`, error.message);
+          return { success: false, account: account.account_name, error: error.message };
+        }
+      })
+    );
+    
+    // Подсчитываем результаты
+    for (const result of results) {
+      if (result.status === 'fulfilled' && result.value.success) {
         updated++;
-      } catch (updateError) {
-        console.error(`[CACHE] Ошибка обновления кеша для ${account.account_name}:`, updateError.message);
+      } else {
         errors++;
       }
-      
-      // Задержка между аккаунтами
-      await new Promise(resolve => setTimeout(resolve, 10000));
-      
-    } catch (err) {
-      console.error(`[CACHE] Ошибка обновления кеша для ${account.account_name}:`, err.message);
-      errors++;
-      // Продолжаем обновление других аккаунтов
+    }
+    
+    // Задержка между батчами (только если есть еще батчи)
+    if (i + CONCURRENCY < accountsToUpdate.length) {
+      await new Promise(resolve => setTimeout(resolve, 5000));
     }
   }
   

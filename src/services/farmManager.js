@@ -220,6 +220,26 @@ export async function startFarming(accountId) {
         return;
       }
       
+      // Если это LogonSessionReplaced - пытаемся перезапустить через 30 секунд
+      if (err.message === 'LogonSessionReplaced') {
+        console.log(`🔄 ${account.account_name}: Сессия заменена, перезапуск через 30 сек...`);
+        
+        // Останавливаем текущую сессию
+        await stopFarming(accountId).catch(e => console.error(`Ошибка остановки:`, e));
+        
+        // Перезапускаем через 30 секунд
+        setTimeout(async () => {
+          try {
+            console.log(`🔄 Перезапуск фарма для ${account.account_name}...`);
+            await startFarming(accountId);
+            console.log(`✅ Фарм перезапущен для ${account.account_name}`);
+          } catch (restartErr) {
+            console.error(`❌ Ошибка перезапуска ${account.account_name}:`, restartErr.message);
+          }
+        }, 30000);
+        return;
+      }
+      
       // Останавливаем только этот аккаунт, не влияя на другие
       stopFarming(accountId).catch(e => console.error(`Ошибка остановки:`, e));
     } catch (e) {
@@ -555,28 +575,22 @@ export function getAllFarmsStatus() {
 }
 
 /**
- * Оптимизация памяти - перезапуск долгоживущих сессий
+ * Оптимизация памяти - только сборка мусора, БЕЗ автоперезапуска сессий
+ * ИСПРАВЛЕНО: Убран автоматический перезапуск каждые 24 часа для избежания конфликтов между контейнерами
  */
 function startMemoryOptimization() {
   setInterval(() => {
-    const now = Date.now();
-    for (const [accountId, data] of activeClients.entries()) {
-      const uptime = now - data.startedAt;
-      
-      // Перезапускаем сессии старше 24 часов для освобождения памяти
-      if (uptime > SESSION_RESTART_INTERVAL) {
-        console.log(`🔄 Перезапуск сессии ${data.accountName} для оптимизации памяти (uptime: ${Math.floor(uptime / 3600000)}ч)`);
-        restartFarming(accountId).catch(err => {
-          console.error(`❌ Ошибка перезапуска ${data.accountName}:`, err.message);
-        });
-      }
-    }
-    
-    // Принудительная сборка мусора если доступна
+    // Только сборка мусора, без перезапуска сессий
     if (global.gc) {
       global.gc();
       console.log('♻️ Сборка мусора выполнена');
     }
+    
+    // Логируем статистику памяти для мониторинга
+    const memUsage = process.memoryUsage();
+    const heapUsedMB = Math.round(memUsage.heapUsed / 1024 / 1024);
+    const heapTotalMB = Math.round(memUsage.heapTotal / 1024 / 1024);
+    console.log(`📊 Память: ${heapUsedMB}MB / ${heapTotalMB}MB (активных сессий: ${activeClients.size})`);
   }, MEMORY_CHECK_INTERVAL);
 }
 

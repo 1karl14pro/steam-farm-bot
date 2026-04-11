@@ -6,64 +6,70 @@ import SteamUser from 'steam-user';
 
 /**
  * Получает cookies через временную сессию если их нет
+ * ИСПРАВЛЕНО: Не создает новую сессию если фарм активен
  * @param {number} accountId 
  * @returns {Promise<Array>} массив cookies
  */
 async function ensureCookies(accountId) {
-  // If farming is active, use existing cookies
-  const farmManager = await import('./farmManager.js');
-  const activeFarms = farmManager.getActiveFarms ? farmManager.getActiveFarms() : [];
-  const hasActiveFarm = activeFarms.includes(accountId);
-  
+  // Сначала проверяем существующие cookies
   let cookies = getCookies(accountId);
   
-  if (!cookies || cookies.length === 0) {
-    if (hasActiveFarm) {
-      console.log(`[PARSER] Фарм активен, использую существующие cookies`);
-      return null; // Shouldn't happen, but handle gracefully
-    }
-    
-    console.log(`[PARSER] Нет cookies, создаю временную сессию для аккаунта ${accountId}`);
-    
-    const account = db.getSteamAccount(accountId);
-    if (!account || !account.refresh_token) {
-      throw new Error('Нет refresh_token для аккаунта');
-    }
-    
-    return new Promise((resolve, reject) => {
-      const client = new SteamUser({
-        autoRelogin: false,
-        promptSteamGuard: false
-      });
-      
-      const timeout = setTimeout(() => {
-        client.logOff();
-        reject(new Error('Таймаут при получении сессии'));
-      }, 30000);
-      
-      client.on('webSession', async (sessionID, sessionCookies) => {
-        clearTimeout(timeout);
-        console.log(`[PARSER] Получена временная сессия с ${sessionCookies.length} cookies`);
-        
-        // Save cookies temporarily for potential reuse
-        const farmManager = await import('./farmManager.js');
-        if (farmManager.setAccountCookies) {
-          farmManager.setAccountCookies(accountId, sessionCookies);
-        }
-        
-        resolve(sessionCookies);
-      });
-      
-      client.on('error', (err) => {
-        clearTimeout(timeout);
-        reject(new Error(`Ошибка: ${err.message}`));
-      });
-      
-      client.logOn({ refreshToken: account.refresh_token });
-    });
+  if (cookies && cookies.length > 0) {
+    console.log(`[PARSER] Использую существующие cookies для аккаунта ${accountId}`);
+    return cookies;
   }
   
-  return cookies;
+  // Проверяем, активен ли фарм - КРИТИЧНО: не создаем новую сессию!
+  const farmManager = await import('./farmManager.js');
+  const hasActiveFarm = farmManager.isFarming(accountId);
+  
+  if (hasActiveFarm) {
+    console.log(`[PARSER] ⚠️ Фарм активен для ${accountId}, пропускаю обновление кеша`);
+    throw new Error('Фарм активен, обновление кеша невозможно');
+  }
+  
+  // Только если фарм НЕ активен - создаем временную сессию
+  console.log(`[PARSER] Создаю временную сессию для аккаунта ${accountId}`);
+  
+  const account = db.getSteamAccount(accountId);
+  if (!account || !account.refresh_token) {
+    throw new Error('Нет refresh_token для аккаунта');
+  }
+  
+  return new Promise((resolve, reject) => {
+    const client = new SteamUser({
+      autoRelogin: false,
+      promptSteamGuard: false
+    });
+    
+    const timeout = setTimeout(() => {
+      client.logOff();
+      reject(new Error('Таймаут при получении сессии'));
+    }, 30000);
+    
+    client.on('webSession', async (sessionID, sessionCookies) => {
+      clearTimeout(timeout);
+      console.log(`[PARSER] Получена временная сессия с ${sessionCookies.length} cookies`);
+      
+      // Сохраняем cookies и сразу отключаемся
+      const farmManager = await import('./farmManager.js');
+      if (farmManager.setAccountCookies) {
+        farmManager.setAccountCookies(accountId, sessionCookies);
+      }
+      
+      // Отключаемся сразу после получения cookies
+      client.logOff();
+      resolve(sessionCookies);
+    });
+    
+    client.on('error', (err) => {
+      clearTimeout(timeout);
+      client.logOff();
+      reject(new Error(`Ошибка: ${err.message}`));
+    });
+    
+    client.logOn({ refreshToken: account.refresh_token });
+  });
 }
 
 /**

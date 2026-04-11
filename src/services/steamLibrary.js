@@ -2,6 +2,7 @@ import SteamUser from 'steam-user';
 import { LoginSession, EAuthTokenPlatformType } from 'steam-session';
 import * as db from '../database.js';
 import { readGameCache, writeGameCache, getSteamId64FromAccount } from './gameCache.js';
+import { withRateLimit } from './rateLimiter.js';
 
 // Блокировка одновременных запросов к Steam для одного аккаунта
 const accountLocks = new Map();
@@ -71,9 +72,11 @@ export async function getTopPlayedGames(accountId, forceRefresh = false) {
           const steamId = cookieValue?.split('||')[0];
           
           if (steamId && /^\d+$/.test(steamId)) { // Проверяем что это число
-            // Запрашиваем список игр с Web API
-            const response = await fetch(`https://api.steampowered.com/IPlayerService/GetOwnedGames/v1/?key=${process.env.STEAM_WEB_API_KEY}&steamid=${steamId}&include_appinfo=1&include_played_free_games=1`);
-            const data = await response.json();
+            // Запрашиваем список игр с Web API с rate limiting
+            const data = await withRateLimit(async () => {
+              const response = await fetch(`https://api.steampowered.com/IPlayerService/GetOwnedGames/v1/?key=${process.env.STEAM_WEB_API_KEY}&steamid=${steamId}&include_appinfo=1&include_played_free_games=1`);
+              return await response.json();
+            }, 'api', 1);
             
             if (data.response && data.response.games) {
               // Сортируем по времени в игре и берем топ-10
@@ -248,7 +251,10 @@ export async function getOwnedGames(accountId, offset = 0, limit = 15, forceRefr
           await Promise.all(batch.map(async (license) => {
             if (license.package_id) {
               try {
-                const packageInfo = await client.getProductInfo([], [license.package_id], true);
+                // Используем rate limiting для запросов к Steam
+                const packageInfo = await withRateLimit(async () => {
+                  return await client.getProductInfo([], [license.package_id], true);
+                }, 'api', 1);
                 
                 if (packageInfo.packages && packageInfo.packages[license.package_id]) {
                   const pkg = packageInfo.packages[license.package_id].packageinfo;
