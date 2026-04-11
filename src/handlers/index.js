@@ -146,6 +146,7 @@ export function setupHandlers() {
       buttons.push([{ text: '🔄 Перезагрузить фарм', callback_data: 'restart_all_farm' }]);
     }
 
+    buttons.push([{ text: '🔄 Обновить статус', callback_data: 'refresh_accounts_status' }]);
     buttons.push([{ text: '🔙 Главное меню', callback_data: 'main_menu' }]);
 
     const limitText = limit === -1 ? '∞' : `${accounts.length}/${limit}`;
@@ -209,6 +210,7 @@ export function setupHandlers() {
       buttons.push([{ text: '🔄 Перезагрузить фарм', callback_data: 'restart_all_farm' }]);
     }
 
+    buttons.push([{ text: '🔄 Обновить статус', callback_data: 'refresh_accounts_status' }]);
     buttons.push([{ text: '🔙 Главное меню', callback_data: 'main_menu' }]);
 
     const limitText = limit === -1 ? '∞' : `${accounts.length}/${limit}`;
@@ -2182,6 +2184,76 @@ export function setupHandlers() {
     });
   });
 
+  // Обработчик кнопки "🔄 Обновить статус"
+  bot.action('refresh_accounts_status', async (ctx) => {
+    await ctx.answerCbQuery('🔄 Обновление статуса...');
+    
+    try {
+      // Удаляем старое сообщение
+      await ctx.deleteMessage();
+      
+      // Отправляем новое с актуальными статусами
+      const accounts = db.getSteamAccounts(ctx.from.id);
+      const limit = db.getAccountLimit(ctx.from.id);
+      const info = db.getUserSubscriptionInfo(ctx.from.id);
+      const PAGE_SIZE = 10;
+      
+      const totalPages = Math.ceil(accounts.length / PAGE_SIZE) || 1;
+      const page = 0; // Всегда показываем первую страницу
+      const start = page * PAGE_SIZE;
+      const pageAccounts = accounts.slice(start, start + PAGE_SIZE);
+      
+      const accountButtons = pageAccounts.map(acc => [{
+        text: `${acc.is_farming ? '🟢' : '⚫'} ${acc.account_name}`,
+        callback_data: `account_${acc.id}`
+      }]);
+      
+      const buttons = [...accountButtons];
+
+      if (totalPages > 1) {
+        const navButtons = [];
+        navButtons.push({ text: `1/${totalPages}`, callback_data: 'noop' });
+        if (totalPages > 1) {
+          navButtons.push({ text: '▶️', callback_data: `accounts_page_1` });
+        }
+        buttons.push(navButtons);
+      }
+
+      if (limit !== 0) {
+        buttons.push([{ text: '➕ Добавить аккаунт', callback_data: 'add_account' }]);
+      }
+
+      if (accounts.length > 1) {
+        buttons.push([{ text: '🎯 Групповой фарм', callback_data: 'group_farm' }]);
+      }
+      
+      const stoppedAccounts = accounts.filter(acc => !acc.is_farming);
+      if (stoppedAccounts.length > 0) {
+        buttons.push([{ text: '▶️ Запустить все', callback_data: 'start_all' }]);
+      }
+
+      const runningAccounts = accounts.filter(acc => acc.is_farming);
+      if (runningAccounts.length > 0) {
+        buttons.push([{ text: '⏸ Остановить все', callback_data: 'stop_all' }]);
+        buttons.push([{ text: '🔄 Перезагрузить фарм', callback_data: 'restart_all_farm' }]);
+      }
+
+      buttons.push([{ text: '🔄 Обновить статус', callback_data: 'refresh_accounts_status' }]);
+      buttons.push([{ text: '🔙 Главное меню', callback_data: 'main_menu' }]);
+
+      const limitText = limit === -1 ? '∞' : `${accounts.length}/${limit}`;
+      const subLabel = info.isPremium ? '⭐ Premium' : limit === 0 ? '❌ Без подписки' : '🎁 Триал';
+      const header = `📋 Steam аккаунты\n━━━━━━━━━━━━━━━\n${subLabel} | Аккаунтов: ${limitText}\n`;
+
+      await ctx.reply(header, {
+        reply_markup: { inline_keyboard: buttons }
+      });
+    } catch (error) {
+      console.error('Ошибка обновления статуса аккаунтов:', error);
+      await ctx.reply('❌ Ошибка обновления статуса');
+    }
+  });
+
   bot.action(/^start_all$/, async (ctx) => {
     await ctx.answerCbQuery();
     
@@ -3142,6 +3214,7 @@ export function setupHandlers() {
       buttons.push([{ text: '⏸ Остановить все', callback_data: 'stop_all' }]);
     }
 
+    buttons.push([{ text: '🔄 Обновить статус', callback_data: 'refresh_accounts_status' }]);
     buttons.push([{ text: '🔙 Главное меню', callback_data: 'main_menu' }]);
 
     const limitText = limit === -1 ? '∞' : `${accounts.length}/${limit}`;
