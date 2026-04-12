@@ -653,8 +653,16 @@ async function updateGameHoursForActiveFarms() {
 
 /**
  * Запускает периодическое обновление часов (каждые 30 минут)
+ * ОТКЛЮЧЕНО: Требует Steam Web API ключ, который может быть недоступен
  */
 function startGameHoursUpdater() {
+  // Проверяем наличие API ключа
+  if (!process.env.STEAM_WEB_API_KEY) {
+    console.log('⚠️ Автоматическое обновление часов отключено: нет STEAM_WEB_API_KEY');
+    console.log('💡 Часы будут обновляться при ручном обновлении библиотеки через бота');
+    return;
+  }
+  
   const UPDATE_INTERVAL = 30 * 60 * 1000; // 30 минут
   
   setInterval(async () => {
@@ -669,6 +677,8 @@ function startGameHoursUpdater() {
     await updateGameHoursForActiveFarms();
     console.log('✅ Первое обновление часов завершено');
   }, 5 * 60 * 1000);
+  
+  console.log('✅ Автоматическое обновление часов активировано (каждые 30 минут)');
 }
 
 // Запускаем обновление часов
