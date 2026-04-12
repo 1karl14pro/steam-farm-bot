@@ -785,22 +785,25 @@ export function setupHandlers() {
         return;
       }
       
-      // Добавляем игру - получаем название из кеша
+      // Добавляем игру - получаем название и часы из кеша
       try {
         const { readGameCache, getSteamId64FromAccount } = await import('../services/gameCache.js');
         const steamId64 = getSteamId64FromAccount(account);
         const cache = readGameCache(steamId64);
         
         let gameName = `App ${appId}`;
+        let initialHours = 0;
         
         if (cache && cache.topPlayed) {
           const gameFromCache = cache.topPlayed.find(g => g.appId === appId);
           if (gameFromCache) {
             gameName = gameFromCache.name;
+            // Конвертируем минуты в часы
+            initialHours = gameFromCache.playtime_forever ? gameFromCache.playtime_forever / 60 : 0;
           }
         }
         
-        const result = db.addGame(accountId, appId, gameName);
+        const result = db.addGame(accountId, appId, gameName, initialHours);
         
         if (result === null) {
           await ctx.answerCbQuery('⚠️ Игра уже добавлена');
@@ -1064,7 +1067,9 @@ export function setupHandlers() {
       const gameInfo = await steamLibrary.getGameInfo(appId);
       const gameName = gameInfo.name;
 
-      db.addGame(accountId, appId, gameName);
+      // Для игр добавленных вручную по App ID начальные часы = 0
+      // так как игра может быть не в библиотеке аккаунта
+      db.addGame(accountId, appId, gameName, 0);
       
       await ctx.answerCbQuery('✅ Игра добавлена');
       
@@ -1169,12 +1174,13 @@ export function setupHandlers() {
 
     await ctx.answerCbQuery('⏳ Добавляю игру...');
 
-    // Получаем название игры из кеша
+    // Получаем название игры и часы из кеша
     const library = await steamLibrary.getOwnedGamesWithHours(accountId, false);
     const gameInfo = library.find(g => g.appId === appId);
     const gameName = gameInfo?.name || `App ${appId}`;
+    const initialHours = gameInfo?.playtime_forever ? gameInfo.playtime_forever / 60 : 0;
 
-    const result = db.addGame(accountId, appId, gameName);
+    const result = db.addGame(accountId, appId, gameName, initialHours);
     
     if (result === null) {
       await ctx.answerCbQuery('⚠️ Игра уже добавлена');
@@ -2635,9 +2641,10 @@ export function setupHandlers() {
         db.clearGames(accountId);
         
         // Добавляем выбранные игры с правильными названиями
+        // Для бесплатных игр начальные часы = 0 (могут быть не в библиотеке)
         for (const appId of state.selectedGames) {
           const gameName = gameNames[appId] || `Game ${appId}`;
-          db.addGame(accountId, appId, gameName);
+          db.addGame(accountId, appId, gameName, 0);
         }
         
         // Запускаем фарм
@@ -4030,7 +4037,8 @@ export function setupHandlers() {
 
           try {
             const gameInfo = await steamLibrary.getGameInfo(appId);
-            db.addGame(state.accountId, appId, gameInfo.name);
+            // Для игр добавленных вручную начальные часы = 0
+            db.addGame(state.accountId, appId, gameInfo.name, 0);
             
             await ctx.reply(
               `✅ Игра добавлена!\n\n` +
