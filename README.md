@@ -530,19 +530,19 @@ refactor: рефакторинг кода
 
 - 📝 [CHANGELOG.md](CHANGELOG.md) - История изменений
 - 🔄 [MIGRATION.md](MIGRATION.md) - Руководство по миграции
-- 📖 [Wiki](https://github.com/yourusername/steam-farm-bot/wiki) - Подробная документация
+- 📖 [GitHub Wiki](https://github.com/1karl14pro/steam-farm-bot/wiki) - Подробная документация
 
 ### Контакты
 
-- 💬 Telegram: [@yourusername](https://t.me/yourusername)
-- 🐛 Issues: [GitHub Issues](https://github.com/yourusername/steam-farm-bot/issues)
-- 📧 Email: your.email@example.com
+- 💬 Telegram: [@BE3YM1E](https://t.me/BE3YM1E)
+- 🐛 Issues: [GitHub Issues](https://github.com/1karl14pro/steam-farm-bot/issues)
+- 📦 GitHub: [steam-farm-bot](https://github.com/1karl14pro/steam-farm-bot)
 
 ### Сообщить об ошибке
 
 Если вы нашли ошибку, пожалуйста:
 
-1. Проверьте [Issues](https://github.com/yourusername/steam-farm-bot/issues)
+1. Проверьте [Issues](https://github.com/1karl14pro/steam-farm-bot/issues)
 2. Если ошибка не описана, создайте новый Issue
 3. Опишите проблему и шаги для воспроизведения
 4. Приложите логи (если возможно)
