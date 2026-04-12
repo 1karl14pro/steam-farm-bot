@@ -101,6 +101,23 @@ try {
     db.exec("ALTER TABLE steam_accounts ADD COLUMN auto_accept_trades INTEGER DEFAULT 0");
   }
 
+  // Добавляем поля для отслеживания часов в играх
+  const gamesTableInfo = db.prepare("PRAGMA table_info(games)").all();
+  const hasInitialHours = gamesTableInfo.find((col) => col.name === 'initial_hours');
+  if (!hasInitialHours) {
+    db.exec("ALTER TABLE games ADD COLUMN initial_hours REAL DEFAULT 0");
+  }
+
+  const hasCurrentHours = gamesTableInfo.find((col) => col.name === 'current_hours');
+  if (!hasCurrentHours) {
+    db.exec("ALTER TABLE games ADD COLUMN current_hours REAL DEFAULT 0");
+  }
+
+  const hasLastUpdated = gamesTableInfo.find((col) => col.name === 'last_updated');
+  if (!hasLastUpdated) {
+    db.exec("ALTER TABLE games ADD COLUMN last_updated INTEGER DEFAULT 0");
+  }
+
   // Очистка дубликатов уведомлений
   try {
     // Удаляем дубликаты, оставляя только первую запись для каждой пары (user_id, type)
@@ -427,12 +444,12 @@ export const getGames = (accountId) => {
   return db.prepare('SELECT * FROM games WHERE account_id = ?').all(accountId);
 };
 
-export const addGame = (accountId, appId, gameName = null) => {
+export const addGame = (accountId, appId, gameName = null, initialHours = 0) => {
   try {
     return db.prepare(`
-      INSERT INTO games (account_id, app_id, game_name)
-      VALUES (?, ?, ?)
-    `).run(accountId, appId, gameName);
+      INSERT INTO games (account_id, app_id, game_name, initial_hours, current_hours, last_updated)
+      VALUES (?, ?, ?, ?, ?, ?)
+    `).run(accountId, appId, gameName, initialHours, initialHours, Math.floor(Date.now() / 1000));
   } catch (err) {
     if (err.code === 'SQLITE_CONSTRAINT') {
       return null; // Игра уже добавлена
@@ -444,6 +461,33 @@ export const addGame = (accountId, appId, gameName = null) => {
 export const removeGame = (accountId, appId) => {
   return db.prepare('DELETE FROM games WHERE account_id = ? AND app_id = ?')
     .run(accountId, appId);
+};
+
+export const updateGameHours = (accountId, appId, currentHours) => {
+  return db.prepare(`
+    UPDATE games 
+    SET current_hours = ?, last_updated = ?
+    WHERE account_id = ? AND app_id = ?
+  `).run(currentHours, Math.floor(Date.now() / 1000), accountId, appId);
+};
+
+export const getGameWithHours = (accountId, appId) => {
+  return db.prepare(`
+    SELECT *, 
+           (current_hours - initial_hours) as hours_gained
+    FROM games 
+    WHERE account_id = ? AND app_id = ?
+  `).get(accountId, appId);
+};
+
+export const getGamesWithHours = (accountId) => {
+  return db.prepare(`
+    SELECT *, 
+           (current_hours - initial_hours) as hours_gained
+    FROM games 
+    WHERE account_id = ?
+    ORDER BY game_name
+  `).all(accountId);
 };
 
 export const clearGames = (accountId) => {
