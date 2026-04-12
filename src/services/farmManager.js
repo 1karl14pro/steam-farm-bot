@@ -599,6 +599,7 @@ startMemoryOptimization();
 
 /**
  * Обновляет часы в играх для всех активных фарм-сессий
+ * ВАЖНО: Использует Web API вместо создания новых сессий, чтобы не вызывать LogonSessionReplaced
  */
 async function updateGameHoursForActiveFarms() {
   const activeFarms = getActiveFarms();
@@ -611,20 +612,39 @@ async function updateGameHoursForActiveFarms() {
       const games = db.getGames(accountId);
       if (games.length === 0) continue;
       
-      // Получаем актуальные часы из Steam API
-      const { getOwnedGames } = await import('./steamLibrary.js');
-      const steamGames = await getOwnedGames(accountId, 0, 999, true);
+      // Используем Web API через Steam ID, чтобы не создавать новую сессию
+      if (!process.env.STEAM_WEB_API_KEY || !account.steam_id_64) {
+        console.log(`⚠️ Пропускаю ${account.account_name}: нет API ключа или Steam ID`);
+        continue;
+      }
+      
+      const { withRateLimit } = await import('./rateLimiter.js');
+      
+      // Получаем данные через Web API с rate limiting
+      const data = await withRateLimit(async () => {
+        const response = await fetch(
+          `https://api.steampowered.com/IPlayerService/GetOwnedGames/v1/?key=${process.env.STEAM_WEB_API_KEY}&steamid=${account.steam_id_64}&include_appinfo=1&include_played_free_games=1`
+        );
+        return await response.json();
+      }, 'api', 1);
+      
+      if (!data.response || !data.response.games) {
+        console.log(`⚠️ Нет данных для ${account.account_name}`);
+        continue;
+      }
       
       // Обновляем часы для каждой игры в фарме
+      let updated = 0;
       for (const game of games) {
-        const steamGame = steamGames.find(sg => sg.appId === game.app_id);
+        const steamGame = data.response.games.find(sg => sg.appid === game.app_id);
         if (steamGame && steamGame.playtime_forever !== undefined) {
           const currentHours = steamGame.playtime_forever / 60; // Конвертируем минуты в часы
           db.updateGameHours(accountId, game.app_id, currentHours);
+          updated++;
         }
       }
       
-      console.log(`📊 Обновлены часы для ${account.account_name} (${games.length} игр)`);
+      console.log(`📊 Обновлены часы для ${account.account_name} (${updated}/${games.length} игр)`);
     } catch (error) {
       console.error(`❌ Ошибка обновления часов для аккаунта ${accountId}:`, error.message);
     }
