@@ -6,9 +6,6 @@ import * as farmManager from './farmManager.js';
  */
 export function formatAccountInfo(account, games) {
   const status = account.is_farming ? '🟢 Фармит' : '⚫ Остановлен';
-  const farmingTime = account.farming_started_at 
-    ? Math.floor((Date.now() / 1000 - account.farming_started_at) / 3600)
-    : 0;
   
   let text = `🎮 ${account.account_name}\n`;
   text += `━━━━━━━━━━━━━━━\n`;
@@ -27,7 +24,13 @@ export function formatAccountInfo(account, games) {
     text += `🕐 Запущен: ${mskDate} ${mskStr} МСК\n`;
     const visMode = account.visibility_mode === 1 ? '👻 Невидимка' : '🌐 В сети';
     text += `${visMode}\n`;
-    text += `⏱ Этот сеанс: ${farmingTime}ч\n`;
+    
+    // Форматируем время сеанса в формате ЧЧ:ММ:СС
+    const sessionSeconds = Math.floor(Date.now() / 1000) - account.farming_started_at;
+    const h = Math.floor(sessionSeconds / 3600);
+    const m = Math.floor((sessionSeconds % 3600) / 60);
+    const s = Math.floor(sessionSeconds % 60);
+    text += `⏱️ Этот сеанс: ${h}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}\n`;
   }
   
   text += `━━━━━━━━━━━━━━━\n`;
@@ -54,8 +57,24 @@ export function formatAccountInfo(account, games) {
   if (games.length > 0) {
     text += `━━━━━━━━━━━━━━━\n`;
     text += `📋 Список игр:\n`;
-    games.forEach((game, idx) => {
-      text += `${idx + 1}. ${game.game_name || `App ${game.app_id}`}\n`;
+    
+    // Получаем игры с информацией о часах
+    const gamesWithHours = db.getGamesWithHours(account.id);
+    
+    gamesWithHours.forEach((game, idx) => {
+      const gameName = game.game_name || `App ${game.app_id}`;
+      const hoursGained = game.hours_gained || 0;
+      const initialHours = game.initial_hours || 0;
+      const currentHours = game.current_hours || 0;
+      
+      // Показываем: название | начальные часы → текущие часы (+нафармлено)
+      if (hoursGained > 0) {
+        text += `${idx + 1}. ${gameName}\n`;
+        text += `   📊 ${initialHours.toFixed(1)}ч → ${currentHours.toFixed(1)}ч (+${hoursGained.toFixed(1)}ч)\n`;
+      } else {
+        text += `${idx + 1}. ${gameName}\n`;
+        text += `   📊 ${currentHours.toFixed(1)}ч (без изменений)\n`;
+      }
     });
   }
   
@@ -113,9 +132,17 @@ export function formatUserProfileFull(user, accounts) {
       const hours = (acc.total_hours_farmed || 0).toFixed(1);
       const status = acc.is_farming ? '🟢' : '⚫';
       const vis = acc.visibility_mode === 1 ? ' 👻' : '';
-      const session = acc.farming_started_at
-        ? ` | ⏱ ${Math.floor((now - acc.farming_started_at) / 3600)}ч`
-        : '';
+      
+      // Форматируем время сеанса в формате ЧЧ:ММ:СС
+      let session = '';
+      if (acc.farming_started_at) {
+        const sessionSeconds = now - acc.farming_started_at;
+        const h = Math.floor(sessionSeconds / 3600);
+        const m = Math.floor((sessionSeconds % 3600) / 60);
+        const s = Math.floor(sessionSeconds % 60);
+        session = ` | ⏱️ ${h}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+      }
+      
       const custom = acc.custom_status ? ` 💬` : '';
       text += `${status} ${acc.account_name}${vis}${custom}${session} (${hours}ч)\n`;
     });

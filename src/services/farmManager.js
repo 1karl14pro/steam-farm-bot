@@ -597,6 +597,63 @@ function startMemoryOptimization() {
 // Запускаем оптимизацию памяти
 startMemoryOptimization();
 
+/**
+ * Обновляет часы в играх для всех активных фарм-сессий
+ */
+async function updateGameHoursForActiveFarms() {
+  const activeFarms = getActiveFarms();
+  
+  for (const accountId of activeFarms) {
+    try {
+      const account = db.getSteamAccount(accountId);
+      if (!account || !account.is_farming) continue;
+      
+      const games = db.getGames(accountId);
+      if (games.length === 0) continue;
+      
+      // Получаем актуальные часы из Steam API
+      const { getOwnedGames } = await import('./steamLibrary.js');
+      const steamGames = await getOwnedGames(accountId, 0, 999, true);
+      
+      // Обновляем часы для каждой игры в фарме
+      for (const game of games) {
+        const steamGame = steamGames.find(sg => sg.appId === game.app_id);
+        if (steamGame && steamGame.playtime_forever !== undefined) {
+          const currentHours = steamGame.playtime_forever / 60; // Конвертируем минуты в часы
+          db.updateGameHours(accountId, game.app_id, currentHours);
+        }
+      }
+      
+      console.log(`📊 Обновлены часы для ${account.account_name} (${games.length} игр)`);
+    } catch (error) {
+      console.error(`❌ Ошибка обновления часов для аккаунта ${accountId}:`, error.message);
+    }
+  }
+}
+
+/**
+ * Запускает периодическое обновление часов (каждые 30 минут)
+ */
+function startGameHoursUpdater() {
+  const UPDATE_INTERVAL = 30 * 60 * 1000; // 30 минут
+  
+  setInterval(async () => {
+    console.log('🔄 Начинаю обновление часов в играх...');
+    await updateGameHoursForActiveFarms();
+    console.log('✅ Обновление часов завершено');
+  }, UPDATE_INTERVAL);
+  
+  // Первое обновление через 5 минут после запуска
+  setTimeout(async () => {
+    console.log('🔄 Первое обновление часов в играх...');
+    await updateGameHoursForActiveFarms();
+    console.log('✅ Первое обновление часов завершено');
+  }, 5 * 60 * 1000);
+}
+
+// Запускаем обновление часов
+startGameHoursUpdater();
+
 // Graceful shutdown
 process.on('SIGINT', async () => {
   console.log('\n🛑 SIGINT received, shutting down...');
