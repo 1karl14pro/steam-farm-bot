@@ -75,8 +75,8 @@ async function restoreActiveSessions() {
         await farmManager.startFarming(account.id);
         console.log(`✅ ${account.account_name} - фарм восстановлен`);
         
-        // Небольшая задержка между запусками
-        await new Promise(resolve => setTimeout(resolve, 2000));
+        // Задержка между запусками для избежания LogonSessionReplaced
+        await new Promise(resolve => setTimeout(resolve, 5000));
       } catch (error) {
         console.error(`❌ Ошибка восстановления ${account.account_name}:`, error.message);
         // Обновляем статус в БД
