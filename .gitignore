@@ -73,3 +73,6 @@ install.sh
 # Data directory
 data/
 
+# Internal AI instructions (local only)
+AI_INSTRUCTIONS.md
+
