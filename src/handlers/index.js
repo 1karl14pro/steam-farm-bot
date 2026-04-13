@@ -2282,7 +2282,6 @@ export function setupHandlers() {
       );
     }
   });
-  });
 
   // Обновление начальных часов для всех игр
   bot.action(/^update_hours_(\d+)$/, async (ctx) => {
