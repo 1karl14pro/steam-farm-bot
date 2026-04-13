@@ -152,7 +152,9 @@ bot.start(async (ctx) => {
         ...pinButtons,
         [{ text: '📋 Мои аккаунты', callback_data: 'accounts' }],
         [{ text: '👤 Профиль', callback_data: 'profile' }],
-        [{ text: '🎁 Реферальная система', callback_data: 'referral' }]
+        [{ text: '🏆 Рейтинги', callback_data: 'leaderboards' }],
+        [{ text: '🎁 Реферальная система', callback_data: 'referral' }],
+        [{ text: 'ℹ️ О боте', callback_data: 'about_bot' }]
       ]
     }
   });
@@ -189,7 +191,9 @@ bot.command('menu', (ctx) => {
         ...pinButtons,
         [{ text: '📋 Мои аккаунты', callback_data: 'accounts' }],
         [{ text: '👤 Профиль', callback_data: 'profile' }],
-        [{ text: '🎁 Реферальная система', callback_data: 'referral' }]
+        [{ text: '🏆 Рейтинги', callback_data: 'leaderboards' }],
+        [{ text: '🎁 Реферальная система', callback_data: 'referral' }],
+        [{ text: 'ℹ️ О боте', callback_data: 'about_bot' }]
       ]
     }
   });
