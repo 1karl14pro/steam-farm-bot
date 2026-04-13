@@ -485,8 +485,18 @@ export const addGame = (accountId, appId, gameName = null, initialHours = 0) => 
 };
 
 export const removeGame = (accountId, appId) => {
-  return db.prepare('DELETE FROM games WHERE account_id = ? AND app_id = ?')
-    .run(accountId, appId);
+  return db.prepare('DELETE FROM games WHERE account_id = ? AND app_id = ?').run(accountId, appId);
+};
+
+/**
+ * Обновляет начальные часы для игры (для исправления статистики)
+ */
+export const updateInitialHours = (accountId, appId, initialHours) => {
+  return db.prepare(`
+    UPDATE games 
+    SET initial_hours = ?, current_hours = ?
+    WHERE account_id = ? AND app_id = ?
+  `).run(initialHours, initialHours, accountId, appId);
 };
 
 export const updateGameHours = (accountId, appId, currentHours) => {
