@@ -66,6 +66,8 @@ bot.launch({
 })
   .then(async () => {
     console.log('✅ Bot Service успешно запущен');
+    console.log('📋 Bot Service обрабатывает команды Telegram');
+    console.log('🔗 Связь с Farm Service через БД');
     
     // Отправляем уведомление админу о запуске
     try {
@@ -74,8 +76,9 @@ bot.launch({
       
       const startupMessage = `🤖 <b>Bot Service запущен</b>\n\n` +
         `📦 <b>Версия:</b> ${version}\n` +
-        `⏰ <b>Время запуска:</b> ${new Date().toLocaleString('ru-RU', { timeZone: 'Europe/Kiev' })}\n\n` +
+        `⏰ <b>Время запуска:</b> ${new Date().toLocaleString('ru-RU', { timeZone: 'Europe/Kyiv' })}\n\n` +
         `✅ Telegram бот готов к работе\n` +
+        `🔗 Связь с Farm Service: через БД\n` +
         `❌ Ошибок нет`;
       
       for (const adminId of adminIds) {

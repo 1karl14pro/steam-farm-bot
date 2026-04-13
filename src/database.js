@@ -244,6 +244,19 @@ db.exec(`
     FOREIGN KEY (account_id) REFERENCES steam_accounts(id) ON DELETE CASCADE
   );
 
+  CREATE TABLE IF NOT EXISTS farm_commands (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    account_id INTEGER NOT NULL,
+    command TEXT NOT NULL,
+    created_at INTEGER DEFAULT (strftime('%s', 'now')),
+    processed INTEGER DEFAULT 0,
+    processed_at INTEGER DEFAULT 0,
+    error TEXT DEFAULT NULL,
+    FOREIGN KEY (account_id) REFERENCES steam_accounts(id) ON DELETE CASCADE
+  );
+
+  CREATE INDEX IF NOT EXISTS idx_farm_commands_processed ON farm_commands(processed, created_at);
+
   CREATE TABLE IF NOT EXISTS notifications (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     user_id INTEGER NOT NULL,
@@ -1048,6 +1061,58 @@ export const getAutoAcceptTrades = (accountId) => {
   const result = db.prepare('SELECT auto_accept_trades FROM steam_accounts WHERE id = ?')
     .get(accountId);
   return result ? result.auto_accept_trades === 1 : false;
+};
+
+// ===== FARM COMMANDS (для связи bot-service ↔ farm-service) =====
+
+/**
+ * Создать команду для фарм-сервиса
+ * @param {number} accountId - ID аккаунта
+ * @param {string} command - Команда: 'start', 'stop', 'restart'
+ * @returns {number} - ID созданной команды
+ */
+export const createFarmCommand = (accountId, command) => {
+  const result = db.prepare(`
+    INSERT INTO farm_commands (account_id, command)
+    VALUES (?, ?)
+  `).run(accountId, command);
+  return result.lastInsertRowid;
+};
+
+/**
+ * Получить необработанные команды
+ * @returns {Array}
+ */
+export const getPendingFarmCommands = () => {
+  return db.prepare(`
+    SELECT * FROM farm_commands
+    WHERE processed = 0
+    ORDER BY created_at ASC
+  `).all();
+};
+
+/**
+ * Отметить команду как обработанную
+ * @param {number} commandId - ID команды
+ * @param {string|null} error - Текст ошибки (если есть)
+ */
+export const markFarmCommandProcessed = (commandId, error = null) => {
+  db.prepare(`
+    UPDATE farm_commands
+    SET processed = 1, processed_at = strftime('%s', 'now'), error = ?
+    WHERE id = ?
+  `).run(error, commandId);
+};
+
+/**
+ * Очистить старые обработанные команды (старше 1 часа)
+ */
+export const cleanupOldFarmCommands = () => {
+  const oneHourAgo = Math.floor(Date.now() / 1000) - 3600;
+  db.prepare(`
+    DELETE FROM farm_commands
+    WHERE processed = 1 AND processed_at < ?
+  `).run(oneHourAgo);
 };
 
 

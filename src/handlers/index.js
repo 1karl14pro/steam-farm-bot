@@ -1,9 +1,11 @@
 import bot, { ADMIN_IDS, BOT_USERNAME } from '../bot.js';
 import * as db from '../database.js';
-import * as farmManager from '../services/farmManager.js';
 import * as steamLibrary from '../services/steamLibrary.js';
 import * as formatter from '../services/formatter.js';
 import { userStates } from '../utils.js';
+
+// ВАЖНО: Bot Service НЕ импортирует farmManager!
+// Все команды фарма отправляются через БД в Farm Service
 
 export function setupHandlers() {
   // ===== TERMS OF SERVICE =====
@@ -238,11 +240,63 @@ export function setupHandlers() {
             [{ text: '📋 Мои аккаунты', callback_data: 'accounts' }],
             [{ text: '👤 Профиль', callback_data: 'profile' }],
             [{ text: '🏆 Рейтинги', callback_data: 'leaderboards' }],
-            [{ text: '🎁 Реферальная система', callback_data: 'referral' }]
+            [{ text: '🎁 Реферальная система', callback_data: 'referral' }],
+            [{ text: 'ℹ️ О боте', callback_data: 'about_bot' }]
           ]
         }
       }
     );
+  });
+
+  bot.action('about_bot', async (ctx) => {
+    await ctx.answerCbQuery();
+    
+    const { version } = await import('../../package.json', { assert: { type: 'json' } });
+    const accounts = db.getAllSteamAccounts();
+    const activeFarms = accounts.filter(a => a.is_farming).length;
+    const globalStats = db.getGlobalStats();
+    
+    const uptime = Math.floor(process.uptime());
+    const uptimeHours = Math.floor(uptime / 3600);
+    const uptimeMinutes = Math.floor((uptime % 3600) / 60);
+    
+    let text = `ℹ️ О боте\n`;
+    text += `━━━━━━━━━━━━━━━\n\n`;
+    text += `📦 <b>Версия:</b> ${version}\n`;
+    text += `🤖 <b>Название:</b> Steam Farm Bot\n`;
+    text += `⏰ <b>Uptime:</b> ${uptimeHours}ч ${uptimeMinutes}м\n\n`;
+    
+    text += `📊 <b>Статистика:</b>\n`;
+    text += `👥 Пользователей: ${globalStats.total_users}\n`;
+    text += `🎮 Аккаунтов: ${globalStats.total_accounts}\n`;
+    text += `🟢 Активных фармов: ${activeFarms}\n`;
+    text += `🎯 Игр в базе: ${globalStats.total_games}\n`;
+    text += `⏱ Всего нафармлено: ${globalStats.total_hours_farmed.toFixed(1)}ч\n\n`;
+    
+    text += `🏗 <b>Архитектура:</b>\n`;
+    text += `• Bot Service - Telegram бот\n`;
+    text += `• Farm Service - Steam сессии\n`;
+    text += `• Связь через БД (без конфликтов)\n\n`;
+    
+    text += `✨ <b>Возможности:</b>\n`;
+    text += `• Фарм до 30 игр одновременно\n`;
+    text += `• Режим невидимки 👻\n`;
+    text += `• Кастомный статус 💬\n`;
+    text += `• Автотрейды 💼\n`;
+    text += `• Статистика в реальном времени 📊\n\n`;
+    
+    text += `📞 <b>Контакты:</b>\n`;
+    text += `Telegram: @BE3YM1E\n`;
+    text += `GitHub: github.com/1karl14pro/steam-farm-bot`;
+    
+    await ctx.editMessageText(text, {
+      parse_mode: 'HTML',
+      reply_markup: {
+        inline_keyboard: [
+          [{ text: '🔙 Главное меню', callback_data: 'main_menu' }]
+        ]
+      }
+    });
   });
 
   bot.action('profile', async (ctx) => {
@@ -825,7 +879,7 @@ export function setupHandlers() {
     // Перезапускаем фарм если активен
     if (account.is_farming) {
       try {
-        await farmManager.restartFarming(accountId);
+        db.createFarmCommand(accountId, 'restart');
       } catch (err) {
         console.error('Ошибка перезапуска:', err);
       }
@@ -997,7 +1051,7 @@ export function setupHandlers() {
       
       if (account.is_farming) {
         try {
-          await farmManager.restartFarming(accountId);
+          db.createFarmCommand(accountId);
         } catch (err) {
           console.error('Ошибка перезапуска:', err);
         }
@@ -1076,7 +1130,7 @@ export function setupHandlers() {
       
       if (account.is_farming) {
         try {
-          await farmManager.restartFarming(accountId);
+          db.createFarmCommand(accountId);
         } catch (err) {
           console.error('Ошибка перезапуска:', err);
         }
@@ -1155,7 +1209,7 @@ export function setupHandlers() {
       
       if (account.is_farming) {
         try {
-          await farmManager.restartFarming(accountId);
+          db.createFarmCommand(accountId);
         } catch (err) {
           console.error('Ошибка перезапуска:', err);
         }
@@ -1190,7 +1244,7 @@ export function setupHandlers() {
       
       if (account.is_farming) {
         try {
-          await farmManager.restartFarming(accountId);
+          db.createFarmCommand(accountId);
         } catch (err) {
           console.error('Ошибка перезапуска:', err);
         }
@@ -1306,16 +1360,17 @@ export function setupHandlers() {
       return;
     }
 
-    if (farmManager.isFarming(accountId)) {
+    if (account.is_farming) {
       await ctx.answerCbQuery('⚠️ Фарм уже запущен', { show_alert: true });
       return;
     }
 
     try {
-      await farmManager.startFarming(accountId);
-      await ctx.answerCbQuery('✅ Фарм запущен', { show_alert: true });
+      // Отправляем команду в Farm Service через БД
+      db.createFarmCommand(accountId, 'start');
+      await ctx.answerCbQuery('✅ Команда отправлена, фарм запускается...', { show_alert: true });
       
-      // Ждем 3 секунды чтобы фарм успел запуститься и обновить статус в БД
+      // Ждем 3 секунды чтобы Farm Service обработал команду
       await new Promise(resolve => setTimeout(resolve, 3000));
       
       // Обновляем сообщение с деталями аккаунта
@@ -1366,17 +1421,18 @@ export function setupHandlers() {
       return;
     }
 
-    if (!farmManager.isFarming(accountId)) {
+    if (!account.is_farming) {
       await ctx.answerCbQuery('⚠️ Фарм не запущен', { show_alert: true });
       return;
     }
 
     try {
-      await farmManager.stopFarming(accountId);
-      await ctx.answerCbQuery('✅ Фарм остановлен', { show_alert: true });
+      // Отправляем команду в Farm Service через БД
+      db.createFarmCommand(accountId, 'stop');
+      await ctx.answerCbQuery('✅ Команда отправлена, фарм останавливается...', { show_alert: true });
       
-      // Ждем 1 секунду чтобы фарм успел остановиться и обновить статус в БД
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      // Ждем 2 секунды чтобы Farm Service обработал команду
+      await new Promise(resolve => setTimeout(resolve, 2000));
       
       // Обновляем сообщение с деталями аккаунта
       const acc = db.getSteamAccount(accountId);
@@ -1485,9 +1541,9 @@ export function setupHandlers() {
 
     db.setCustomStatus(accountId, null);
 
-    const isFarming = farmManager.isFarming(accountId);
+    const isFarming = account.is_farming;
     if (isFarming) {
-      await farmManager.restartFarming(accountId);
+      db.createFarmCommand(accountId, 'restart');
     }
 
     await ctx.answerCbQuery('🗑 Статус удален');
@@ -1541,9 +1597,9 @@ export function setupHandlers() {
     const newMode = currentMode === 0 ? 1 : 0;
     db.setVisibilityMode(accountId, newMode);
 
-    const isFarming = farmManager.isFarming(accountId);
+    const isFarming = account.is_farming;
     if (isFarming) {
-      await farmManager.restartFarming(accountId);
+      db.createFarmCommand(accountId, 'restart');
     }
 
     await ctx.answerCbQuery(
@@ -2160,7 +2216,7 @@ export function setupHandlers() {
     await ctx.answerCbQuery('✅ Список игр очищен');
 
     if (account.is_farming) {
-      await farmManager.stopFarming(accountId);
+      db.createFarmCommand(accountId);
     }
 
     ctx.callbackQuery.data = `games_${accountId}`;
@@ -2376,7 +2432,7 @@ export function setupHandlers() {
       try {
         const games = db.getGames(account.id);
         if (games.length > 0) {
-          await farmManager.startFarming(account.id);
+          db.createFarmCommand(account.id);
           successCount++;
         }
       } catch (error) {
@@ -2422,7 +2478,7 @@ export function setupHandlers() {
     let successCount = 0;
     for (const account of runningAccounts) {
       try {
-        await farmManager.stopFarming(account.id);
+        db.createFarmCommand(account.id);
         successCount++;
       } catch (error) {
         console.error(`❌ Ошибка остановки фарма для аккаунта ${account.id}:`, error.message);
@@ -2455,9 +2511,9 @@ export function setupHandlers() {
       try {
         const games = db.getGames(account.id);
         if (games.length > 0) {
-          await farmManager.stopFarming(account.id);
+          db.createFarmCommand(account.id);
           await new Promise(resolve => setTimeout(resolve, 2000)); // Ждем 2 секунды
-          await farmManager.startFarming(account.id);
+          db.createFarmCommand(account.id);
           successCount++;
         }
         await new Promise(resolve => setTimeout(resolve, 1000)); // Ждем перед следующим
@@ -2746,7 +2802,7 @@ export function setupHandlers() {
         }
         
         // Запускаем фарм
-        await farmManager.startFarming(accountId);
+        db.createFarmCommand(accountId);
         successCount++;
       } catch (error) {
         console.error(`❌ Ошибка запуска группового фарма для аккаунта ${accountId}:`, error.message);
@@ -2897,7 +2953,7 @@ export function setupHandlers() {
         // Если аккаунт фармит, перезапускаем
         const account = db.getSteamAccount(accountId);
         if (account && account.is_farming) {
-          await farmManager.restartFarming(accountId);
+          db.createFarmCommand(accountId);
         }
         
         successCount++;
@@ -3043,7 +3099,7 @@ export function setupHandlers() {
         // Если аккаунт фармит, перезапускаем
         const account = db.getSteamAccount(accountId);
         if (account && account.is_farming) {
-          await farmManager.restartFarming(accountId);
+          db.createFarmCommand(accountId);
         }
         
         successCount++;
@@ -3085,7 +3141,7 @@ export function setupHandlers() {
         // Если аккаунт фармит, перезапускаем
         const account = db.getSteamAccount(accountId);
         if (account && account.is_farming) {
-          await farmManager.restartFarming(accountId);
+          db.createFarmCommand(accountId);
         }
         
         successCount++;
@@ -3530,7 +3586,7 @@ export function setupHandlers() {
 
     const users = db.getAllUsers();
     const accounts = db.getAllSteamAccounts();
-    const activeFarms = farmManager.getActiveFarms();
+    const activeFarms = accounts.filter(a => a.is_farming).length;
     
     // Получаем использование ресурсов
     const memUsage = process.memoryUsage();
@@ -3551,7 +3607,7 @@ export function setupHandlers() {
     text += `👥 Пользователей: ${users.length}\n`;
     text += `✅ Активных: ${activeUsers}\n`;
     text += `🎮 Аккаунтов: ${accounts.length}\n`;
-    text += `🟢 Фармит: ${activeFarms.length}\n\n`;
+    text += `🟢 Фармит: ${activeFarms}\n\n`;
     
     text += `💻 Ресурсы:\n`;
     text += `🧠 RAM: ${memUsedMB}/${memTotalMB} МБ\n`;
@@ -3667,7 +3723,8 @@ export function setupHandlers() {
   bot.action('admin_farms', async (ctx) => {
     if (!ADMIN_IDS.includes(ctx.from.id)) return;
     
-    const activeFarms = farmManager.getAllFarmsStatus();
+    const accounts = db.getAllSteamAccounts();
+    const activeFarms = accounts.filter(a => a.is_farming);
     
     if (activeFarms.length === 0) {
       await ctx.editMessageText('🎮 Активные фармы\n━━━━━━━━━━━━━━━\n\nНет активных фармов', {
@@ -3683,11 +3740,13 @@ export function setupHandlers() {
     let text = `🎮 Активные фармы (${activeFarms.length})\n━━━━━━━━━━━━━━━\n\n`;
     
     for (const farm of activeFarms.slice(0, 10)) {
-      const uptimeHours = Math.floor(farm.uptime / 3600);
-      const uptimeMinutes = Math.floor((farm.uptime % 3600) / 60);
-      text += `🟢 ${farm.accountName}\n`;
-      text += `   Игр: ${farm.gamesCount} | Uptime: ${uptimeHours}ч ${uptimeMinutes}м\n`;
-      text += `   Всего: ${farm.totalHoursFarmed.toFixed(1)}ч\n\n`;
+      const games = db.getGames(farm.id);
+      const uptimeSeconds = farm.farming_started_at ? Math.floor(Date.now() / 1000) - farm.farming_started_at : 0;
+      const uptimeHours = Math.floor(uptimeSeconds / 3600);
+      const uptimeMinutes = Math.floor((uptimeSeconds % 3600) / 60);
+      text += `🟢 ${farm.account_name}\n`;
+      text += `   Игр: ${games.length} | Uptime: ${uptimeHours}ч ${uptimeMinutes}м\n`;
+      text += `   Всего: ${farm.total_hours_farmed.toFixed(1)}ч\n\n`;
     }
     
     if (activeFarms.length > 10) {
@@ -3709,7 +3768,7 @@ export function setupHandlers() {
     
     const users = db.getAllUsers();
     const accounts = db.getAllSteamAccounts();
-    const activeFarms = farmManager.getActiveFarms();
+    const activeFarms = accounts.filter(a => a.is_farming).length;
     
     // Статистика по дням
     const now = Math.floor(Date.now() / 1000);
@@ -3731,8 +3790,8 @@ export function setupHandlers() {
     
     text += `🎮 Аккаунты:\n`;
     text += `Всего: ${accounts.length}\n`;
-    text += `Активных: ${activeFarms.length}\n`;
-    text += `Остановлено: ${accounts.length - activeFarms.length}\n\n`;
+    text += `Активных: ${activeFarms}\n`;
+    text += `Остановлено: ${accounts.length - activeFarms}\n\n`;
     
     text += `⏱ Фарм:\n`;
     text += `Всего нафармлено: ${totalHoursFarmed.toFixed(1)} часов\n`;
@@ -3875,7 +3934,7 @@ export function setupHandlers() {
     
     const users = db.getAllUsers();
     const accounts = db.getAllSteamAccounts();
-    const activeFarms = farmManager.getActiveFarms();
+    const activeFarms = accounts.filter(a => a.is_farming).length;
     
     // Получаем использование ресурсов
     const memUsage = process.memoryUsage();
@@ -3896,7 +3955,7 @@ export function setupHandlers() {
     text += `👥 Пользователей: ${users.length}\n`;
     text += `✅ Активных: ${activeUsers}\n`;
     text += `🎮 Аккаунтов: ${accounts.length}\n`;
-    text += `🟢 Фармит: ${activeFarms.length}\n\n`;
+    text += `🟢 Фармит: ${activeFarms}\n\n`;
     
     text += `💻 Ресурсы:\n`;
     text += `🧠 RAM: ${memUsedMB}/${memTotalMB} МБ\n`;
@@ -4153,7 +4212,7 @@ export function setupHandlers() {
             );
 
             if (account.is_farming) {
-              await farmManager.restartFarming(state.accountId);
+              db.createFarmCommand(state.accountId);
               await ctx.reply('🔄 Фарм перезапущен с новой игрой');
             }
           } catch (err) {
@@ -4195,7 +4254,7 @@ export function setupHandlers() {
           );
 
           if (account.is_farming) {
-            await farmManager.restartFarming(state.accountId);
+            db.createFarmCommand(state.accountId);
             await ctx.reply('🔄 Фарм перезапущен с новым статусом');
           }
 
@@ -4226,7 +4285,7 @@ export function setupHandlers() {
               // Если аккаунт фармит, перезапускаем
               const account = db.getSteamAccount(accountId);
               if (account && account.is_farming) {
-                await farmManager.restartFarming(accountId);
+                db.createFarmCommand(accountId);
               }
               
               successCount++;
@@ -4298,7 +4357,7 @@ export function setupHandlers() {
           );
 
           if (account.is_farming) {
-            await farmManager.restartFarming(state.accountId);
+            db.createFarmCommand(state.accountId);
             await ctx.reply('🔄 Фарм перезапущен с новым PIN');
           }
 

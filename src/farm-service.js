@@ -1,6 +1,7 @@
 import 'dotenv/config';
 import { writeFileSync, existsSync, statSync, renameSync, readdirSync, unlinkSync } from 'fs';
 import * as sessionManager from './services/sessionManager.js';
+import * as farmCommandProcessor from './services/farmCommandProcessor.js';
 import * as db from './database.js';
 
 // Скрываем предупреждение о punycode
@@ -84,21 +85,27 @@ startTokenRefreshService();
 import { startLogManagement } from './services/logManager.js';
 startLogManagement();
 
-// Запускаем менеджер сессий (основная логика фарма)
+// Запускаем обработчик команд фарма (НОВОЕ - главный компонент)
+farmCommandProcessor.startCommandProcessor();
+
+// Запускаем менеджер сессий (восстановление при перезапуске)
 sessionManager.startSessionManager();
 
 console.log('✅ Farm Service успешно запущен');
 console.log('✅ Все фарм-сервисы активны');
+console.log('📋 Farm Service управляет всеми Steam сессиями');
 
 // Graceful shutdown
 process.once('SIGINT', () => {
   console.log('🛑 Получен сигнал SIGINT, остановка Farm Service...');
+  farmCommandProcessor.stopCommandProcessor();
   sessionManager.stopSessionManager();
   process.exit(0);
 });
 
 process.once('SIGTERM', () => {
   console.log('🛑 Получен сигнал SIGTERM, остановка Farm Service...');
+  farmCommandProcessor.stopCommandProcessor();
   sessionManager.stopSessionManager();
   process.exit(0);
 });
