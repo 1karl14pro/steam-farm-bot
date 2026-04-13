@@ -157,7 +157,7 @@ bot.launch({
       
       const startupMessage = `🚀 <b>Бот запущен</b>\n\n` +
         `📦 <b>Версия:</b> ${version}\n` +
-        `⏰ <b>Время запуска:</b> ${new Date().toLocaleString('ru-RU', { timeZone: 'Europe/Kiev' })}\n\n` +
+        `⏰ <b>Время запуска:</b> ${new Date().toLocaleString('ru-RU', { timeZone: 'Europe/Kyiv' })}\n\n` +
         `✅ Все функции успешно запущены:\n` +
         `• База данных\n` +
         `• Менеджер сессий\n` +

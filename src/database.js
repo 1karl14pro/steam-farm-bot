@@ -193,6 +193,13 @@ db.exec(`
   CREATE INDEX IF NOT EXISTS idx_notifications_user_type ON notifications(user_id, type);
   CREATE INDEX IF NOT EXISTS idx_farm_stats_account_date ON farm_stats(account_id, date);
   CREATE INDEX IF NOT EXISTS idx_pending_payments_status ON pending_payments(status, user_id);
+  
+  -- Дополнительные индексы для оптимизации
+  CREATE INDEX IF NOT EXISTS idx_games_account_app ON games(account_id, app_id);
+  CREATE INDEX IF NOT EXISTS idx_users_premium ON users(premium_expires_at, is_banned);
+  CREATE INDEX IF NOT EXISTS idx_accounts_user_farming ON steam_accounts(user_id, is_farming);
+  CREATE INDEX IF NOT EXISTS idx_library_cache_app ON library_cache(app_id);
+  CREATE INDEX IF NOT EXISTS idx_goals_account_completed ON farm_goals(account_id, completed);
 
   CREATE TABLE IF NOT EXISTS pending_payments (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -445,6 +452,25 @@ export const getGames = (accountId) => {
 };
 
 export const addGame = (accountId, appId, gameName = null, initialHours = 0) => {
+  // Валидация входных данных
+  if (!accountId || accountId <= 0) {
+    throw new Error('Некорректный ID аккаунта');
+  }
+  
+  if (!appId || appId <= 0) {
+    throw new Error('Некорректный App ID игры');
+  }
+  
+  if (initialHours < 0) {
+    console.warn(`[DB] Отрицательное значение initialHours (${initialHours}), устанавливаю 0`);
+    initialHours = 0;
+  }
+  
+  if (initialHours > 1000000) {
+    console.warn(`[DB] Слишком большое значение initialHours (${initialHours}), устанавливаю 0`);
+    initialHours = 0;
+  }
+  
   try {
     return db.prepare(`
       INSERT INTO games (account_id, app_id, game_name, initial_hours, current_hours, last_updated)

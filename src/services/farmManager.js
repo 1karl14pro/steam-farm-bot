@@ -578,8 +578,14 @@ export function getAllFarmsStatus() {
  * Оптимизация памяти - только сборка мусора, БЕЗ автоперезапуска сессий
  * ИСПРАВЛЕНО: Убран автоматический перезапуск каждые 24 часа для избежания конфликтов между контейнерами
  */
+let memoryOptimizationInterval = null;
+
 function startMemoryOptimization() {
-  setInterval(() => {
+  if (memoryOptimizationInterval) {
+    return; // Уже запущено
+  }
+  
+  memoryOptimizationInterval = setInterval(() => {
     // Только сборка мусора, без перезапуска сессий
     if (global.gc) {
       global.gc();
@@ -592,6 +598,14 @@ function startMemoryOptimization() {
     const heapTotalMB = Math.round(memUsage.heapTotal / 1024 / 1024);
     console.log(`📊 Память: ${heapUsedMB}MB / ${heapTotalMB}MB (активных сессий: ${activeClients.size})`);
   }, MEMORY_CHECK_INTERVAL);
+}
+
+function stopMemoryOptimization() {
+  if (memoryOptimizationInterval) {
+    clearInterval(memoryOptimizationInterval);
+    memoryOptimizationInterval = null;
+    console.log('🛑 Оптимизация памяти остановлена');
+  }
 }
 
 // Запускаем оптимизацию памяти
@@ -687,12 +701,14 @@ startGameHoursUpdater();
 // Graceful shutdown
 process.on('SIGINT', async () => {
   console.log('\n🛑 SIGINT received, shutting down...');
+  stopMemoryOptimization();
   await stopAllFarming();
   process.exit(0);
 });
 
 process.on('SIGTERM', async () => {
   console.log('\n🛑 SIGTERM received, shutting down...');
+  stopMemoryOptimization();
   await stopAllFarming();
   process.exit(0);
 });

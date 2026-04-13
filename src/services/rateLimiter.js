@@ -76,9 +76,9 @@ class RateLimiter {
 }
 
 // Создаем глобальные лимитеры для разных типов запросов
-const steamApiLimiter = new RateLimiter(20, 2, 1000); // 20 запросов, +2 каждую секунду
-const steamWebLimiter = new RateLimiter(30, 3, 1000); // 30 запросов, +3 каждую секунду
-const steamStoreLimiter = new RateLimiter(10, 1, 1000); // 10 запросов, +1 каждую секунду
+const steamApiLimiter = new RateLimiter(30, 3, 1000); // Оптимизировано // 20 запросов, +2 каждую секунду
+const steamWebLimiter = new RateLimiter(50, 5, 1000); // Оптимизировано // 30 запросов, +3 каждую секунду
+const steamStoreLimiter = new RateLimiter(15, 2, 1000); // Оптимизировано // 10 запросов, +1 каждую секунду
 
 /**
  * Выполняет функцию с rate limiting

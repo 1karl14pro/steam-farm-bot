@@ -27,7 +27,7 @@ export function startSessionManager() {
   // Проверяем состояние сессий каждые 10 минут (оптимизация CPU)
   checkInterval = setInterval(() => {
     checkSessions();
-  }, 600000);
+  }, 1800000); // 30 минут (было 10)
 
   console.log('✅ Менеджер сессий запущен');
 }
