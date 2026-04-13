@@ -660,6 +660,7 @@ export function setupHandlers() {
     ];
 
     if (games.length > 0) {
+      buttons.push([{ text: '🔄 Обновить часы игр', callback_data: `update_hours_${accountId}` }]);
       buttons.push([{ text: '🗑 Очистить список', callback_data: `clear_games_${accountId}` }]);
     }
 
@@ -2154,40 +2155,137 @@ export function setupHandlers() {
     }
 
     const games = db.getGames(accountId);
-    if (games.length === 0) {
-      await ctx.answerCbQuery('❌ Список игр пуст', { show_alert: true });
+    games.forEach(game => db.removeGame(accountId, game.app_id));
+
+    await ctx.answerCbQuery('✅ Список игр очищен');
+
+    if (account.is_farming) {
+      await farmManager.stopFarming(accountId);
+    }
+
+    ctx.callbackQuery.data = `games_${accountId}`;
+    await bot.handleUpdate({ callback_query: ctx.callbackQuery });
+  });
+
+  // Обновление начальных часов для всех игр
+  bot.action(/^update_hours_(\d+)$/, async (ctx) => {
+    const accountId = parseInt(ctx.match[1]);
+    const account = db.getSteamAccount(accountId);
+
+    if (!account || account.user_id !== ctx.from.id) {
+      await ctx.answerCbQuery('❌ Аккаунт не найден');
       return;
     }
 
-    const deletedCount = db.clearGames(accountId);
-    await ctx.answerCbQuery(`🗑 Удалено игр: ${deletedCount.changes}`, { show_alert: true });
+    await ctx.answerCbQuery('⏳ Обновляю часы...');
+    await ctx.editMessageText('⏳ Загружаю данные из Steam...\n\nЭто может занять до минуты.');
 
-    // Если фарм активен - перезапустим
-    if (account.is_farming) {
-      try {
-        await farmManager.restartFarming(accountId);
-        await ctx.reply('🔄 Фарм перезапущен (без игр)');
-      } catch (err) {
-        console.error('Ошибка перезапуска:', err);
+    try {
+      // Получаем библиотеку с часами
+      const library = await steamLibrary.getOwnedGamesWithHours(accountId, true);
+      const games = db.getGames(accountId);
+      
+      let updated = 0;
+      let notFound = 0;
+
+      for (const game of games) {
+        const gameInfo = library.find(g => g.appId === game.app_id);
+        if (gameInfo && gameInfo.playtime_forever > 0) {
+          const hours = gameInfo.playtime_forever / 60;
+          db.updateInitialHours(accountId, game.app_id, hours);
+          updated++;
+        } else {
+          notFound++;
+        }
       }
+
+      await ctx.editMessageText(
+        `✅ Обновление завершено!\n\n` +
+        `Обновлено: ${updated} игр\n` +
+        `Не найдено часов: ${notFound} игр\n\n` +
+        `Теперь статистика будет показывать корректные данные.`,
+        {
+          reply_markup: {
+            inline_keyboard: [
+              [{ text: '🔙 К списку игр', callback_data: `games_${accountId}` }]
+            ]
+          }
+        }
+      );
+    } catch (err) {
+      console.error('Ошибка обновления часов:', err);
+      await ctx.editMessageText(
+        `❌ Ошибка обновления часов: ${err.message}`,
+        {
+          reply_markup: {
+            inline_keyboard: [
+              [{ text: '🔙 К списку игр', callback_data: `games_${accountId}` }]
+            ]
+          }
+        }
+      );
+    }
+  });
+  });
+
+  // Обновление начальных часов для всех игр
+  bot.action(/^update_hours_(\d+)$/, async (ctx) => {
+    const accountId = parseInt(ctx.match[1]);
+    const account = db.getSteamAccount(accountId);
+
+    if (!account || account.user_id !== ctx.from.id) {
+      await ctx.answerCbQuery('❌ Аккаунт не найден');
+      return;
     }
 
-    // Обновляем сообщение с играми
-    const acc = db.getSteamAccount(accountId);
-    const updatedGames = db.getGames(accountId);
-    const maxGames = db.getGamesLimit(acc.user_id);
-    const text = `🎮 Игры для ${acc.account_name}\n\n${formatter.formatGamesList(updatedGames)}\nВсего: ${updatedGames.length}/${maxGames}`;
+    await ctx.answerCbQuery('⏳ Обновляю часы...');
+    await ctx.editMessageText('⏳ Загружаю данные из Steam...\n\nЭто может занять до минуты.');
 
-    const buttons = [
-      [{ text: '📚 Выбрать из библиотеки', callback_data: `library_${accountId}` }],
-      [{ text: '➕ Добавить игру по ID', callback_data: `add_game_${accountId}` }],
-      [{ text: '⏱ Выбрать по часам', callback_data: `by_hours_${accountId}` }],
-      [{ text: '🔙 Назад', callback_data: `account_${accountId}` }]
-    ];
+    try {
+      // Получаем библиотеку с часами
+      const library = await steamLibrary.getOwnedGamesWithHours(accountId, true);
+      const games = db.getGames(accountId);
+      
+      let updated = 0;
+      let notFound = 0;
 
-    await ctx.editMessageText(text, {
-      reply_markup: { inline_keyboard: buttons }
-    });
+      for (const game of games) {
+        const gameInfo = library.find(g => g.appId === game.app_id);
+        if (gameInfo && gameInfo.playtime_forever > 0) {
+          const hours = gameInfo.playtime_forever / 60;
+          db.updateInitialHours(accountId, game.app_id, hours);
+          updated++;
+        } else {
+          notFound++;
+        }
+      }
+
+      await ctx.editMessageText(
+        `✅ Обновление завершено!\n\n` +
+        `Обновлено: ${updated} игр\n` +
+        `Не найдено часов: ${notFound} игр\n\n` +
+        `Теперь статистика будет показывать корректные данные.`,
+        {
+          reply_markup: {
+            inline_keyboard: [
+              [{ text: '🔙 К списку игр', callback_data: `games_${accountId}` }]
+            ]
+          }
+        }
+      );
+    } catch (err) {
+      console.error('Ошибка обновления часов:', err);
+      await ctx.editMessageText(
+        `❌ Ошибка обновления часов: ${err.message}`,
+        {
+          reply_markup: {
+            inline_keyboard: [
+              [{ text: '🔙 К списку игр', callback_data: `games_${accountId}` }]
+            ]
+          }
+        }
+      );
+    }
   });
 
   // Обработчик кнопки "🔄 Обновить статус"
