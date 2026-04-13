@@ -53,6 +53,26 @@ export async function startFarming(accountId) {
       await db.updateSteamId64(accountId, steamId64);
       console.log(`🆔 Сохранен Steam ID для ${account.account_name}: ${steamId64}`);
       
+      // Получаем текущие часы из Steam и обновляем initial_hours
+      try {
+        console.log(`⏳ Получаю текущие часы игр для ${account.account_name}...`);
+        const { getOwnedGamesWithHours } = await import('./steamLibrary.js');
+        const library = await getOwnedGamesWithHours(accountId, false);
+        
+        const games = db.getGames(accountId);
+        for (const game of games) {
+          const gameInfo = library.find(g => g.appId === game.app_id);
+          if (gameInfo && gameInfo.playtime_forever > 0) {
+            const hours = gameInfo.playtime_forever / 60;
+            db.updateInitialHours(accountId, game.app_id, hours);
+            console.log(`📊 ${game.game_name}: ${hours.toFixed(1)}ч (начальные часы обновлены)`);
+          }
+        }
+      } catch (hoursErr) {
+        console.error(`⚠️ Не удалось обновить часы для ${account.account_name}:`, hoursErr.message);
+        // Продолжаем фарм даже если не удалось получить часы
+      }
+      
       const visibilityMode = db.getVisibilityMode(accountId);
       if (visibilityMode === 1) {
         client.setPersona(7);
