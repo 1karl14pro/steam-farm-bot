@@ -53,7 +53,16 @@ export async function startFarming(accountId) {
       await db.updateSteamId64(accountId, steamId64);
       console.log(`🆔 Сохранен Steam ID для ${account.account_name}: ${steamId64}`);
       
-      // Получаем текущие часы из Steam и обновляем initial_hours
+      const visibilityMode = db.getVisibilityMode(accountId);
+      if (visibilityMode === 1) {
+        client.setPersona(7);
+        console.log(`👻 ${account.account_name}: режим "Невидимка"`);
+      } else {
+        client.setPersona(1);
+        console.log(`🌐 ${account.account_name}: режим "В сети"`);
+      }
+      
+      // Получаем текущие часы из Steam и обновляем initial_hours ПЕРЕД запуском игр
       try {
         console.log(`⏳ Получаю текущие часы игр для ${account.account_name}...`);
         const { getOwnedGamesWithHours } = await import('./steamLibrary.js');
@@ -68,18 +77,10 @@ export async function startFarming(accountId) {
             console.log(`📊 ${game.game_name}: ${hours.toFixed(1)}ч (начальные часы обновлены)`);
           }
         }
+        console.log(`✅ Часы обновлены для ${account.account_name}`);
       } catch (hoursErr) {
         console.error(`⚠️ Не удалось обновить часы для ${account.account_name}:`, hoursErr.message);
         // Продолжаем фарм даже если не удалось получить часы
-      }
-      
-      const visibilityMode = db.getVisibilityMode(accountId);
-      if (visibilityMode === 1) {
-        client.setPersona(7);
-        console.log(`👻 ${account.account_name}: режим "Невидимка"`);
-      } else {
-        client.setPersona(1);
-        console.log(`🌐 ${account.account_name}: режим "В сети"`);
       }
       
       // Запускаем фарм игр с кастомным названием, если задано
