@@ -1,6 +1,6 @@
 {
   "name": "steam-farm-bot",
-  "version": "1.9.6.0",
+  "version": "1.9.7.0",
   "description": "Telegram bot for Steam hours farming - Optimized for VDS",
   "main": "src/index.js",
   "type": "module",

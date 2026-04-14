@@ -72,11 +72,34 @@ export async function getTopPlayedGames(accountId, forceRefresh = false) {
           const steamId = cookieValue?.split('||')[0];
           
           if (steamId && /^\d+$/.test(steamId)) { // Проверяем что это число
-            // Запрашиваем список игр с Web API с rate limiting
-            const data = await withRateLimit(async () => {
-              const response = await fetch(`https://api.steampowered.com/IPlayerService/GetOwnedGames/v1/?key=${process.env.STEAM_WEB_API_KEY}&steamid=${steamId}&include_appinfo=1&include_played_free_games=1`);
-              return await response.json();
-            }, 'api', 1);
+             // Запрашиваем список игр с Web API с rate limiting и таймаутом
+             const data = await withRateLimit(async () => {
+               const controller = new AbortController();
+               const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 секунд таймаут
+               
+               try {
+                 const response = await fetch(`https://api.steampowered.com/IPlayerService/GetOwnedGames/v1/?key=${process.env.STEAM_WEB_API_KEY}&steamid=${steamId}&include_appinfo=1&include_played_free_games=1`, {
+                   signal: controller.signal
+                 });
+                 
+                 if (!response.ok) {
+                   throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                 }
+                 
+                 const result = await response.json();
+                 
+                 clearTimeout(timeoutId);
+                 return result;
+               } catch (error) {
+                 clearTimeout(timeoutId);
+                 
+                 if (error.name === 'AbortError') {
+                   throw new Error('Таймаут запроса к Steam Web API');
+                 }
+                 
+                 throw error;
+               }
+             }, 'api', 1);
             
             if (data.response && data.response.games) {
               // Сортируем по времени в игре и берем топ-10
@@ -384,9 +407,40 @@ export async function getOwnedGames(accountId, offset = 0, limit = 15, forceRefr
  */
 export async function getGameInfo(appId) {
   try {
-    // Пробуем получить информацию из Steam Store API
-    const response = await fetch(`https://store.steampowered.com/api/appdetails?appids=${appId}&l=russian`);
-    const data = await response.json();
+     // Пробуем получить информацию из Steam Store API с таймаутом
+     const controller = new AbortController();
+     const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 секунд таймаут
+     
+     try {
+       const response = await fetch(`https://store.steampowered.com/api/appdetails?appids=${appId}&l=russian`, {
+         signal: controller.signal
+       });
+       
+       if (!response.ok) {
+         throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+       }
+       
+       const data = await response.json();
+       
+       clearTimeout(timeoutId);
+       
+       if (data[appId] && data[appId].success && data[appId].data) {
+         return {
+           appId: appId,
+           name: data[appId].data.name || `App ${appId}`,
+           type: data[appId].data.type || 'game'
+         };
+       }
+     } catch (error) {
+       clearTimeout(timeoutId);
+       
+       if (error.name === 'AbortError') {
+         console.warn(`Таймаут запроса к Steam Store API для игры ${appId}`);
+       } else {
+         console.warn(`Ошибка запроса к Steam Store API для игры ${appId}:`, error.message);
+       }
+       // Продолжаем выполнение, вернется информация по умолчанию
+     }
     
     if (data[appId] && data[appId].success && data[appId].data) {
       return {

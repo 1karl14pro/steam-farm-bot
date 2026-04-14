@@ -1,7 +1,6 @@
 import SteamUser from 'steam-user';
 import * as db from '../database.js';
 import * as tradeManager from './tradeManager.js';
-import * as syncUtils from './syncUtils.js';
 
 // Хранилище активных клиентов Steam
 const activeClients = new Map();
@@ -9,9 +8,9 @@ const accountCookies = new Map();
 const stoppingAccounts = new Set();
 
 // Лимиты для оптимизации ресурсов
-const MAX_CONCURRENT_SESSIONS = 75; // Максимум одновременных сессий (уменьшено для лучшей стабильности)
+const MAX_CONCURRENT_SESSIONS = 100; // Максимум одновременных сессий
 const SESSION_RESTART_INTERVAL = 24 * 60 * 60 * 1000; // 24 часа - перезапуск для освобождения памяти
-const MEMORY_CHECK_INTERVAL = 1800000; // Проверка каждые 30 минут (уменьшено для более частого мониторинга)
+const MEMORY_CHECK_INTERVAL = 3600000; // Проверка каждый час
 
 /**
  * Запускает фарм для аккаунта
@@ -63,31 +62,6 @@ export async function startFarming(accountId) {
         console.log(`🌐 ${account.account_name}: режим "В сети"`);
       }
       
-      // Получаем текущие часы из Steam и обновляем initial_hours ПЕРЕД запуском игр
-      try {
-        console.log(`⏳ Получаю текущие часы игр для ${account.account_name}...`);
-        const { getOwnedGamesWithHours } = await import('./steamLibrary.js');
-        const library = await safeAsyncCall(() => getOwnedGamesWithHours(accountId, false), 
-                                          `получение библиотеки игр для ${account.account_name}`);
-        
-        if (library) {
-          const games = db.getGames(accountId);
-          for (const game of games) {
-            const gameInfo = library.find(g => g.appId === game.app_id);
-            if (gameInfo && gameInfo.playtime_forever > 0) {
-              const hours = gameInfo.playtime_forever / 60;
-              await safeAsyncCall(() => db.updateInitialHours(accountId, game.app_id, hours), 
-                                `обновление начальных часов для ${game.game_name}`);
-              console.log(`📊 ${game.game_name}: ${hours.toFixed(1)}ч (начальные часы обновлены)`);
-            }
-          }
-          console.log(`✅ Часы обновлены для ${account.account_name}`);
-        }
-      } catch (hoursErr) {
-        console.error(`⚠️ Не удалось обновить часы для ${account.account_name}:`, hoursErr.message);
-        // Продолжаем фарм даже если не удалось получить часы
-      }
-      
       // Запускаем фарм игр с кастомным названием, если задано
       const customStatus = db.getCustomStatus(accountId);
       
@@ -96,7 +70,7 @@ export async function startFarming(accountId) {
         // Это позволяет отображать кастомный статус в профиле при фарме всех игр
         
         // Шаг 1: Сбрасываем текущее состояние
-        await safeAsyncCall(() => client.gamesPlayed([]), `сброс игр для ${account.account_name}`);
+        client.gamesPlayed([]);
         
         // Шаг 2: Ждем немного
         await new Promise(resolve => setTimeout(resolve, 500));
@@ -111,133 +85,96 @@ export async function startFarming(accountId) {
           ...appIds.map(appId => appId)
         ];
         
-        await safeAsyncCall(() => client.gamesPlayed(gamesToPlay), `запуск игр для ${account.account_name}`);
+        client.gamesPlayed(gamesToPlay);
         console.log(`💬 Кастомный статус: ${account.account_name} - ${customStatus} (запущено игр: ${appIds.length})`);
       } else {
         // Обычный запуск всех игр без кастомного статуса
-        await safeAsyncCall(() => client.gamesPlayed(appIds), `запуск игр для ${account.account_name}`);
+        client.gamesPlayed(appIds);
       }
       
       // Пытаемся получить веб-сессию для cookies
       try {
-        await safeAsyncCall(() => client.webLogOn(), `получение веб-сессии для ${account.account_name}`);
+        await client.webLogOn();
         console.log(`🌐 Веб-сессия получена для ${account.account_name}`);
         
         // Инициализируем менеджер трейдов после получения веб-сессии
-        await safeAsyncCall(() => tradeManager.initTradeManager(client, accountId, account.account_name),
-                           `инициализация трейд-менеджера для ${account.account_name}`);
+        tradeManager.initTradeManager(client, accountId, account.account_name);
       } catch (webErr) {
         console.error(`❌ Ошибка получения веб-сессии для ${account.account_name}:`, webErr.message);
       }
       
       const now = Math.floor(Date.now() / 1000);
-      await safeAsyncCall(() => db.setFarmingStartedAt(accountId, now), 
-                         `установка времени начала фарма для ${account.account_name}`);
-      await safeAsyncCall(() => db.updateAccountFarmingStatus(accountId, true),
-                         `обновление статуса фарма для ${account.account_name}`);
+      await db.setFarmingStartedAt(accountId, now);
+      await db.updateAccountFarmingStatus(accountId, true);
     } catch (err) {
-      console.error(`❌ Критическая ошибка при запуске фарма ${account.account_name}:`, err.message);
+      console.error(`❌ Ошибка при запуске фарма ${account.account_name}:`, err.message);
       // Не останавливаем клиент, продолжаем работу
     }
   });
-
-// Универсальная функция для безопасного вызова асинхронных операций
-async function safeAsyncCall(fn, operationDescription) {
-  try {
-    return await fn();
-  } catch (error) {
-    console.error(`❌ Ошибка при выполнении "${operationDescription}":`, error.message);
-    // Не выбрасываем ошибку дальше, чтобы не прерывать основной поток
-    return null;
-  }
-}
   
   // Обработчик запросов в друзья
   client.on('friendRelationship', async (steamID, relationship) => {
-    try {
-      // relationship === 2 означает запрос в друзья
-      if (relationship === 2) {
-        const settings = await safeAsyncCall(() => db.getNotificationSettings(account.user_id), 
-                                           'получение настроек уведомлений');
-        if (!settings) return;
-        
-        const friendRequestSetting = settings.find(s => s.type === 'friend_request');
-        
-        if (friendRequestSetting && friendRequestSetting.enabled) {
-          try {
-            // Запрашиваем информацию о пользователе
-            await new Promise((resolve) => {
-              client.requestRichPresence(steamID.accountid, (err, response) => {
-                // Игнорируем ошибки rich presence
-                resolve();
-              });
-            });
-            
-            // Ждем немного и пытаемся получить имя из кеша
-            await new Promise(resolve => setTimeout(resolve, 1000));
-            
-            let userName = 'Неизвестный пользователь';
-            const steamId64 = steamID.getSteamID64();
-            
-            // Пытаемся получить из кеша users
-            if (client.users && client.users[steamId64]) {
-              userName = client.users[steamId64].player_name || userName;
-            }
-            
-            const botModule = await import('../bot.js');
-            const bot = botModule.default;
-            if (bot && bot.telegram) {
-              await safeAsyncCall(() => bot.telegram.sendMessage(
-                account.user_id,
-                `👥 Новый запрос в друзья!\n\n` +
-                `Аккаунт: ${account.account_name}\n` +
-                `От: ${userName}\n` +
-                `Steam ID: ${steamId64}\n\n` +
-                `Откройте Steam для принятия/отклонения.`
-              ), 'отправка уведомления о запросе в друзья');
-            }
-            console.log(`[NOTIFICATIONS] Отправлено уведомление о запросе в друзья для ${account.account_name} от ${userName}`);
-          } catch (err) {
-            console.error(`[NOTIFICATIONS] Ошибка отправки уведомления:`, err.message);
+    // relationship === 2 означает запрос в друзья
+    if (relationship === 2) {
+      const settings = db.getNotificationSettings(account.user_id);
+      const friendRequestSetting = settings.find(s => s.type === 'friend_request');
+      
+      if (friendRequestSetting && friendRequestSetting.enabled) {
+        try {
+          // Запрашиваем информацию о пользователе
+          client.requestRichPresence(steamID.accountid, (err, response) => {
+            // Игнорируем ошибки rich presence
+          });
+          
+          // Ждем немного и пытаемся получить имя из кеша
+          await new Promise(resolve => setTimeout(resolve, 1000));
+          
+          let userName = 'Неизвестный пользователь';
+          const steamId64 = steamID.getSteamID64();
+          
+          // Пытаемся получить из кеша users
+          if (client.users && client.users[steamId64]) {
+            userName = client.users[steamId64].player_name || userName;
           }
+          
+          const bot = (await import('../bot.js')).default;
+          await bot.telegram.sendMessage(
+            account.user_id,
+            `👥 Новый запрос в друзья!\n\n` +
+            `Аккаунт: ${account.account_name}\n` +
+            `От: ${userName}\n` +
+            `Steam ID: ${steamId64}\n\n` +
+            `Откройте Steam для принятия/отклонения.`
+          );
+          console.log(`[NOTIFICATIONS] Отправлено уведомление о запросе в друзья для ${account.account_name} от ${userName}`);
+        } catch (err) {
+          console.error(`[NOTIFICATIONS] Ошибка отправки уведомления:`, err.message);
         }
       }
-    } catch (error) {
-      console.error(`❌ Ошибка обработки запроса в друзья для ${account.account_name}:`, error.message);
     }
   });
   
   // Обработчик предложений обмена
   client.on('tradeOffers', async (count) => {
-    try {
-      if (count > 0) {
-        const settings = await safeAsyncCall(() => db.getNotificationSettings(account.user_id),
-                                          'получение настроек уведомлений трейдов');
-        if (!settings) return;
-        
-        const tradeSetting = settings.find(s => s.type === 'trade_offer');
-        
-        if (tradeSetting && tradeSetting.enabled) {
-          try {
-            const botModule = await import('../bot.js');
-            const bot = botModule.default;
-            if (bot && bot.telegram) {
-              await safeAsyncCall(() => bot.telegram.sendMessage(
-                account.user_id,
-                `💼 Новое предложение обмена!\n\n` +
-                `Аккаунт: ${account.account_name}\n` +
-                `Количество: ${count}\n\n` +
-                `Откройте Steam для просмотра.`
-              ), 'отправка уведомления о трейде');
-            }
-            console.log(`[NOTIFICATIONS] Отправлено уведомление о трейде для ${account.account_name}`);
-          } catch (err) {
-            console.error(`[NOTIFICATIONS] Ошибка отправки уведомления:`, err.message);
-          }
+    if (count > 0) {
+      const settings = db.getNotificationSettings(account.user_id);
+      const tradeSetting = settings.find(s => s.type === 'trade_offer');
+      
+      if (tradeSetting && tradeSetting.enabled) {
+        try {
+          const bot = (await import('../bot.js')).default;
+          await bot.telegram.sendMessage(
+            account.user_id,
+            `💼 Новое предложение обмена!\n\n` +
+            `Аккаунт: ${account.account_name}\n` +
+            `Количество: ${count}\n\n` +
+            `Откройте Steam для просмотра.`
+          );
+          console.log(`[NOTIFICATIONS] Отправлено уведомление о трейде для ${account.account_name}`);
+        } catch (err) {
+          console.error(`[NOTIFICATIONS] Ошибка отправки уведомления:`, err.message);
         }
       }
-    } catch (error) {
-      console.error(`❌ Ошибка обработки предложений обмена для ${account.account_name}:`, error.message);
     }
   });
   
@@ -263,85 +200,81 @@ async function safeAsyncCall(fn, operationDescription) {
         
         // Уведомляем пользователя
         try {
-          const botModule = await import('../bot.js');
-          const bot = botModule.default;
-          if (bot && bot.telegram) {
-            await safeAsyncCall(() => bot.telegram.sendMessage(
-              account.user_id,
-              `⏸ Фарм приостановлен для ${account.account_name}\n\n` +
-              `Причина: Игра запущена на вашем ПК\n` +
-              `Запустите фарм вручную когда закончите играть.`
-            ), `отправка уведомления о конфликте сессии для ${account.account_name}`);
-          }
-        } catch (notificationErr) {
-          console.error(`❌ Ошибка подготовки уведомления для ${account.account_name}:`, notificationErr.message);
+          const bot = (await import('../bot.js')).default;
+          bot.telegram.sendMessage(
+            account.user_id,
+            `⏸ Фарм приостановлен для ${account.account_name}\n\n` +
+            `Причина: Игра запущена на вашем ПК\n` +
+            `Запустите фарм вручную когда закончите играть.`
+          ).catch((err) => {
+            console.error(`❌ Ошибка отправки уведомления пользователю ${account.user_id}:`, err.message);
+          });
+        } catch (err) {
+          console.error(`❌ Ошибка обработки конфликта для ${account.account_name}:`, err.message);
         }
         
         // Останавливаем фарм
-        await safeAsyncCall(() => stopFarming(accountId), `остановка фарма из-за конфликта сессии для ${account.account_name}`);
+        stopFarming(accountId).catch((err) => {
+          console.error(`❌ Ошибка остановки фарма для аккаунта ${accountId}:`, err.message);
+        });
         return;
       }
       
       // Если это LogonSessionReplaced - пытаемся перезапустить через 30 секунд
       if (err.message === 'LogonSessionReplaced') {
-        console.log(`🔄 ${account.account_name}: Сессия заменена, планирую перезапуск...`);
+        console.log(`🔄 ${account.account_name}: Сессия заменена, перезапуск через 30 сек...`);
         
         // Останавливаем текущую сессию
-        await safeAsyncCall(() => stopFarming(accountId), `остановка фарма из-за замены сессии для ${account.account_name}`);
+        await stopFarming(accountId).catch(e => console.error(`Ошибка остановки:`, e));
         
         // Перезапускаем через 30 секунд
-        const restartTimer = setTimeout(async () => {
+        setTimeout(async () => {
           try {
             console.log(`🔄 Перезапуск фарма для ${account.account_name}...`);
-            
-            // Проверяем, не запущен ли фарм уже другим процессом
-            if (isFarming(accountId)) {
-              console.log(`⚠️ ${account.account_name}: Фарм уже запущен другим процессом`);
-              return;
-            }
-            
             await startFarming(accountId);
             console.log(`✅ Фарм перезапущен для ${account.account_name}`);
           } catch (restartErr) {
             console.error(`❌ Ошибка перезапуска ${account.account_name}:`, restartErr.message);
           }
         }, 30000);
-        
-        // Удаляем таймер из памяти после выполнения
-        restartTimer.unref && restartTimer.unref();
         return;
       }
       
       // Останавливаем только этот аккаунт, не влияя на другие
-      await safeAsyncCall(() => stopFarming(accountId), `остановка фарма из-за ошибки для ${account.account_name}`);
-  } catch (e) {
-    console.error(`❌ Критическая ошибка обработки для ${account.account_name}:`, e);
-  }
-});
+      stopFarming(accountId).catch(e => console.error(`Ошибка остановки:`, e));
+    } catch (e) {
+      console.error(`❌ Критическая ошибка обработки для ${account.account_name}:`, e);
+    }
+  });
 
-
+  client.on('disconnected', async (eresult, msg) => {
+    try {
+      console.log(`🔌 ${account.account_name} отключен:`, msg);
+      
+      if (stoppingAccounts.has(accountId)) return;
+      stoppingAccounts.add(accountId);
+      
+      activeClients.delete(accountId);
+      accountCookies.delete(accountId);
+      
+      const oldAccount = db.getSteamAccount(accountId);
+      if (oldAccount && oldAccount.farming_started_at) {
+        const farmingTime = Math.floor(Date.now() / 1000) - oldAccount.farming_started_at;
+        const hours = farmingTime / 3600;
+        await db.finalizeFarming(accountId, hours);
+      } else {
+        await db.updateAccountFarmingStatus(accountId, false);
+      }
+      
+      stoppingAccounts.delete(accountId);
+    } catch (err) {
+      console.error(`❌ Ошибка при отключении ${account.account_name}:`, err.message);
+      stoppingAccounts.delete(accountId);
+    }
+  });
 
   client.on('steamGuard', (domain, callback) => {
     console.log(`⚠️ ${account.account_name}: Требуется Steam Guard код${domain ? ` (${domain})` : ''}`);
-    
-    // Пытаемся получить код из базы данных (через handler)
-    const pendingAuth = db.getPendingAuth(account.user_id);
-    if (pendingAuth && pendingAuth.type === 'steam_guard') {
-      const code = pendingAuth.code;
-      if (code) {
-        console.log(`🔐 Использую сохраненный код Steam Guard для ${account.account_name}`);
-        callback(null, code);
-        db.clearPendingAuth(account.user_id);
-        return;
-      }
-    }
-    
-    // В противном случае ждем код через обработчик (реализация в handlers)
-    console.log(`📱 Ожидание ввода кода Steam Guard для ${account.account_name} через бота...`);
-    
-    // Вызываем callback с null, чтобы продолжить ожидание
-    // Код будет предоставлен позже через обработчик ввода
-    callback(null, null);
   });
 
   // Обработка запроса PIN родительского контроля
@@ -617,15 +550,6 @@ export function getAccountCookies(accountId) {
 }
 
 /**
- * Проверяет, находится ли аккаунт в процессе остановки
- * @param {number} accountId - ID аккаунта
- * @returns {boolean}
- */
-export function isStopping(accountId) {
-  return stoppingAccounts.has(accountId);
-}
-
-/**
  * Returns a summary of all farming sessions (status view).
  * Useful for quick diagnostics from Telegram.
  */
@@ -654,14 +578,8 @@ export function getAllFarmsStatus() {
  * Оптимизация памяти - только сборка мусора, БЕЗ автоперезапуска сессий
  * ИСПРАВЛЕНО: Убран автоматический перезапуск каждые 24 часа для избежания конфликтов между контейнерами
  */
-let memoryOptimizationInterval = null;
-
 function startMemoryOptimization() {
-  if (memoryOptimizationInterval) {
-    return; // Уже запущено
-  }
-  
-  memoryOptimizationInterval = setInterval(() => {
+  setInterval(() => {
     // Только сборка мусора, без перезапуска сессий
     if (global.gc) {
       global.gc();
@@ -674,14 +592,6 @@ function startMemoryOptimization() {
     const heapTotalMB = Math.round(memUsage.heapTotal / 1024 / 1024);
     console.log(`📊 Память: ${heapUsedMB}MB / ${heapTotalMB}MB (активных сессий: ${activeClients.size})`);
   }, MEMORY_CHECK_INTERVAL);
-}
-
-function stopMemoryOptimization() {
-  if (memoryOptimizationInterval) {
-    clearInterval(memoryOptimizationInterval);
-    memoryOptimizationInterval = null;
-    console.log('🛑 Оптимизация памяти остановлена');
-  }
 }
 
 // Запускаем оптимизацию памяти
@@ -774,55 +684,15 @@ function startGameHoursUpdater() {
 // Запускаем обновление часов
 startGameHoursUpdater();
 
-// Запускаем периодическую проверку синхронизации (каждые 10 минут)
-const SYNC_INTERVAL = 600000; // 10 минут
-setInterval(() => {
-  try {
-    const syncResult = syncUtils.checkServiceSync((accountId) => getClient(accountId) !== null);
-    syncUtils.logSyncStatus(syncResult);
-    
-    // Если обнаружены серьезные несоответствия, можно запустить синхронизацию
-    if (syncResult.inconsistencies.length > 0) {
-      console.log(`🔍 Автоматическая синхронизация...`);
-      syncUtils.syncServices(startFarming, stopFarming, isFarming)
-        .then(fixes => {
-          if (fixes.length > 0) {
-            console.log(`✅ Автоматическая синхронизация завершена: ${fixes.length} исправлений`);
-          }
-        })
-        .catch(err => {
-          console.error('❌ Ошибка автоматической синхронизации:', err.message);
-        });
-    }
-  } catch (err) {
-    console.error('❌ Ошибка проверки синхронизации:', err.message);
-  }
-}, SYNC_INTERVAL);
-
-console.log('✅ Проверка синхронизации сервисов активирована (каждые 10 минут)');
-
-// Универсальная функция для безопасного вызова асинхронных операций
-async function safeAsyncCall(fn, operationDescription) {
-  try {
-    return await fn();
-  } catch (error) {
-    console.error(`❌ Ошибка при выполнении "${operationDescription}":`, error.message);
-    // Не выбрасываем ошибку дальше, чтобы не прерывать основной поток
-    return null;
-  }
-}
-
 // Graceful shutdown
 process.on('SIGINT', async () => {
   console.log('\n🛑 SIGINT received, shutting down...');
-  stopMemoryOptimization();
   await stopAllFarming();
   process.exit(0);
 });
 
 process.on('SIGTERM', async () => {
   console.log('\n🛑 SIGTERM received, shutting down...');
-  stopMemoryOptimization();
   await stopAllFarming();
   process.exit(0);
 });

@@ -193,13 +193,6 @@ db.exec(`
   CREATE INDEX IF NOT EXISTS idx_notifications_user_type ON notifications(user_id, type);
   CREATE INDEX IF NOT EXISTS idx_farm_stats_account_date ON farm_stats(account_id, date);
   CREATE INDEX IF NOT EXISTS idx_pending_payments_status ON pending_payments(status, user_id);
-  
-  -- Дополнительные индексы для оптимизации
-  CREATE INDEX IF NOT EXISTS idx_games_account_app ON games(account_id, app_id);
-  CREATE INDEX IF NOT EXISTS idx_users_premium ON users(premium_expires_at, is_banned);
-  CREATE INDEX IF NOT EXISTS idx_accounts_user_farming ON steam_accounts(user_id, is_farming);
-  CREATE INDEX IF NOT EXISTS idx_library_cache_app ON library_cache(app_id);
-  CREATE INDEX IF NOT EXISTS idx_goals_account_completed ON farm_goals(account_id, completed);
 
   CREATE TABLE IF NOT EXISTS pending_payments (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -244,19 +237,6 @@ db.exec(`
     FOREIGN KEY (account_id) REFERENCES steam_accounts(id) ON DELETE CASCADE
   );
 
-  CREATE TABLE IF NOT EXISTS farm_commands (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    account_id INTEGER NOT NULL,
-    command TEXT NOT NULL,
-    created_at INTEGER DEFAULT (strftime('%s', 'now')),
-    processed INTEGER DEFAULT 0,
-    processed_at INTEGER DEFAULT 0,
-    error TEXT DEFAULT NULL,
-    FOREIGN KEY (account_id) REFERENCES steam_accounts(id) ON DELETE CASCADE
-  );
-
-  CREATE INDEX IF NOT EXISTS idx_farm_commands_processed ON farm_commands(processed, created_at);
-
   CREATE TABLE IF NOT EXISTS notifications (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     user_id INTEGER NOT NULL,
@@ -264,16 +244,6 @@ db.exec(`
     enabled INTEGER DEFAULT 1,
     FOREIGN KEY (user_id) REFERENCES users(telegram_id) ON DELETE CASCADE,
     UNIQUE(user_id, type)
-  );
-
-  CREATE TABLE IF NOT EXISTS pending_auth (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    user_id INTEGER NOT NULL,
-    type TEXT NOT NULL,
-    code TEXT,
-    data TEXT,
-    created_at INTEGER DEFAULT (strftime('%s', 'now')),
-    FOREIGN KEY (user_id) REFERENCES users(telegram_id) ON DELETE CASCADE
   );
 `);
 
@@ -475,25 +445,6 @@ export const getGames = (accountId) => {
 };
 
 export const addGame = (accountId, appId, gameName = null, initialHours = 0) => {
-  // Валидация входных данных
-  if (!accountId || accountId <= 0) {
-    throw new Error('Некорректный ID аккаунта');
-  }
-  
-  if (!appId || appId <= 0) {
-    throw new Error('Некорректный App ID игры');
-  }
-  
-  if (initialHours < 0) {
-    console.warn(`[DB] Отрицательное значение initialHours (${initialHours}), устанавливаю 0`);
-    initialHours = 0;
-  }
-  
-  if (initialHours > 1000000) {
-    console.warn(`[DB] Слишком большое значение initialHours (${initialHours}), устанавливаю 0`);
-    initialHours = 0;
-  }
-  
   try {
     return db.prepare(`
       INSERT INTO games (account_id, app_id, game_name, initial_hours, current_hours, last_updated)
@@ -508,18 +459,8 @@ export const addGame = (accountId, appId, gameName = null, initialHours = 0) => 
 };
 
 export const removeGame = (accountId, appId) => {
-  return db.prepare('DELETE FROM games WHERE account_id = ? AND app_id = ?').run(accountId, appId);
-};
-
-/**
- * Обновляет начальные часы для игры (для исправления статистики)
- */
-export const updateInitialHours = (accountId, appId, initialHours) => {
-  return db.prepare(`
-    UPDATE games 
-    SET initial_hours = ?, current_hours = ?
-    WHERE account_id = ? AND app_id = ?
-  `).run(initialHours, initialHours, accountId, appId);
+  return db.prepare('DELETE FROM games WHERE account_id = ? AND app_id = ?')
+    .run(accountId, appId);
 };
 
 export const updateGameHours = (accountId, appId, currentHours) => {
@@ -1071,105 +1012,6 @@ export const getAutoAcceptTrades = (accountId) => {
   const result = db.prepare('SELECT auto_accept_trades FROM steam_accounts WHERE id = ?')
     .get(accountId);
   return result ? result.auto_accept_trades === 1 : false;
-};
-
-// ===== PENDING AUTH =====
-
-/**
- * Сохранить ожидающую аутентификацию
- * @param {number} userId - ID пользователя
- * @param {string} type - Тип аутентификации ('steam_guard', 'two_factor', etc.)
- * @param {string} code - Код аутентификации
- * @param {any} data - Дополнительные данные
- */
-export const setPendingAuth = (userId, type, code = null, data = null) => {
-  const serializedData = data ? JSON.stringify(data) : null;
-  return db.prepare(`
-    INSERT OR REPLACE INTO pending_auth (user_id, type, code, data)
-    VALUES (?, ?, ?, ?)
-  `).run(userId, type, code, serializedData);
-};
-
-/**
- * Получить ожидающую аутентификацию
- * @param {number} userId - ID пользователя
- * @returns {Object|null}
- */
-export const getPendingAuth = (userId) => {
-  const result = db.prepare(`
-    SELECT * FROM pending_auth 
-    WHERE user_id = ?
-  `).get(userId);
-  
-  if (result && result.data) {
-    try {
-      result.data = JSON.parse(result.data);
-    } catch (e) {
-      console.error('Ошибка парсинга данных аутентификации:', e.message);
-    }
-  }
-  
-  return result;
-};
-
-/**
- * Очистить ожидающую аутентификацию
- * @param {number} userId - ID пользователя
- */
-export const clearPendingAuth = (userId) => {
-  return db.prepare('DELETE FROM pending_auth WHERE user_id = ?').run(userId);
-};
-
-// ===== FARM COMMANDS (для связи bot-service ↔ farm-service) =====
-
-/**
- * Создать команду для фарм-сервиса
- * @param {number} accountId - ID аккаунта
- * @param {string} command - Команда: 'start', 'stop', 'restart'
- * @returns {number} - ID созданной команды
- */
-export const createFarmCommand = (accountId, command) => {
-  const result = db.prepare(`
-    INSERT INTO farm_commands (account_id, command)
-    VALUES (?, ?)
-  `).run(accountId, command);
-  return result.lastInsertRowid;
-};
-
-/**
- * Получить необработанные команды
- * @returns {Array}
- */
-export const getPendingFarmCommands = () => {
-  return db.prepare(`
-    SELECT * FROM farm_commands
-    WHERE processed = 0
-    ORDER BY created_at ASC
-  `).all();
-};
-
-/**
- * Отметить команду как обработанную
- * @param {number} commandId - ID команды
- * @param {string|null} error - Текст ошибки (если есть)
- */
-export const markFarmCommandProcessed = (commandId, error = null) => {
-  db.prepare(`
-    UPDATE farm_commands
-    SET processed = 1, processed_at = strftime('%s', 'now'), error = ?
-    WHERE id = ?
-  `).run(error, commandId);
-};
-
-/**
- * Очистить старые обработанные команды (старше 1 часа)
- */
-export const cleanupOldFarmCommands = () => {
-  const oneHourAgo = Math.floor(Date.now() / 1000) - 3600;
-  db.prepare(`
-    DELETE FROM farm_commands
-    WHERE processed = 1 AND processed_at < ?
-  `).run(oneHourAgo);
 };
 
 

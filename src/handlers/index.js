@@ -4163,10 +4163,19 @@ export function setupHandlers() {
     try {
       switch (state.action) {
         case 'add_game': {
-          const appId = parseInt(ctx.message.text.trim());
+          const inputText = ctx.message.text.trim();
           
-          if (isNaN(appId) || appId <= 0) {
-            await ctx.reply('❌ Неверный формат. Отправьте числовой App ID игры.');
+          // Валидация формата числа
+          if (!/^\d+$/.test(inputText)) {
+            await ctx.reply('❌ Неверный формат. Отправьте числовой App ID игры (только цифры).');
+            return;
+          }
+          
+          const appId = parseInt(inputText);
+          
+          // Проверка на разумный диапазон App ID (обычно от 1 до ~2 млрд)
+          if (isNaN(appId) || appId <= 0 || appId > 2147483647) {
+            await ctx.reply('❌ Неверный App ID. Отправьте корректный числовой App ID игры.');
             return;
           }
 
@@ -4226,8 +4235,24 @@ export function setupHandlers() {
         case 'change_status': {
           const statusText = ctx.message.text.trim();
           
+          // Валидация длины
           if (statusText.length > 100) {
             await ctx.reply('❌ Статус слишком длинный (максимум 100 символов)');
+            return;
+          }
+          
+          // Валидация на опасные символы (например, слишком много эмодзи, которые могут вызвать проблемы)
+          // Проверяем на более 50% эмодзи или специальных символов подряд
+          const emojiPattern = /[\uD83C-\uDBFF\uDC00-\uDFFF]/g;
+          const emojiMatches = statusText.match(emojiPattern);
+          if (emojiMatches && emojiMatches.length > 20) {
+            await ctx.reply('❌ Слишком много эмодзи в статусе. Максимум 20 эмодзи.');
+            return;
+          }
+          
+          // Проверка на подозрительные символы
+          if (/[<>'"\\]/.test(statusText)) {
+            await ctx.reply('❌ Статус содержит недопустимые символы (<, >, \', ", \\)');
             return;
           }
 
@@ -4264,8 +4289,23 @@ export function setupHandlers() {
         case 'group_status_waiting_input': {
           const statusText = ctx.message.text.trim();
           
+          // Валидация длины
           if (statusText.length > 100) {
             await ctx.reply('❌ Статус слишком длинный (максимум 100 символов)');
+            return;
+          }
+          
+          // Валидация на опасные символы
+          const emojiPattern = /[\uD83C-\uDBFF\uDC00-\uDFFF]/g;
+          const emojiMatches = statusText.match(emojiPattern);
+          if (emojiMatches && emojiMatches.length > 20) {
+            await ctx.reply('❌ Слишком много эмодзи в статусе. Максимум 20 эмодзи.');
+            return;
+          }
+          
+          // Проверка на подозрительные символы
+          if (/[<>'"\\]/.test(statusText)) {
+            await ctx.reply('❌ Статус содержит недопустимые символы (<, >, \', ", \\)');
             return;
           }
 
@@ -4329,8 +4369,16 @@ export function setupHandlers() {
             return;
           }
 
+          // Валидация: 4 цифры
           if (!/^\d{4}$/.test(pinText)) {
             await ctx.reply('❌ PIN должен состоять из 4 цифр');
+            return;
+          }
+          
+          // Дополнительная проверка: не должна быть простой комбинацией (например, 0000, 1234 и т.д.)
+          const commonPatterns = [/^(\d)\1{3}$/, /^(0123|1234|2345|3456|4567|5678|6789|9876|8765|7654|6543|5432|4321|3210)$/];
+          if (commonPatterns.some(pattern => pattern.test(pinText))) {
+            await ctx.reply('❌ Слишком простой PIN. Используйте комбинацию из 4 цифр, отличную от стандартных последовательностей.');
             return;
           }
 
@@ -4376,6 +4424,12 @@ export function setupHandlers() {
             // Игнорируем ошибку если не удалось удалить
           }
           
+          // Проверяем на подозрительные символы в начале/конце
+          if (/[<>'"\\]/.test(input)) {
+            await ctx.reply('❌ Введены недопустимые символы в учетных данных. Попробуйте снова.');
+            return;
+          }
+          
           // Проверяем формат логин:пароль
           if (input.includes(':')) {
             console.log('[AUTH] Обнаружен формат логин:пароль');
@@ -4386,13 +4440,31 @@ export function setupHandlers() {
               
               console.log(`[AUTH] Логин: ${login}, Пароль: ${password.length} символов`);
               
+              // Валидация логина
               if (!login || login.length < 3) {
-                await ctx.reply('❌ Логин слишком короткий');
+                await ctx.reply('❌ Логин слишком короткий (минимум 3 символа)');
                 return;
               }
               
+              if (login.length > 64) {
+                await ctx.reply('❌ Логин слишком длинный (максимум 64 символа)');
+                return;
+              }
+              
+              // Проверка на допустимые символы в логине
+              if (!/^[a-zA-Z0-9_]+$/.test(login)) {
+                await ctx.reply('❌ Логин содержит недопустимые символы (допустимы: латинские буквы, цифры, подчеркивание)');
+                return;
+              }
+              
+              // Валидация пароля
               if (!password || password.length < 6) {
-                await ctx.reply('❌ Пароль слишком короткий');
+                await ctx.reply('❌ Пароль слишком короткий (минимум 6 символов)');
+                return;
+              }
+              
+              if (password.length > 128) {
+                await ctx.reply('❌ Пароль слишком длинный (максимум 128 символов)');
                 return;
               }
               
@@ -4615,8 +4687,20 @@ export function setupHandlers() {
             // Игнорируем ошибку если не удалось удалить
           }
           
+          // Валидация пароля
           if (!password || password.length < 6) {
-            await ctx.reply('❌ Пароль слишком короткий');
+            await ctx.reply('❌ Пароль слишком короткий (минимум 6 символов)');
+            return;
+          }
+          
+          if (password.length > 128) {
+            await ctx.reply('❌ Пароль слишком длинный (максимум 128 символов)');
+            return;
+          }
+          
+          // Проверка на подозрительные символы
+          if (/[<>'"\\]/.test(password)) {
+            await ctx.reply('❌ Пароль содержит недопустимые символы (<, >, \', ", \\)');
             return;
           }
           
@@ -4754,11 +4838,17 @@ export function setupHandlers() {
         case 'add_account_steamguard': {
           const code = ctx.message.text.trim();
           
-          // Удаляем сообщение пользователя с кодом
-          try {
-            await ctx.deleteMessage();
-          } catch (err) {
-            // Игнорируем ошибку если не удалось удалить
+          // Валидация формата кода
+          if (!/^[A-Z0-9]{5}$/.test(code)) {
+            await ctx.reply('❌ Неверный формат кода. Код должен содержать 5 символов (заглавные буквы и цифры)');
+            return;
+          }
+          
+          // Проверка на возможные ошибки ввода
+          if (/^[O0]{5}$/.test(code) || /^[II1]{5}$/.test(code)) {
+            // Обычно пользователи путают O/0 или I/1/l, поэтому отклоняем такие коды
+            await ctx.reply('❌ Код может содержать ошибку ввода. Проверьте код Steam Guard (буквы O/I не должны повторяться 5 раз)');
+            return;
           }
           
           if (!/^[A-Z0-9]{5}$/.test(code)) {
@@ -4979,7 +5069,16 @@ export function setupHandlers() {
         }
 
         case 'add_account': {
-          const parts = ctx.message.text.trim().split(':');
+          const inputText = ctx.message.text.trim();
+          
+          // Проверка на опасные символы
+          if (/[<>'"\\]/.test(inputText)) {
+            await ctx.reply('❌ Данные содержат недопустимые символы.');
+            userStates.delete(ctx.from.id);
+            return;
+          }
+          
+          const parts = inputText.split(':');
           
           if (parts.length < 5) {
             await ctx.reply(
@@ -4993,6 +5092,39 @@ export function setupHandlers() {
 
           if (!login || !password || !sharedSecret || !identitySecret || !refreshToken) {
             await ctx.reply('❌ Все поля обязательны для заполнения');
+            return;
+          }
+          
+          // Валидация логина
+          if (login.length < 3 || login.length > 64) {
+            await ctx.reply('❌ Некорректная длина логина (3-64 символа)');
+            userStates.delete(ctx.from.id);
+            return;
+          }
+          
+          // Валидация пароля
+          if (password.length < 6 || password.length > 128) {
+            await ctx.reply('❌ Некорректная длина пароля (6-128 символов)');
+            userStates.delete(ctx.from.id);
+            return;
+          }
+          
+          // Валидация остальных параметров
+          if (sharedSecret.length !== 28) {
+            await ctx.reply('❌ Некорректная длина shared_secret (ожидается 28 символов Base64)');
+            userStates.delete(ctx.from.id);
+            return;
+          }
+          
+          if (identitySecret.length !== 28) {
+            await ctx.reply('❌ Некорректная длина identity_secret (ожидается 28 символов Base64)');
+            userStates.delete(ctx.from.id);
+            return;
+          }
+          
+          if (refreshToken.length < 50 || refreshToken.length > 200) {
+            await ctx.reply('❌ Некорректная длина refresh_token (ожидается 50-200 символов)');
+            userStates.delete(ctx.from.id);
             return;
           }
 

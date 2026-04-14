@@ -16,21 +16,34 @@ export function formatAccountInfo(account, games) {
   }
   
   if (account.is_farming) {
-    const startMs = account.farming_started_at * 1000;
-    const mskTime = new Date(startMs + 3 * 60 * 60 * 1000);
-    const mskStr = mskTime.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' });
-    const mskDate = mskTime.toLocaleDateString('ru-RU', { day: '2-digit', month: '2-digit' });
-    text += `━━━━━━━━━━━━━━━\n`;
-    text += `🕐 Запущен: ${mskDate} ${mskStr} МСК\n`;
+    // Проверяем, есть ли корректная дата запуска фарма
+    if (account.farming_started_at && account.farming_started_at > 0) {
+      const startMs = account.farming_started_at * 1000;
+      const mskTime = new Date(startMs + 3 * 60 * 60 * 1000);
+      const mskStr = mskTime.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' });
+      const mskDate = mskTime.toLocaleDateString('ru-RU', { day: '2-digit', month: '2-digit' });
+      text += `━━━━━━━━━━━━━━━\n`;
+      text += `🕐 Запущен: ${mskDate} ${mskStr} МСК\n`;
+    } else {
+      text += `━━━━━━━━━━━━━━━\n`;
+      text += `🕐 Запущен: Дата неизвестна\n`;
+    }
+    
     const visMode = account.visibility_mode === 1 ? '👻 Невидимка' : '🌐 В сети';
     text += `${visMode}\n`;
     
     // Форматируем время сеанса в формате ЧЧ:ММ:СС
-    const sessionSeconds = Math.floor(Date.now() / 1000) - account.farming_started_at;
-    const h = Math.floor(sessionSeconds / 3600);
-    const m = Math.floor((sessionSeconds % 3600) / 60);
-    const s = Math.floor(sessionSeconds % 60);
-    text += `⏱️ Этот сеанс: ${h}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}\n`;
+    let sessionText = '';
+    if (account.farming_started_at && account.farming_started_at > 0) {
+      const sessionSeconds = Math.floor(Date.now() / 1000) - account.farming_started_at;
+      const h = Math.floor(sessionSeconds / 3600);
+      const m = Math.floor((sessionSeconds % 3600) / 60);
+      const s = Math.floor(sessionSeconds % 60);
+      sessionText = `${h}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+    } else {
+      sessionText = '00:00:00'; // Если время начала неизвестно
+    }
+    text += `⏱️ Этот сеанс: ${sessionText}\n`;
   }
   
   text += `━━━━━━━━━━━━━━━\n`;
@@ -135,12 +148,14 @@ export function formatUserProfileFull(user, accounts) {
       
       // Форматируем время сеанса в формате ЧЧ:ММ:СС
       let session = '';
-      if (acc.farming_started_at) {
+      if (acc.farming_started_at && acc.farming_started_at > 0) {
         const sessionSeconds = now - acc.farming_started_at;
         const h = Math.floor(sessionSeconds / 3600);
         const m = Math.floor((sessionSeconds % 3600) / 60);
         const s = Math.floor(sessionSeconds % 60);
         session = ` | ⏱️ ${h}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+      } else {
+        session = ' | ⏱️ 00:00:00'; // Если время начала неизвестно
       }
       
       const custom = acc.custom_status ? ` 💬` : '';
